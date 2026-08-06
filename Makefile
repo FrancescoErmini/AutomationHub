@@ -1,0 +1,115 @@
+SHELL := /bin/bash
+.DEFAULT_GOAL := help
+
+PYTHON := .venv/bin/python
+PIP := .venv/bin/pip
+PYTEST := .venv/bin/pytest
+RUFF := .venv/bin/ruff
+MYPY := .venv/bin/mypy
+ALEMBIC := .venv/bin/alembic
+DEV_DATABASE_URL := postgresql+psycopg://automation_hub:automation_hub_dev@localhost:$${POSTGRES_PORT:-5432}/automation_hub
+TEST_DATABASE_URL := postgresql+psycopg://automation_hub:automation_hub_dev@localhost:$${POSTGRES_PORT:-5432}/automation_hub_test
+
+.PHONY: help setup install up down dev logs db-up db-down db-reset migrate migration seed ingest ingest-rpa lint format typecheck test test-unit test-integration test-frontend test-e2e test-all clean health
+
+help: ## Show available commands
+	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+setup: ## Install dependencies, start PostgreSQL, migrate, and seed
+	@test -f .env || cp .env.example .env
+	@$(MAKE) install
+	@$(MAKE) db-up
+	@$(MAKE) migrate
+	@$(MAKE) seed
+
+install: ## Install pinned backend and frontend dependencies
+	@test -x .venv/bin/pip || virtualenv -p python3 .venv
+	@$(PIP) install --upgrade pip
+	@$(PIP) install -e './backend[dev]'
+	@npm --prefix frontend ci
+
+up: ## Build and start the complete stack
+	docker compose up -d --build
+
+down: ## Stop the complete stack
+	docker compose down
+
+dev: ## Run the complete stack in the foreground
+	docker compose up --build
+
+logs: ## Follow application logs
+	docker compose logs -f backend frontend postgres
+
+db-up: ## Start PostgreSQL and wait until healthy
+	docker compose up -d postgres
+	@until docker compose exec -T postgres pg_isready -U automation_hub -d automation_hub >/dev/null 2>&1; do sleep 1; done
+
+db-down: ## Stop PostgreSQL
+	docker compose stop postgres
+
+db-reset: ## Recreate PostgreSQL volumes, migrate, and seed (destructive)
+	docker compose down -v
+	@$(MAKE) db-up
+	@$(MAKE) migrate
+	@$(MAKE) seed
+
+migrate: ## Apply development database migrations
+	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(ALEMBIC) upgrade head
+
+migration: ## Create migration; use NAME='description'
+	@test -n "$(NAME)" || (echo "NAME is required, e.g. make migration NAME='add field'" && exit 2)
+	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(ALEMBIC) revision --autogenerate -m "$(NAME)"
+
+seed: ## Seed deterministic development data
+	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli seed
+
+ingest: ## Validate and ingest sample CSV, writing a quality report
+	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli ingest ../data/fixtures/items.csv --report-dir ../artifacts/data-quality
+
+ingest-rpa: ## Validate and ingest the RPA analytics workbook
+	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli ingest-rpa
+
+lint: ## Check backend and frontend code quality
+	$(RUFF) check backend
+	$(RUFF) format --check backend
+	npm --prefix frontend run lint
+
+format: ## Format backend and frontend code
+	$(RUFF) check --fix backend
+	$(RUFF) format backend
+	npm --prefix frontend run format
+
+typecheck: ## Type-check backend and frontend
+	$(MYPY) backend/app backend/tests
+	npm --prefix frontend run typecheck
+
+test: test-unit ## Run fast unit tests
+
+test-unit: ## Run backend and frontend unit tests
+	$(PYTEST) backend/tests/unit tests/data_quality
+	npm --prefix frontend run test
+
+test-integration: db-up ## Migrate isolated test DB and run integration tests
+	cd backend && DATABASE_URL=$(TEST_DATABASE_URL) ../$(ALEMBIC) upgrade head
+	DATABASE_URL=$(TEST_DATABASE_URL) $(PYTEST) backend/tests/integration
+
+test-frontend: ## Run frontend unit tests
+	npm --prefix frontend run test
+
+test-e2e: up ## Run Playwright in its pinned container
+	docker compose --profile test run --rm e2e
+
+test-all: lint typecheck test-unit test-integration test-e2e ## Run the full quality gate
+
+clean: ## Remove generated local artifacts and caches
+	rm -rf .pytest_cache .mypy_cache .ruff_cache backend/.pytest_cache frontend/dist frontend/coverage frontend/test-results frontend/playwright-report
+	find backend -type d -name __pycache__ -prune -exec rm -rf {} +
+
+health: ## Check Docker services and public endpoints
+	docker compose ps
+	curl --fail --silent http://localhost:$${BACKEND_PORT:-8000}/health
+	@echo
+	curl --fail --silent http://localhost:$${BACKEND_PORT:-8000}/api/v1/status
+	@echo
+	curl --fail --silent http://localhost:$${FRONTEND_PORT:-5173} >/dev/null
+	@echo "Frontend is healthy"

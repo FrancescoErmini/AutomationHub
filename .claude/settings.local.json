@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose *)",
+      "Bash(../.venv/bin/alembic current *)",
+      "Bash(../.venv/bin/alembic upgrade *)"
+    ]
+  }
+}
