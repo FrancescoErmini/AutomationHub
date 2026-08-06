@@ -3,9 +3,10 @@ from typing import Any
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.audit import IngestionBatch
 
 SCHEMA = "staging"
 
@@ -21,6 +22,11 @@ class StagingRowMixin:
     ingestion_batch_id: Mapped[int] = mapped_column(
         ForeignKey("audit.ingestion_batch.id"), index=True
     )
+
+    @declared_attr
+    def ingestion_batch(cls) -> Mapped["IngestionBatch"]:
+        return relationship("IngestionBatch")
+
     source_file: Mapped[str] = mapped_column(String(500))
     source_sheet: Mapped[str] = mapped_column(String(60))
     source_row_number: Mapped[int] = mapped_column()

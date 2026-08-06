@@ -12,9 +12,10 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.audit import IngestionBatch
 
 SCHEMA = "core"
 
@@ -119,6 +120,10 @@ class Process(Base):
     in_pipeline: Mapped[bool] = mapped_column(Boolean(), default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    department: Mapped["Department | None"] = relationship()
+    company: Mapped["Company | None"] = relationship()
+    ams_year: Mapped["AmsYear | None"] = relationship()
+
 
 class Ticket(Base):
     __tablename__ = "ticket"
@@ -152,6 +157,13 @@ class Ticket(Base):
     note: Mapped[str | None] = mapped_column(Text(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    ams_year: Mapped["AmsYear | None"] = relationship()
+    priority: Mapped["Priority | None"] = relationship()
+    process: Mapped["Process | None"] = relationship()
+    root_cause: Mapped["RootCause | None"] = relationship()
+    support_level: Mapped["SupportLevel | None"] = relationship()
+    company: Mapped["Company | None"] = relationship()
+
 
 class ProcessEconomics(Base):
     __tablename__ = "process_economics"
@@ -165,6 +177,8 @@ class ProcessEconomics(Base):
     extra_annual_saving_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
     note: Mapped[str | None] = mapped_column(Text(), nullable=True)
 
+    process: Mapped["Process"] = relationship()
+
 
 class Ams1LCost(Base):
     __tablename__ = "ams_1l_cost"
@@ -174,6 +188,8 @@ class Ams1LCost(Base):
     ams_year_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.ams_year.id"), unique=True)
     annual_fee_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     n_processes_baseline: Mapped[int]
+
+    ams_year: Mapped["AmsYear"] = relationship()
 
 
 class Ams2LCost(Base):
@@ -191,6 +207,9 @@ class Ams2LCost(Base):
     cost_per_ticket_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    ticket: Mapped["Ticket"] = relationship()
+    company: Mapped["Company | None"] = relationship()
+
 
 class LicenseCost(Base):
     __tablename__ = "license_cost"
@@ -203,6 +222,8 @@ class LicenseCost(Base):
     year: Mapped[int]
     virtual_machine_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.virtual_machine.id"))
     cost_year_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+
+    virtual_machine: Mapped["VirtualMachine"] = relationship()
 
 
 class ProcessSchedule(Base):
@@ -223,6 +244,9 @@ class ProcessSchedule(Base):
     run_user: Mapped[str | None] = mapped_column(String(120), nullable=True)
     rpa_hours_month: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
 
+    process: Mapped["Process"] = relationship()
+    virtual_machine: Mapped["VirtualMachine | None"] = relationship()
+
 
 class ValueNormalization(Base):
     """Audit trail for every inferred/normalized value: original, normalized,
@@ -235,6 +259,7 @@ class ValueNormalization(Base):
     ingestion_batch_id: Mapped[int | None] = mapped_column(
         ForeignKey("audit.ingestion_batch.id"), nullable=True, index=True
     )
+    ingestion_batch: Mapped["IngestionBatch | None"] = relationship()
     entity: Mapped[str] = mapped_column(String(60))
     source_sheet: Mapped[str] = mapped_column(String(60))
     source_row_number: Mapped[int | None] = mapped_column(nullable=True)
