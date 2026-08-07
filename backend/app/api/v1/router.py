@@ -8,6 +8,7 @@ from app.api.v1 import (
     process_catalog,
     roi,
     service_performance,
+    simple_ops,
 )
 from app.dependencies import ItemServiceDependency
 from app.schemas.item import ItemCreate, ItemRead
@@ -19,6 +20,7 @@ router.include_router(operations.router)
 router.include_router(roi.router)
 router.include_router(service_performance.router)
 router.include_router(process_catalog.router)
+router.include_router(simple_ops.router)
 router.include_router(admin.router)
 
 

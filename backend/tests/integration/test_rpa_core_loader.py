@@ -24,6 +24,7 @@ from app.models.core import (
     SupportLevel,
     Ticket,
     VirtualMachine,
+    VmCost,
 )
 from app.models.staging import StagingEconomics
 
@@ -112,6 +113,29 @@ def test_core_load_populates_fact_tables(db_session: Session) -> None:
     )
     assert variable is not None
     assert variable.value == Decimal("26.6000")
+
+
+def test_core_load_mirrors_license_cost_into_vm_cost_at_zero(db_session: Session) -> None:
+    _load_fixture(db_session)
+
+    license_pairs = set(
+        db_session.execute(select(LicenseCost.year, LicenseCost.virtual_machine_id)).tuples().all()
+    )
+    vm_cost_rows = db_session.execute(
+        select(VmCost.year, VmCost.virtual_machine_id, VmCost.cost_eur)
+    ).all()
+
+    assert len(vm_cost_rows) == len(license_pairs)
+    assert {(year, vm_id) for year, vm_id, _ in vm_cost_rows} == license_pairs
+    assert all(cost_eur == 0 for _, _, cost_eur in vm_cost_rows)
+
+
+def test_core_load_defaults_process_schedule_time_slot_to_morning(db_session: Session) -> None:
+    _load_fixture(db_session)
+
+    time_slots = db_session.scalars(select(ProcessSchedule.time_slot)).all()
+    assert len(time_slots) == 2
+    assert all(time_slot == "morning" for time_slot in time_slots)
 
 
 def test_core_load_is_idempotent_across_repeated_ingestions(db_session: Session) -> None:

@@ -7,6 +7,7 @@ from app.models.audit import (
 from app.models.core import (
     Ams1LCost,
     Ams2LCost,
+    AmsRfcCost,
     AmsYear,
     Company,
     Department,
@@ -21,6 +22,7 @@ from app.models.core import (
     Ticket,
     ValueNormalization,
     VirtualMachine,
+    VmCost,
 )
 from app.models.item import Item
 from app.models.staging import (
@@ -44,6 +46,7 @@ from app.models.staging import (
 __all__ = [
     "Ams1LCost",
     "Ams2LCost",
+    "AmsRfcCost",
     "AmsYear",
     "Company",
     "DataQualityIssue",
@@ -77,4 +80,5 @@ __all__ = [
     "Ticket",
     "ValueNormalization",
     "VirtualMachine",
+    "VmCost",
 ]

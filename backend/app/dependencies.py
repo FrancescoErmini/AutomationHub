@@ -16,6 +16,7 @@ from app.services.operations import OperationsService
 from app.services.process_catalog import ProcessCatalogService
 from app.services.roi import RoiService
 from app.services.service_performance import ServicePerformanceService
+from app.services.simple_ops import SimpleOpsService
 
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -56,6 +57,10 @@ def get_service_performance_service(
     return ServicePerformanceService(repo)
 
 
+def get_simple_ops_service(repo: AnalyticsRepositoryDependency) -> SimpleOpsService:
+    return SimpleOpsService(repo)
+
+
 ExecutiveServiceDependency = Annotated[ExecutiveService, Depends(get_executive_service)]
 OperationsServiceDependency = Annotated[OperationsService, Depends(get_operations_service)]
 RoiServiceDependency = Annotated[RoiService, Depends(get_roi_service)]
@@ -65,6 +70,7 @@ ProcessCatalogServiceDependency = Annotated[
 ServicePerformanceServiceDependency = Annotated[
     ServicePerformanceService, Depends(get_service_performance_service)
 ]
+SimpleOpsServiceDependency = Annotated[SimpleOpsService, Depends(get_simple_ops_service)]
 
 
 def get_admin_repository(session: DbSession) -> AdminRepository:

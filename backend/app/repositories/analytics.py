@@ -15,16 +15,19 @@ from sqlalchemy.orm import Session
 from app.models.core import (
     Ams1LCost,
     Ams2LCost,
+    AmsRfcCost,
     AmsYear,
     Company,
     Department,
     LicenseCost,
     Process,
     ProcessEconomics,
+    ProcessSchedule,
     ReferenceVariable,
     RootCause,
     Ticket,
     VirtualMachine,
+    VmCost,
 )
 
 
@@ -341,3 +344,259 @@ class AnalyticsRepository:
 
     def virtual_machine_count(self) -> int:
         return self._session.scalar(select(func.count(VirtualMachine.id))) or 0
+
+    def process_count(self) -> int:
+        return self._session.scalar(select(func.count(Process.id))) or 0
+
+    def license_cost_by_year(self, years: list[int]) -> dict[int, Decimal]:
+        stmt = (
+            select(LicenseCost.year, func.coalesce(func.sum(LicenseCost.cost_year_eur), 0))
+            .where(LicenseCost.year.in_(years))
+            .group_by(LicenseCost.year)
+        )
+        return {year: Decimal(total) for year, total in self._session.execute(stmt).tuples().all()}
+
+    def licensed_vm_count_by_year(self, years: list[int]) -> dict[int, int]:
+        stmt = (
+            select(LicenseCost.year, func.count(func.distinct(LicenseCost.virtual_machine_id)))
+            .where(LicenseCost.year.in_(years))
+            .group_by(LicenseCost.year)
+        )
+        return dict(self._session.execute(stmt).tuples().all())
+
+    def vm_cost_by_year(self, years: list[int]) -> dict[int, Decimal]:
+        stmt = (
+            select(VmCost.year, func.coalesce(func.sum(VmCost.cost_eur), 0))
+            .where(VmCost.year.in_(years))
+            .group_by(VmCost.year)
+        )
+        return {year: Decimal(total) for year, total in self._session.execute(stmt).tuples().all()}
+
+    def ams_1l_by_year(self) -> list[tuple[int, Decimal, int]]:
+        stmt = (
+            select(AmsYear.year, Ams1LCost.annual_fee_eur, Ams1LCost.n_processes_baseline)
+            .join(AmsYear, AmsYear.id == Ams1LCost.ams_year_id)
+            .where(AmsYear.year.is_not(None))
+            .order_by(AmsYear.year)
+        )
+        rows = self._session.execute(stmt).tuples().all()
+        return [
+            (year, Decimal(fee), n_processes)
+            for year, fee, n_processes in rows
+            if year is not None
+        ]
+
+    def ams_2l_ticket_count_by_year(self, years: list[int]) -> dict[int, int]:
+        """2L tickets *opened* in each year, for the flat-rate (x €500) header KPI."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        stmt = (
+            select(yr.label("yr"), func.count(Ticket.id))
+            .where(Ticket.is_1l.is_(False), Ticket.start_date.is_not(None), yr.in_(years))
+            .group_by(yr)
+        )
+        return dict(self._session.execute(stmt).tuples().all())
+
+    def ams_2l_actual_cost_by_year(self, years: list[int]) -> dict[int, tuple[Decimal, int]]:
+        """Actual AMS 2L cost (sum + distinct ticket count), keyed by the *ticket's*
+        start_date year -- for the AMS 2L trend and per-process breakdown, distinct
+        from the flat-rate header KPI."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        stmt = (
+            select(
+                yr.label("yr"),
+                func.coalesce(func.sum(Ams2LCost.cost_per_ticket_eur), 0),
+                func.count(func.distinct(Ams2LCost.ticket_id)),
+            )
+            .join(Ticket, Ticket.id == Ams2LCost.ticket_id)
+            .where(Ticket.start_date.is_not(None), yr.in_(years))
+            .group_by(yr)
+        )
+        return {
+            year: (Decimal(total), count)
+            for year, total, count in self._session.execute(stmt).tuples().all()
+        }
+
+    def ams_rfc_cost_by_year(self, years: list[int]) -> dict[int, Decimal]:
+        stmt = (
+            select(AmsRfcCost.year, func.coalesce(func.sum(AmsRfcCost.cost_eur), 0))
+            .where(AmsRfcCost.year.in_(years))
+            .group_by(AmsRfcCost.year)
+        )
+        return {year: Decimal(total) for year, total in self._session.execute(stmt).tuples().all()}
+
+    def ams_rfc_count_by_year(self, years: list[int]) -> dict[int, int]:
+        stmt = (
+            select(AmsRfcCost.year, func.count(AmsRfcCost.id))
+            .where(AmsRfcCost.year.in_(years))
+            .group_by(AmsRfcCost.year)
+        )
+        return dict(self._session.execute(stmt).tuples().all())
+
+    def occupancy_heatmap(self) -> list[tuple[str, str, int]]:
+        """(VM normalized_id, time_slot, count of scheduled processes) -- inner join
+        drops schedule rows with no VM, which is fine here (nothing to plot)."""
+        stmt = (
+            select(
+                VirtualMachine.normalized_id,
+                ProcessSchedule.time_slot,
+                func.count(ProcessSchedule.id),
+            )
+            .join(VirtualMachine, VirtualMachine.id == ProcessSchedule.virtual_machine_id)
+            .group_by(VirtualMachine.normalized_id, ProcessSchedule.time_slot)
+            .order_by(VirtualMachine.normalized_id)
+        )
+        return list(self._session.execute(stmt).tuples().all())
+
+    def root_cause_and_type_breakdown(
+        self, *, is_1l: bool, year: int
+    ) -> tuple[list[tuple[str, int]], int, int]:
+        """Root-cause counts (NULL -> 'unclassified') plus Service Request vs
+        Incident counts, scoped to support level and the ticket's start_date year."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        base_filters = (Ticket.is_1l.is_(is_1l), Ticket.start_date.is_not(None), yr == year)
+
+        label = func.coalesce(RootCause.name, literal("unclassified"))
+        root_cause_stmt = (
+            select(label, func.count(Ticket.id))
+            .outerjoin(RootCause, RootCause.id == Ticket.root_cause_id)
+            .where(*base_filters)
+            .group_by(label)
+            .order_by(func.count(Ticket.id).desc())
+        )
+        root_causes = list(self._session.execute(root_cause_stmt).tuples().all())
+
+        type_stmt = select(
+            func.count(Ticket.id).filter(Ticket.ticket_type == "Service Request"),
+            func.count(Ticket.id).filter(Ticket.ticket_type != "Service Request"),
+        ).where(*base_filters)
+        sr_count, incident_count = self._session.execute(type_stmt).one()
+        return root_causes, sr_count, incident_count
+
+    def rpa_internal_root_cause_pct_inputs(self, year: int) -> tuple[int, int]:
+        """(tickets with root cause 'Problema Funzionale RPA', total non-Service-Request
+        tickets), both scoped to start_date year -- the RPA Internal Root Causes % KPI."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        base_filters = (
+            Ticket.start_date.is_not(None),
+            yr == year,
+            Ticket.ticket_type != "Service Request",
+        )
+        stmt = (
+            select(
+                func.count(Ticket.id).filter(RootCause.name == "Problema Funzionale RPA"),
+                func.count(Ticket.id),
+            )
+            .outerjoin(RootCause, RootCause.id == Ticket.root_cause_id)
+            .where(*base_filters)
+        )
+        numerator, denominator = self._session.execute(stmt).one()
+        return numerator, denominator
+
+    def backlog_aging_14d_inputs(self, year: int, as_of: date) -> tuple[int, int]:
+        """(open tickets opened in `year` and older than 14 days as of `as_of`,
+        total tickets opened in `year`) -- the Backlog Aging % KPI."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        age_days = cast(literal(as_of) - Ticket.start_date, Integer)
+        base_filters = (Ticket.start_date.is_not(None), yr == year)
+        stmt = select(
+            func.count(Ticket.id).filter(Ticket.end_date.is_(None), age_days > 14),
+            func.count(Ticket.id),
+        ).where(*base_filters)
+        numerator, denominator = self._session.execute(stmt).one()
+        return numerator, denominator
+
+    def l1_ratio_inputs_by_year(self, year: int) -> tuple[int, int]:
+        """(L1 ticket count, total ticket count), scoped to start_date year."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        stmt = select(
+            func.count(Ticket.id).filter(Ticket.is_1l.is_(True)),
+            func.count(Ticket.id),
+        ).where(Ticket.start_date.is_not(None), yr == year)
+        l1, total = self._session.execute(stmt).one()
+        return l1, total
+
+    def median_resolution_days_by_year(self, year: int) -> Decimal | None:
+        """Median resolution days (MTTR) for tickets opened in `year` and closed
+        with a valid end_date."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        days = Ticket.end_date - Ticket.start_date
+        stmt = select(func.percentile_cont(0.5).within_group(days)).where(
+            Ticket.start_date.is_not(None), Ticket.end_date.is_not(None), yr == year
+        )
+        median_days = self._session.scalar(stmt)
+        return Decimal(str(median_days)) if median_days is not None else None
+
+    def cost_breakdown_by_process(self, year: int) -> list[tuple[str, Decimal, Decimal]]:
+        """(process_name, license_share_eur, actual_2l_cost_eur) per process, for `year`.
+
+        License share = license_cost(that process's VM, year) / count of processes
+        assigned to that VM. A process is "assigned" to the VM in its first
+        process_schedule row (ordered by id) -- a process with no schedule row, or
+        whose first row has no VM, gets a €0 license share. AMS-1L's share is
+        identical for every process (annual fee / total process count) and is
+        added by the caller, not computed per-row here.
+        """
+        row_number = func.row_number().over(
+            partition_by=ProcessSchedule.process_id, order_by=ProcessSchedule.id
+        )
+        first_schedule = (
+            select(
+                ProcessSchedule.process_id.label("process_id"),
+                ProcessSchedule.virtual_machine_id.label("virtual_machine_id"),
+                row_number.label("rn"),
+            )
+        ).subquery()
+        first_schedule = (
+            select(first_schedule.c.process_id, first_schedule.c.virtual_machine_id)
+            .where(first_schedule.c.rn == 1)
+            .subquery()
+        )
+
+        vm_process_counts = (
+            select(
+                first_schedule.c.virtual_machine_id,
+                func.count().label("cnt"),
+            )
+            .where(first_schedule.c.virtual_machine_id.is_not(None))
+            .group_by(first_schedule.c.virtual_machine_id)
+            .subquery()
+        )
+
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        l2_by_process = (
+            select(
+                Ticket.process_id.label("process_id"),
+                func.coalesce(func.sum(Ams2LCost.cost_per_ticket_eur), 0).label("l2_eur"),
+            )
+            .join(Ams2LCost, Ams2LCost.ticket_id == Ticket.id)
+            .where(Ticket.start_date.is_not(None), yr == year)
+            .group_by(Ticket.process_id)
+            .subquery()
+        )
+
+        stmt = (
+            select(
+                Process.canonical_name,
+                func.coalesce(
+                    LicenseCost.cost_year_eur / vm_process_counts.c.cnt, Decimal("0")
+                ).label("license_eur"),
+                func.coalesce(l2_by_process.c.l2_eur, 0).label("l2_eur"),
+            )
+            .select_from(Process)
+            .outerjoin(first_schedule, first_schedule.c.process_id == Process.id)
+            .outerjoin(
+                vm_process_counts,
+                vm_process_counts.c.virtual_machine_id == first_schedule.c.virtual_machine_id,
+            )
+            .outerjoin(
+                LicenseCost,
+                (LicenseCost.virtual_machine_id == first_schedule.c.virtual_machine_id)
+                & (LicenseCost.year == year),
+            )
+            .outerjoin(l2_by_process, l2_by_process.c.process_id == Process.id)
+            .order_by(Process.canonical_name)
+        )
+        return [
+            (name, Decimal(license_eur), Decimal(l2_eur))
+            for name, license_eur, l2_eur in self._session.execute(stmt).tuples().all()
+        ]

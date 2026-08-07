@@ -51,6 +51,7 @@ from app.models.core import (
     Ticket,
     ValueNormalization,
     VirtualMachine,
+    VmCost,
 )
 from app.models.staging import (
     StagingAms1L,
@@ -74,6 +75,7 @@ _CORE_DELETE_ORDER: list[type[Base]] = [
     Ams2LCost,
     ProcessEconomics,
     Ams1LCost,
+    VmCost,
     LicenseCost,
     Ticket,
     Process,
@@ -182,6 +184,7 @@ def load_core_from_staging(session: Session, batch_id: int) -> CoreLoadResult:
     ams_1l_costs = _load_ams_1l_costs(session, batch_id, ams_years)
     ams_2l_costs = _load_ams_2l_costs(session, batch_id, tickets, companies)
     license_costs = _load_license_costs(session, batch_id, virtual_machines)
+    vm_costs = _load_vm_costs(session)
     process_schedules = _load_process_schedules(session, batch_id, processes, virtual_machines)
 
     session.commit()
@@ -203,6 +206,7 @@ def load_core_from_staging(session: Session, batch_id: int) -> CoreLoadResult:
             "ams_1l_cost": ams_1l_costs,
             "ams_2l_cost": ams_2l_costs,
             "license_cost": license_costs,
+            "vm_cost": vm_costs,
             "process_schedule": process_schedules,
         },
     )
@@ -756,6 +760,19 @@ def _load_license_costs(
                 cost_year_eur=normalize_decimal(raw.get("COST_YEAR")) or Decimal("0"),
             )
         )
+        count += 1
+    session.flush()
+    return count
+
+
+def _load_vm_costs(session: Session) -> int:
+    """General VM running cost has no source sheet yet -- mirror every
+    (year, VM) pair already loaded into license_cost, at cost_eur=0, so the
+    infra cost table stays populated until real opex figures exist."""
+    count = 0
+    pairs = session.execute(select(LicenseCost.year, LicenseCost.virtual_machine_id).distinct())
+    for year, virtual_machine_id in pairs:
+        session.add(VmCost(year=year, virtual_machine_id=virtual_machine_id, cost_eur=Decimal("0")))
         count += 1
     session.flush()
     return count

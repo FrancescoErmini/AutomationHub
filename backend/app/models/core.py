@@ -226,6 +226,25 @@ class LicenseCost(Base):
     virtual_machine: Mapped["VirtualMachine"] = relationship()
 
 
+class VmCost(Base):
+    """General VM running cost by year, distinct from license_cost. Mirrors
+    license_cost's (year, VM) keying; seeded at 0 until real opex figures are
+    available."""
+
+    __tablename__ = "vm_cost"
+    __table_args__ = (
+        UniqueConstraint("year", "virtual_machine_id", name="uq_vm_cost_year_vm"),
+        {"schema": SCHEMA},
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    year: Mapped[int]
+    virtual_machine_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.virtual_machine.id"))
+    cost_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+
+    virtual_machine: Mapped["VirtualMachine"] = relationship()
+
+
 class ProcessSchedule(Base):
     __tablename__ = "process_schedule"
     __table_args__ = {"schema": SCHEMA}
@@ -243,9 +262,38 @@ class ProcessSchedule(Base):
     )
     run_user: Mapped[str | None] = mapped_column(String(120), nullable=True)
     rpa_hours_month: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    # Heatmap bucket for "machine occupancy by time slot". No source column
+    # for this exists yet, so every row defaults to 'morning' until real
+    # values are back-filled per row.
+    time_slot: Mapped[str] = mapped_column(String(20), server_default="morning")
 
     process: Mapped["Process"] = relationship()
     virtual_machine: Mapped["VirtualMachine | None"] = relationship()
+
+
+class AmsRfcCost(Base):
+    """Typed promotion of the curated AMS RFC/amendment CSV -- distinct from
+    the raw, unvalidated staging.ams_rfc workbook dump. root_cause_raw is
+    kept unnormalized: some source rows carry Excel date serials instead of
+    text, not worth guessing at."""
+
+    __tablename__ = "ams_rfc_cost"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    process_id: Mapped[int | None] = mapped_column(
+        ForeignKey(f"{SCHEMA}.process.id"), nullable=True, index=True
+    )
+    rfc_ref: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    year: Mapped[int]
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    man_days: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    root_cause_raw: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    cost_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    process: Mapped["Process | None"] = relationship()
 
 
 class ValueNormalization(Base):
