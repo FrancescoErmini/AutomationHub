@@ -27,6 +27,7 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-automation_hub}:${POSTGRES_PASSWORD:-automation_hub_dev}@postgres:5432/${POSTGRES_DB:-automation_hub}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       RPA_WORKBOOK_PATH: "/workspace/data/raw/RPA - o365.xlsx"
+      APQC_WORKBOOK_PATH: "/workspace/data/raw/K07122_Life_Sciences_v722_vsLife_Sciences_v721_2025.xlsx"
     command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
     ports:
       - "${BACKEND_PORT:-8000}:8000"

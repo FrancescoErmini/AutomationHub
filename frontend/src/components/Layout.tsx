@@ -38,6 +38,9 @@ export function Layout() {
             <NavLink to="/items" className={navClass}>
               Items
             </NavLink>
+            <NavLink to="/ideas" className={navClass}>
+              Ideas
+            </NavLink>
           </nav>
         </div>
       </header>

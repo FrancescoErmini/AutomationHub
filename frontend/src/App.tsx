@@ -4,6 +4,9 @@ import { Layout } from './components/Layout'
 import { CatalogPage } from './pages/CatalogPage'
 import { ExecutivePage } from './pages/ExecutivePage'
 import { HomePage } from './pages/HomePage'
+import { IdeaDetailPage } from './pages/IdeaDetailPage'
+import { IdeaWizardPage } from './pages/IdeaWizardPage'
+import { IdeasPage } from './pages/IdeasPage'
 import { ItemsPage } from './pages/ItemsPage'
 import { OperationsPage } from './pages/OperationsPage'
 import { RoiPage } from './pages/RoiPage'
@@ -25,6 +28,9 @@ export function App() {
           path="service-performance"
           element={<ServicePerformancePage />}
         />
+        <Route path="ideas" element={<IdeasPage />} />
+        <Route path="ideas/new" element={<IdeaWizardPage />} />
+        <Route path="ideas/:id" element={<IdeaDetailPage />} />
       </Route>
     </Routes>
   )

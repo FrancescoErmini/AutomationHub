@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 from app.db.session import SessionLocal
+from app.ingestion.apqc_loader import load_apqc_taxonomy_from_workbook
 from app.ingestion.items import ingest_items_csv
 from app.ingestion.rpa_pipeline import run_rpa_ingestion
 from app.repositories.items import ItemRepository
@@ -46,6 +47,16 @@ def ingest_rpa(path: Path) -> None:
         )
 
 
+def ingest_apqc(path: Path) -> None:
+    with SessionLocal() as session:
+        summary = load_apqc_taxonomy_from_workbook(session, path)
+    print(
+        f"APQC taxonomy: categories={summary.categories}, "
+        f"process_groups={summary.process_groups}, processes={summary.processes}, "
+        f"skipped(level 4/5)={summary.skipped}"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Automation Hub data commands")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -57,14 +68,24 @@ def main() -> None:
         "ingest-rpa", help="Validate and ingest the RPA analytics workbook"
     )
     ingest_rpa_parser.add_argument("--path", type=Path, default=Path("../data/raw/RPA - o365.xlsx"))
+    ingest_apqc_parser = subparsers.add_parser(
+        "ingest-apqc", help="Validate and ingest the APQC taxonomy workbook"
+    )
+    ingest_apqc_parser.add_argument(
+        "--path",
+        type=Path,
+        default=Path("../data/raw/K07122_Life_Sciences_v722_vsLife_Sciences_v721_2025.xlsx"),
+    )
     args = parser.parse_args()
 
     if args.command == "seed":
         seed()
     elif args.command == "ingest":
         ingest(args.path, args.report_dir)
-    else:
+    elif args.command == "ingest-rpa":
         ingest_rpa(args.path)
+    else:
+        ingest_apqc(args.path)
 
 
 if __name__ == "__main__":

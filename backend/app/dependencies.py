@@ -8,9 +8,12 @@ from app.core.config import get_settings
 from app.db.session import get_db
 from app.repositories.admin import AdminRepository
 from app.repositories.analytics import AnalyticsRepository
+from app.repositories.ideas import IdeaRepository
 from app.repositories.items import ItemRepository
 from app.services.admin import AdminService
+from app.services.apqc import ApqcService
 from app.services.executive import ExecutiveService
+from app.services.ideas import IdeaService
 from app.services.items import ItemService
 from app.services.operations import OperationsService
 from app.services.process_catalog import ProcessCatalogService
@@ -71,6 +74,25 @@ ServicePerformanceServiceDependency = Annotated[
     ServicePerformanceService, Depends(get_service_performance_service)
 ]
 SimpleOpsServiceDependency = Annotated[SimpleOpsService, Depends(get_simple_ops_service)]
+
+
+def get_idea_repository(session: DbSession) -> IdeaRepository:
+    return IdeaRepository(session)
+
+
+IdeaRepositoryDependency = Annotated[IdeaRepository, Depends(get_idea_repository)]
+
+
+def get_apqc_service(repo: IdeaRepositoryDependency) -> ApqcService:
+    return ApqcService(repo)
+
+
+def get_idea_service(repo: IdeaRepositoryDependency) -> IdeaService:
+    return IdeaService(repo)
+
+
+ApqcServiceDependency = Annotated[ApqcService, Depends(get_apqc_service)]
+IdeaServiceDependency = Annotated[IdeaService, Depends(get_idea_service)]
 
 
 def get_admin_repository(session: DbSession) -> AdminRepository:

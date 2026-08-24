@@ -98,6 +98,18 @@ class VirtualMachine(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Application(Base):
+    """A system/application used by one or more processes, sourced from
+    PIPELINE's SYSTEM column (e.g. SAP, AS400, Archiflow)."""
+
+    __tablename__ = "application"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Process(Base):
     __tablename__ = "process"
     __table_args__ = {"schema": SCHEMA}
@@ -123,6 +135,28 @@ class Process(Base):
     department: Mapped["Department | None"] = relationship()
     company: Mapped["Company | None"] = relationship()
     ams_year: Mapped["AmsYear | None"] = relationship()
+    applications: Mapped[list["Application"]] = relationship(
+        secondary=f"{SCHEMA}.process_application", viewonly=True, order_by="Application.name"
+    )
+
+
+class ProcessApplication(Base):
+    """Link between a process and one application it uses. A process's SYSTEM
+    value in PIPELINE is often multi-valued (e.g. "SAP\\nAS400"), hence the
+    many-to-many rather than a single FK on process."""
+
+    __tablename__ = "process_application"
+    __table_args__ = (
+        UniqueConstraint("process_id", "application_id", name="uq_process_application"),
+        {"schema": SCHEMA},
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    process_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.process.id"), index=True)
+    application_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.application.id"), index=True)
+
+    process: Mapped["Process"] = relationship()
+    application: Mapped["Application"] = relationship()
 
 
 class Ticket(Base):
@@ -264,8 +298,14 @@ class ProcessSchedule(Base):
     rpa_hours_month: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     # Heatmap bucket for "machine occupancy by time slot". No source column
     # for this exists yet, so every row defaults to 'morning' until real
-    # values are back-filled per row.
-    time_slot: Mapped[str] = mapped_column(String(20), server_default="morning")
+    # # values are back-filled per row.
+    # 'night', label: '00-04', count: 0, intensity: 0 },
+    #       { slot: 'early_morning', label: '04-08', count: 0, intensity: 0 },
+    #       { slot: 'morning', label: '08-12', count: 51, intensity: 100 },
+    #       { slot: 'afternoon', label: '12-16', count: 0, intensity: 0 },
+    #       { slot: 'evening', label: '16-20', count: 0, intensity: 0 },
+    #       { slot: 'late_evening label: '20-24', count: 0, intensity: 0
+    time_slot: Mapped[str] = mapped_column(String(20))
 
     process: Mapped["Process"] = relationship()
     virtual_machine: Mapped["VirtualMachine | None"] = relationship()
@@ -294,6 +334,115 @@ class AmsRfcCost(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     process: Mapped["Process | None"] = relationship()
+
+
+class ApqcCategory(Base):
+    """APQC PCF Life Sciences taxonomy, level 1 (e.g. Hierarchy ID '1.0')."""
+
+    __tablename__ = "apqc_category"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    pcf_id: Mapped[int] = mapped_column(unique=True, index=True)
+    hierarchy_id: Mapped[str] = mapped_column(String(20), unique=True)
+    name: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True)
+
+
+class ApqcProcessGroup(Base):
+    """APQC PCF taxonomy, level 2 (e.g. Hierarchy ID '1.1')."""
+
+    __tablename__ = "apqc_process_group"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    pcf_id: Mapped[int] = mapped_column(unique=True, index=True)
+    hierarchy_id: Mapped[str] = mapped_column(String(20), unique=True)
+    name: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    category_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.apqc_category.id"), index=True)
+
+    category: Mapped["ApqcCategory"] = relationship()
+
+
+class ApqcProcess(Base):
+    """APQC PCF taxonomy, level 3 (e.g. Hierarchy ID '1.1.1')."""
+
+    __tablename__ = "apqc_process"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    pcf_id: Mapped[int] = mapped_column(unique=True, index=True)
+    hierarchy_id: Mapped[str] = mapped_column(String(20), unique=True)
+    name: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    process_group_id: Mapped[int] = mapped_column(
+        ForeignKey(f"{SCHEMA}.apqc_process_group.id"), index=True
+    )
+
+    process_group: Mapped["ApqcProcessGroup"] = relationship()
+
+
+class Idea(Base):
+    """A submitted automation candidate: wizard inputs plus computed scoring
+    engine outputs (ROI, feasibility, technology category, classification)."""
+
+    __tablename__ = "idea"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(300))
+    submitter_name: Mapped[str] = mapped_column(String(200))
+    apqc_process_id: Mapped[int] = mapped_column(
+        ForeignKey(f"{SCHEMA}.apqc_process.id"), index=True
+    )
+
+    # Step 3 -- Process Overview & Business Goals
+    primary_goal: Mapped[str] = mapped_column(String(60))
+    process_stability: Mapped[str] = mapped_column(String(60))
+    system_stability: Mapped[str] = mapped_column(String(60))
+
+    # Step 4 -- Volumetry & Human Effort
+    task_frequency: Mapped[str] = mapped_column(String(20))
+    transaction_volume: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    headcount_fte: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    avg_time_per_task_minutes: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    error_rate_pct: Mapped[Decimal] = mapped_column(Numeric(6, 3))
+    avg_rework_time_minutes: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    audit_rate_pct: Mapped[Decimal] = mapped_column(Numeric(6, 3))
+    avg_loaded_fte_cost_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+
+    # Step 5 -- Complexity & Standardisation
+    number_of_steps: Mapped[str] = mapped_column(String(20))
+    decision_logic: Mapped[str] = mapped_column(String(60))
+    process_variations: Mapped[str] = mapped_column(String(30))
+
+    # Step 6 -- Systems & Environment
+    primary_input_format: Mapped[str] = mapped_column(String(60))
+    number_of_systems: Mapped[str] = mapped_column(String(10))
+    system_interface: Mapped[str] = mapped_column(String(60))
+
+    # Step 7 -- AI Assessment
+    unstructured_data: Mapped[str] = mapped_column(String(60))
+    cognitive_reasoning: Mapped[str] = mapped_column(String(60))
+    computer_vision: Mapped[str] = mapped_column(String(60))
+    ai_output_risk: Mapped[str] = mapped_column(String(60))
+
+    # Scoring engine outputs, computed server-side on submit
+    annual_transactions: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    base_hours: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    rework_hours: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    total_hours_saved: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    gross_roi_eur: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    feasibility_score: Mapped[int]
+    feasibility_band: Mapped[str] = mapped_column(String(10))
+    technology_category: Mapped[str] = mapped_column(String(60))
+    final_classification: Mapped[str] = mapped_column(String(60))
+
+    status: Mapped[str] = mapped_column(String(20), default="Submitted")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    apqc_process: Mapped["ApqcProcess"] = relationship()
 
 
 class ValueNormalization(Base):

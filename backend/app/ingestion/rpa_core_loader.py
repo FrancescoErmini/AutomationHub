@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.db.base import Base
 from app.ingestion.normalization import (
+    AMS_YEAR_CALENDAR_YEAR,
     NormalizedValue,
     ams_year_ordinal,
     normalize_ams_year,
@@ -32,17 +33,21 @@ from app.ingestion.normalization import (
     normalize_text_key,
     normalize_vm_id,
     process_matching_key,
+    split_applications,
 )
 from app.models.audit import DataQualityIssue
 from app.models.core import (
     Ams1LCost,
     Ams2LCost,
+    AmsRfcCost,
     AmsYear,
+    Application,
     Company,
     Department,
     LicenseCost,
     Priority,
     Process,
+    ProcessApplication,
     ProcessEconomics,
     ProcessSchedule,
     ReferenceVariable,
@@ -69,8 +74,12 @@ from app.models.staging import (
 
 _T = TypeVar("_T", bound=StagingRowMixin)
 
-# Children before parents.
+# Children before parents. AmsRfcCost is populated by the separate AMS RFC
+# CSV loader, not this workbook pipeline, but it FKs to core.process so it
+# must still be cleared before core.process is, or a full rebuild fails with
+# a foreign key violation once any AMS RFC costs exist.
 _CORE_DELETE_ORDER: list[type[Base]] = [
+    ProcessApplication,
     ProcessSchedule,
     Ams2LCost,
     ProcessEconomics,
@@ -78,7 +87,9 @@ _CORE_DELETE_ORDER: list[type[Base]] = [
     VmCost,
     LicenseCost,
     Ticket,
+    AmsRfcCost,
     Process,
+    Application,
     VirtualMachine,
     AmsYear,
     SupportLevel,
@@ -176,7 +187,9 @@ def load_core_from_staging(session: Session, batch_id: int) -> CoreLoadResult:
     support_levels = _load_support_levels(session)
     ams_years = _load_ams_years(session, batch_id)
     virtual_machines = _load_virtual_machines(session, batch_id)
+    applications = _load_applications(session, batch_id)
     processes = _load_processes(session, batch_id, departments, companies, ams_years)
+    process_applications = _load_process_applications(session, batch_id, processes, applications)
     tickets = _load_tickets(
         session, batch_id, processes, companies, root_causes, priorities, ams_years, support_levels
     )
@@ -200,7 +213,9 @@ def load_core_from_staging(session: Session, batch_id: int) -> CoreLoadResult:
             "support_level": len(support_levels),
             "ams_year": len(ams_years),
             "virtual_machine": len(virtual_machines),
+            "application": len(applications),
             "process": len(processes),
+            "process_application": process_applications,
             "ticket": len(tickets),
             "process_economics": process_economics,
             "ams_1l_cost": ams_1l_costs,
@@ -390,7 +405,9 @@ def _load_ams_years(session: Session, batch_id: int) -> dict[str, AmsYear]:
             )
             if result.normalized not in ams_years:
                 ams_year = AmsYear(
-                    code=result.normalized, ordinal=ams_year_ordinal(result.normalized)
+                    code=result.normalized,
+                    ordinal=ams_year_ordinal(result.normalized),
+                    year=AMS_YEAR_CALENDAR_YEAR.get(result.normalized),
                 )
                 session.add(ams_year)
                 ams_years[result.normalized] = ams_year
@@ -425,6 +442,59 @@ def _load_virtual_machines(session: Session, batch_id: int) -> dict[str, Virtual
                 machines[result.normalized] = machine
     session.flush()
     return machines
+
+
+def _load_applications(session: Session, batch_id: int) -> dict[str, Application]:
+    applications: dict[str, Application] = {}
+    for row in _valid_rows(session, StagingPipeline, batch_id):
+        raw = row.raw_row.get("SYSTEM")
+        if _is_blank(raw):
+            continue
+        for result in split_applications(str(raw)):
+            _log_normalization(
+                session,
+                batch_id,
+                entity="application",
+                source_sheet=row.source_sheet,
+                source_row_number=row.source_row_number,
+                value=result,
+            )
+            if result.normalized not in applications:
+                application = Application(name=result.normalized)
+                session.add(application)
+                applications[result.normalized] = application
+    session.flush()
+    return applications
+
+
+def _load_process_applications(
+    session: Session,
+    batch_id: int,
+    processes: dict[str, Process],
+    applications: dict[str, Application],
+) -> int:
+    count = 0
+    seen: set[tuple[int, int]] = set()
+    for row in _valid_rows(session, StagingPipeline, batch_id):
+        raw = row.raw_row
+        system_raw = raw.get("SYSTEM")
+        if _is_blank(system_raw):
+            continue
+        process = processes.get(process_matching_key(str(raw["PID"])))
+        if process is None:
+            continue
+        for result in split_applications(str(system_raw)):
+            application = applications.get(result.normalized)
+            if application is None:
+                continue
+            key = (process.id, application.id)
+            if key in seen:
+                continue
+            seen.add(key)
+            session.add(ProcessApplication(process_id=process.id, application_id=application.id))
+            count += 1
+    session.flush()
+    return count
 
 
 def _load_processes(

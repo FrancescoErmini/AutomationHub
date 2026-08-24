@@ -12,11 +12,13 @@ from app.models.core import (
     Ams1LCost,
     Ams2LCost,
     AmsYear,
+    Application,
     Company,
     Department,
     LicenseCost,
     Priority,
     Process,
+    ProcessApplication,
     ProcessEconomics,
     ProcessSchedule,
     ReferenceVariable,
@@ -55,7 +57,18 @@ def test_core_load_populates_dimension_tables_from_the_fixture(db_session: Sessi
     assert _count(db_session, SupportLevel) == 2
     assert _count(db_session, AmsYear) == 2
     assert _count(db_session, VirtualMachine) == 2
+    assert _count(db_session, Application) == 4
     assert _count(db_session, Process) == 5
+
+
+def test_core_load_sets_ams_year_calendar_year(db_session: Session) -> None:
+    """AmsYear.year drives every year-keyed trend chart (running cost,
+    license cost, infra, AMS 1L/2L) -- it must be set on every load, not just
+    once by row id, since a full rebuild reissues AmsYear ids."""
+    _load_fixture(db_session)
+
+    years_by_code = dict(db_session.execute(select(AmsYear.code, AmsYear.year)).tuples().all())
+    assert years_by_code == {"1st": 2024, "2nd": 2025}
 
 
 def test_core_load_deduplicates_tickets_and_logs_the_duplicate(db_session: Session) -> None:
@@ -136,6 +149,29 @@ def test_core_load_defaults_process_schedule_time_slot_to_morning(db_session: Se
     time_slots = db_session.scalars(select(ProcessSchedule.time_slot)).all()
     assert len(time_slots) == 2
     assert all(time_slot == "morning" for time_slot in time_slots)
+
+
+def test_core_load_splits_multi_valued_system_column_into_applications(
+    db_session: Session,
+) -> None:
+    _load_fixture(db_session)
+
+    # SAP (Alpha + Beta), AS400 (Beta), Gmail + excel (Gamma, case-insensitive
+    # dedupe within the cell against "Excel") -- Delta has a blank SYSTEM and
+    # links to nothing.
+    names = set(db_session.scalars(select(Application.name)))
+    assert names == {"SAP", "AS400", "Gmail", "excel"}
+
+    alpha = db_session.scalar(select(Process).where(Process.canonical_name == "RPA - Test Alpha"))
+    beta = db_session.scalar(select(Process).where(Process.canonical_name == "RPA - Test Beta"))
+    delta = db_session.scalar(select(Process).where(Process.canonical_name == "RPA - Test Delta"))
+    assert alpha is not None and beta is not None and delta is not None
+
+    assert {app.name for app in alpha.applications} == {"SAP"}
+    assert {app.name for app in beta.applications} == {"SAP", "AS400"}
+    assert delta.applications == []
+
+    assert _count(db_session, ProcessApplication) == 5
 
 
 def test_core_load_is_idempotent_across_repeated_ingestions(db_session: Session) -> None:

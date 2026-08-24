@@ -13,6 +13,9 @@ from decimal import Decimal, InvalidOperation
 
 _WHITESPACE_RE = re.compile(r"\s+")
 _VM_PREFIX_RE = re.compile(r"^MCD(WIN|LNX)", re.IGNORECASE)
+# PIPELINE's SYSTEM cell is often multi-valued, delimited by a newline
+# ("SAP\nAS400") or a comma ("Gmail, Excel") -- both are split on.
+_APPLICATION_SPLIT_RE = re.compile(r"[\n,]+")
 
 AMS_YEAR_LOOKUP: dict[str, tuple[str, int]] = {
     "i": ("1st", 1),
@@ -22,6 +25,13 @@ AMS_YEAR_LOOKUP: dict[str, tuple[str, int]] = {
     "2nd": ("2nd", 2),
     "3rd": ("3rd", 3),
 }
+
+# The AMS contract's ordinal year (1st/2nd/3rd) isn't itself a calendar year
+# anywhere in the workbook -- this fixes it to the program's actual contract
+# start (AMS year 1 = 2024), matching the values previously seeded by hand in
+# migration 20260806_0008. Keyed by the stable normalized code, not a row id,
+# so it survives a full ingestion rebuild (which reissues AmsYear row ids).
+AMS_YEAR_CALENDAR_YEAR: dict[str, int] = {"1st": 2024, "2nd": 2025, "3rd": 2026}
 
 # Enumerable alias table for the two group-level companies that actually
 # appear in the core-bound sheets (TICKETS, PIPELINE, AMS 2L). Finer legal
@@ -61,6 +71,27 @@ def normalize_vm_id(raw: str) -> NormalizedValue:
     return NormalizedValue(
         original=raw, normalized=normalized, method=method, confidence=Decimal("1.0")
     )
+
+
+def split_applications(raw: str) -> list[NormalizedValue]:
+    """Split a SYSTEM cell into its individual application names, trimming
+    and collapsing whitespace on each piece and dropping case-insensitive
+    duplicates within the cell (first spelling wins)."""
+    seen: set[str] = set()
+    results: list[NormalizedValue] = []
+    for piece in _APPLICATION_SPLIT_RE.split(raw):
+        cleaned = _WHITESPACE_RE.sub(" ", piece).strip()
+        if not cleaned:
+            continue
+        key = cleaned.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        method = "identity" if cleaned == raw else "split_multi_value"
+        results.append(
+            NormalizedValue(original=raw, normalized=cleaned, method=method, confidence=Decimal("1.0"))
+        )
+    return results
 
 
 def normalize_ams_year(raw: str) -> NormalizedValue | None:

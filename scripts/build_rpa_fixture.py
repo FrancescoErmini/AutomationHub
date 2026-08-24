@@ -36,7 +36,9 @@ sheet(
 )
 
 # PIPELINE: enrichment. "RPA - Test Beta " (trailing space) and " rpa - test gamma"
-# (leading space + lowercase) exercise trim+casefold matching.
+# (leading space + lowercase) exercise trim+casefold matching. SYSTEM exercises
+# a single application, a newline-delimited pair, a comma-delimited pair
+# sharing "Excel" with the newline row (case-insensitive dedupe), and blank.
 sheet(
     "PIPELINE",
     [
@@ -48,12 +50,13 @@ sheet(
         "Customer Company",
         "AMS Year",
         "Go-Live date",
+        "SYSTEM",
     ],
     [
-        ["RPA - Test Alpha", "Alpha description", "Finance", "In production", "Menarini", "Menarini", "1st", "1/6/2021"],
-        ["RPA - Test Beta ", "Beta description", "Supply Chain", "In production", "Codifi", "Codifi", "1st", "3/9/2021"],
-        [" rpa - test gamma", "Gamma description", "Finance", "In development", "Menarini", "Menarini", "2nd", "5/1/2022"],
-        ["RPA - Test Delta", "Delta description", "Customer Service", "In production", "Codifi", "Codifi", "2nd", "9/3/2022"],
+        ["RPA - Test Alpha", "Alpha description", "Finance", "In production", "Menarini", "Menarini", "1st", "1/6/2021", "SAP"],
+        ["RPA - Test Beta ", "Beta description", "Supply Chain", "In production", "Codifi", "Codifi", "1st", "3/9/2021", "SAP\nAS400"],
+        [" rpa - test gamma", "Gamma description", "Finance", "In development", "Menarini", "Menarini", "2nd", "5/1/2022", "Gmail, excel"],
+        ["RPA - Test Delta", "Delta description", "Customer Service", "In production", "Codifi", "Codifi", "2nd", "9/3/2022", None],
     ],
 )
 
