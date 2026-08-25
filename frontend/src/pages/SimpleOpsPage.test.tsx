@@ -153,12 +153,14 @@ describe('SimpleOpsPage', () => {
     mockRoutes()
     renderWithQueryClient(<SimpleOpsPage />)
 
-    expect(await screen.findByText('Operation Dashboard')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Operations Dashboard'),
+    ).toBeInTheDocument()
     expect(await screen.findByText('AMS 1L')).toBeInTheDocument()
     expect(await screen.findByText('Change Request')).toBeInTheDocument()
-    // "Infrastruttura" also labels the existing standalone infra panel's
+    // "Infrastructure" also labels the existing standalone infra panel's
     // heading, so the new KPI card makes this text appear twice.
-    expect(await screen.findAllByText('Infrastruttura')).toHaveLength(2)
+    expect(await screen.findAllByText('Infrastructure')).toHaveLength(2)
   })
 
   it('renders the running cost trend and cost breakdown sections', async () => {
@@ -166,10 +168,10 @@ describe('SimpleOpsPage', () => {
     renderWithQueryClient(<SimpleOpsPage />)
 
     expect(
-      await screen.findByText('Andamento costo running totale'),
+      await screen.findByText('Total running cost trend'),
     ).toBeInTheDocument()
     expect(
-      await screen.findByText('Scomposizione costo per processo'),
+      await screen.findByText('Cost breakdown by process'),
     ).toBeInTheDocument()
     expect(await screen.findByText('RPA - Sauron')).toBeInTheDocument()
   })

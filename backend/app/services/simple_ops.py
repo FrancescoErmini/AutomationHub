@@ -357,7 +357,7 @@ class SimpleOpsService:
                     "Median Resolution Time (MTTR)",
                     value,
                     "days",
-                    "Target < 1 giorno",
+                    "Target < 1 day",
                     _status_for(value, "<", 1.0),
                 )
             )
@@ -368,7 +368,7 @@ class SimpleOpsService:
                     "Median Resolution Time (MTTR)",
                     None,
                     "days",
-                    "Target < 1 giorno",
+                    "Target < 1 day",
                     "unavailable",
                 )
             )

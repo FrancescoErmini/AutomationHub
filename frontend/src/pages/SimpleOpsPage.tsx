@@ -39,7 +39,7 @@ function metricNumber(map: MetricMap | undefined, key: string): number | null {
 function formatDelta(value: number | null): string | null {
   if (value === null) return null
   const sign = value >= 0 ? '+' : ''
-  return `${sign}${value.toFixed(0)}% vs anno precedente`
+  return `${sign}${value.toFixed(0)}% vs last year`
 }
 
 interface TrendPointXY extends RunningCostTrendPoint {
@@ -94,7 +94,7 @@ function KpiCard({ label, value, unit, subtitle, spot, hero }: KpiCardProps) {
     <div className={`kpi${hero ? ' kpi-hero' : ''}`}>
       <p className="kpi-label">{label}</p>
       <p className="kpi-num">
-        {value === null ? 'N/D' : formatValue(value, unit)}
+        {value === null ? 'N/A' : formatValue(value, unit)}
       </p>
       {subtitle && (
         <p className={`kpi-delta${spot ? ' spot' : ''}`}>{subtitle}</p>
@@ -190,12 +190,12 @@ export function SimpleOpsPage() {
       <div className="opt-wrap">
         <div className="sheet">
           <span className="dash-kicker">RPA Program · Running Cost</span>
-          <h1 className="dash-h1">Operation Dashboard</h1>
+          <h1 className="dash-h1">Operations Dashboard</h1>
           <p className="dash-sub">
-            Costi di esercizio della piattaforma RPA e qualità servizio AMS:
-            licenze Blue Prism, supporto AMS (1L), ticket di supporto
-            specialistico (2L), infrastruttura e change request. Anno di
-            riferimento {CURRENT_YEAR}, dati da PostgreSQL.
+            Running costs for the RPA platform and AMS service quality: Blue
+            Prism licences, AMS support (1L), specialist support tickets
+            (2L), infrastructure, and change requests. Reference year{' '}
+            {CURRENT_YEAR}, data from PostgreSQL.
           </p>
           <hr className="rh" />
 
@@ -208,12 +208,12 @@ export function SimpleOpsPage() {
             <div className="kpi-row">
               <KpiCard
                 hero
-                label={`Costo running totale ${CURRENT_YEAR}`}
+                label={`Total running cost ${CURRENT_YEAR}`}
                 value={metricNumber(kpis.data, 'kpi_total_running_cost_eur')}
                 unit="eur"
                 subtitle={[
                   metricNumber(kpis.data, 'kpi_process_count') !== null
-                    ? `su ${metricNumber(kpis.data, 'kpi_process_count')} processi`
+                    ? `across ${metricNumber(kpis.data, 'kpi_process_count')} processes`
                     : null,
                   formatDelta(
                     metricNumber(kpis.data, 'kpi_total_running_cost_delta_pct'),
@@ -224,23 +224,23 @@ export function SimpleOpsPage() {
               />
               <KpiCard
                 hero
-                label="Costo running medio / processo"
+                label="Average running cost / process"
                 value={metricNumber(kpis.data, 'kpi_avg_cost_per_process_eur')}
                 unit="eur"
-                subtitle="licenza + AMS + 2L + infra"
+                subtitle="licence + AMS + 2L + infra"
               />
               <KpiCard
-                label="Licenze Blue Prism"
+                label="Blue Prism licences"
                 value={metricNumber(kpis.data, 'kpi_license_cost_eur')}
                 unit="eur"
                 subtitle={
                   metricNumber(kpis.data, 'kpi_licensed_vm_count') !== null
-                    ? `${metricNumber(kpis.data, 'kpi_licensed_vm_count')} macchine (VM) licenziate`
+                    ? `${metricNumber(kpis.data, 'kpi_licensed_vm_count')} licensed VMs`
                     : null
                 }
               />
               <KpiCard
-                label="Infrastruttura"
+                label="Infrastructure"
                 value={metricNumber(kpis.data, 'kpi_infrastructure_cost_eur')}
                 unit="eur"
                 spot
@@ -258,7 +258,7 @@ export function SimpleOpsPage() {
                 )}
               />
               <KpiCard
-                label="Ticket 2L"
+                label="2L tickets"
                 value={metricNumber(kpis.data, 'kpi_ticket_2l_cost_eur')}
                 unit="eur"
                 spot
@@ -267,7 +267,7 @@ export function SimpleOpsPage() {
                     metricNumber(kpis.data, 'kpi_ticket_2l_cost_delta_pct'),
                   ),
                   metricNumber(kpis.data, 'kpi_ticket_2l_count') !== null
-                    ? `${metricNumber(kpis.data, 'kpi_ticket_2l_count')} ticket gestiti`
+                    ? `${metricNumber(kpis.data, 'kpi_ticket_2l_count')} tickets handled`
                     : null,
                 ]
                   .filter(Boolean)
@@ -279,7 +279,7 @@ export function SimpleOpsPage() {
                 unit="eur"
                 subtitle={
                   metricNumber(kpis.data, 'kpi_change_request_count') !== null
-                    ? `${metricNumber(kpis.data, 'kpi_change_request_count')} RFC AMS gestite`
+                    ? `${metricNumber(kpis.data, 'kpi_change_request_count')} AMS RFCs handled`
                     : null
                 }
               />
@@ -292,12 +292,12 @@ export function SimpleOpsPage() {
                 className="h2-dot"
                 style={{ background: 'var(--color-neutral-700)' }}
               />
-              Andamento costo running totale
+              Total running cost trend
             </h2>
             <p className="note">
-              Somma licenze + infrastruttura + AMS 1L + ticket 2L (tariffa
-              flat) + change request per anno. L&apos;ultimo anno è una stima
-              lineare basata sulla crescita del numero di processi in AMS.
+              Sum of licences + infrastructure + AMS 1L + 2L tickets (flat
+              rate) + change requests per year. The final year is a linear
+              estimate based on AMS process-count growth.
             </p>
             <AsyncSection
               isPending={runningCostTrend.isPending}
@@ -393,13 +393,13 @@ export function SimpleOpsPage() {
                       .map(
                         (p) =>
                           formatValue(p.total_eur, 'eur') +
-                          (p.estimate ? ` (${p.year}, stima*)` : ''),
+                          (p.estimate ? ` (${p.year}, estimate*)` : ''),
                       )
                       .join(' → ')}
                   </p>
                 </>
               ) : (
-                <p className="kpi-delta">Dati insufficienti per il trend.</p>
+                <p className="kpi-delta">Not enough data for the trend.</p>
               )}
             </AsyncSection>
           </section>
@@ -412,11 +412,10 @@ export function SimpleOpsPage() {
                     className="h2-dot"
                     style={{ background: 'var(--color-accent-500)' }}
                   />
-                  Licenze Blue Prism
+                  Blue Prism licences
                 </h2>
                 <p className="note">
-                  Canone annuale per macchina virtuale licenziata, sommato per
-                  anno.
+                  Annual fee per licensed virtual machine, summed by year.
                 </p>
                 <AsyncSection
                   isPending={licenseCostTrend.isPending}
@@ -447,7 +446,7 @@ export function SimpleOpsPage() {
                 </AsyncSection>
                 <div className="sub-block">
                   <p className="kpi-label" style={{ marginBottom: 4 }}>
-                    Occupazione macchine per fascia oraria
+                    Machine occupancy by time slot
                   </p>
                   <AsyncSection
                     isPending={heatmap.isPending}
@@ -470,7 +469,7 @@ export function SimpleOpsPage() {
                               <div
                                 className="heat-cell"
                                 key={`${row.vm}-${cell.slot}`}
-                                title={`${cell.count} processi`}
+                                title={`${cell.count} processes`}
                                 style={{
                                   background:
                                     cell.count > 0
@@ -489,7 +488,7 @@ export function SimpleOpsPage() {
                       </div>
                     ) : (
                       <p className="kpi-delta">
-                        Nessun dato di schedulazione disponibile.
+                        No scheduling data available.
                       </p>
                     )}
                   </AsyncSection>
@@ -501,9 +500,9 @@ export function SimpleOpsPage() {
                     className="h2-dot"
                     style={{ background: 'var(--color-accent-2-500)' }}
                   />
-                  Infrastruttura
+                  Infrastructure
                 </h2>
-                <p className="note">Opex annuo di VM e database.</p>
+                <p className="note">Annual opex for VMs and databases.</p>
                 <AsyncSection
                   isPending={infrastructure.isPending}
                   isError={infrastructure.isError}
@@ -532,13 +531,13 @@ export function SimpleOpsPage() {
                       className="tbd"
                       style={{ borderColor: 'var(--color-accent-2-300)' }}
                     >
-                      Dati opex indicativi (€0) — in attesa di conferma dal team
-                      infrastruttura.
+                      Indicative opex data (€0) — awaiting confirmation from
+                      the infrastructure team.
                     </div>
                   )}
                   <div className="sub-block">
                     <p className="stat-line">
-                      <span>Numero VM</span>
+                      <span>VM count</span>
                       <span
                         className="v"
                         style={{ color: 'var(--color-accent-2-700)' }}
@@ -547,7 +546,7 @@ export function SimpleOpsPage() {
                       </span>
                     </p>
                     <p className="stat-line" style={{ borderBottom: 'none' }}>
-                      <span>Numero database</span>
+                      <span>Database count</span>
                       <span
                         className="v"
                         style={{ color: 'var(--color-accent-2-700)' }}
@@ -570,9 +569,9 @@ export function SimpleOpsPage() {
               AMS 1L &amp; AMS 2L
             </h2>
             <p className="note">
-              AMS 1L: canone annuale a baseline processi. AMS 2L: costo
-              effettivo per ticket (variabile, distinto dalla tariffa flat usata
-              nel KPI di testata).
+              AMS 1L: annual fee based on the baseline process count. AMS 2L:
+              actual cost per ticket (variable, distinct from the flat rate
+              used in the header KPI).
             </p>
             <AsyncSection
               isPending={amsTrend.isPending}
@@ -586,7 +585,7 @@ export function SimpleOpsPage() {
                   {(amsTrend.data?.l1 ?? []).map((point) => (
                     <div className="bar-row" key={point.year}>
                       <div className="lbl">
-                        {point.year} — {point.process_count} proc.
+                        {point.year} — {point.process_count} procs.
                       </div>
                       <div className="bar-track">
                         <div
@@ -607,7 +606,7 @@ export function SimpleOpsPage() {
                   {(amsTrend.data?.l2 ?? []).map((point) => (
                     <div className="bar-row" key={point.year}>
                       <div className="lbl">
-                        {point.year} — {point.ticket_count} ticket
+                        {point.year} — {point.ticket_count} tickets
                       </div>
                       <div className="bar-track">
                         <div
@@ -634,20 +633,20 @@ export function SimpleOpsPage() {
                 className="h2-dot"
                 style={{ background: 'var(--color-accent-700)' }}
               />
-              Qualità operativa — SLA e stato KPI
+              Operational quality — SLA and KPI status
             </h2>
             <p className="note">
-              Indicatori di salute del programma RPA per l&apos;anno{' '}
-              {CURRENT_YEAR}, con soglie Verde / Giallo / Rosso.
+              Health indicators for the RPA program for {CURRENT_YEAR}, with
+              Green / Amber / Red thresholds.
             </p>
             <div className="range-row">
               <span className="kpi-label" style={{ margin: 0 }}>
-                Periodo
+                Period
               </span>
               <div
                 className="seg"
                 role="radiogroup"
-                aria-label="Intervallo temporale"
+                aria-label="Time range"
               >
                 <label className="seg-opt">
                   <input
@@ -656,7 +655,7 @@ export function SimpleOpsPage() {
                     defaultChecked
                     readOnly
                   />
-                  Anno corrente
+                  Current year
                 </label>
               </div>
             </div>
@@ -683,7 +682,7 @@ export function SimpleOpsPage() {
                     >
                       {card.available
                         ? formatValue(card.value as number, card.unit)
-                        : 'N/D'}
+                        : 'N/A'}
                     </div>
                     <div className="card-meta">
                       <span
@@ -706,9 +705,8 @@ export function SimpleOpsPage() {
               Root cause &amp; Service Request vs Incident — 1L / 2L
             </h2>
             <p className="note">
-              Composizione delle richieste gestite da 1L e 2L: causa radice (top
-              4 + Altro) e quota Service Request vs Incident, anno{' '}
-              {CURRENT_YEAR}.
+              Breakdown of requests handled by 1L and 2L: root cause (top 4 +
+              Other) and Service Request vs. Incident share, {CURRENT_YEAR}.
             </p>
             <AsyncSection
               isPending={qualityBreakdown.isPending}
@@ -729,7 +727,7 @@ export function SimpleOpsPage() {
                         <p className="l1l2-head">{level.toUpperCase()}</p>
                         {donut.total_tickets === 0 ? (
                           <p className="kpi-delta">
-                            Nessun ticket per l&apos;anno selezionato.
+                            No tickets for the selected year.
                           </p>
                         ) : (
                           <div className="donut-row">
@@ -826,20 +824,19 @@ export function SimpleOpsPage() {
           </section>
 
           <section className="blk">
-            <h2>Scomposizione costo per processo</h2>
+            <h2>Cost breakdown by process</h2>
             <p className="note">
-              Licenza (quota per VM) + infrastruttura (quota per VM) + AMS 1L
-              (quota uniforme / processo) + 2L (costo effettivo), anno{' '}
-              {CURRENT_YEAR}.
+              Licence (per-VM share) + infrastructure (per-VM share) + AMS 1L
+              (even share / process) + 2L (actual cost), {CURRENT_YEAR}.
             </p>
             <div className="legend">
               <span>
                 <i className="seg-license" />
-                Licenza (quota)
+                Licence (share)
               </span>
               <span>
                 <i className="seg-infra" />
-                Infrastruttura (quota)
+                Infrastructure (share)
               </span>
               <span>
                 <i className="seg-ams" />
@@ -847,7 +844,7 @@ export function SimpleOpsPage() {
               </span>
               <span>
                 <i className="seg-2l" />
-                Ticket 2L
+                2L tickets
               </span>
             </div>
             <AsyncSection
@@ -900,10 +897,10 @@ export function SimpleOpsPage() {
                     disabled={processPage === 0}
                     onClick={() => setProcessPage((p) => Math.max(0, p - 1))}
                   >
-                    ← Precedente
+                    ← Previous
                   </button>
                   <span className="pager-status">
-                    Pagina {processPage + 1} di {totalPages}
+                    Page {processPage + 1} of {totalPages}
                   </span>
                   <button
                     type="button"
@@ -913,7 +910,7 @@ export function SimpleOpsPage() {
                       setProcessPage((p) => Math.min(totalPages - 1, p + 1))
                     }
                   >
-                    Successiva →
+                    Next →
                   </button>
                 </div>
               )}
@@ -921,9 +918,9 @@ export function SimpleOpsPage() {
           </section>
 
           <footer className="dnote">
-            Dati da PostgreSQL (schema core). Infrastruttura in attesa di
-            conferma opex; heatmap occupazione degenere finché le fasce orarie
-            reali non sono valorizzate per processo.
+            Data from PostgreSQL (core schema). Infrastructure opex is
+            awaiting confirmation; the occupancy heatmap is degenerate until
+            real time slots are populated per process.
           </footer>
         </div>
       </div>

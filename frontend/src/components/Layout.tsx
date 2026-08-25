@@ -24,7 +24,7 @@ export function Layout() {
               Executive
             </NavLink>
             <NavLink to="/simple-ops" className={navClass}>
-              Simple Ops
+              Operations
             </NavLink>
             <NavLink to="/ideas" className={navClass}>
               Ideas
