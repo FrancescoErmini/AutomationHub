@@ -2,72 +2,66 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import {
-  fetchExecutiveCompanySummary,
-  fetchExecutiveCostBreakdown,
   fetchExecutiveKpis,
+  fetchExecutiveSavingsPayback,
+  fetchExecutiveTcoTrend,
   fetchExecutiveTrends,
 } from '../api/executive'
 import { fetchFilters } from '../api/metadata'
 import { formatValue } from '../api/metrics'
 import { AsyncSection } from '../components/AsyncSection'
 import { CompanyFilter } from '../components/CompanyFilter'
-import { DataTable } from '../components/DataTable'
 import { MetricCard } from '../components/MetricCard'
-import { RankBarChart } from '../components/RankBarChart'
+import { PaybackAreaChart } from '../components/PaybackAreaChart'
+import { StackedBarChart } from '../components/StackedBarChart'
 import { TrendChart } from '../components/TrendChart'
-import type { CompanySummaryRow } from '../api/executive'
 
 const KPI_CARDS: { key: string; label: string }[] = [
   { key: 'kpi_annual_saving_eur', label: 'Annual saving' },
-  { key: 'kpi_roi_1_5y_ok_pct', label: 'ROI 1.5Y OK %' },
-  { key: 'kpi_roi_3y_full_cost_pct', label: 'ROI 3Y' },
-  { key: 'kpi_net_benefit_3y_eur', label: '3Y net benefit' },
-  { key: 'kpi_run_cost_3y_eur', label: '3Y run cost' },
+  { key: 'kpi_total_capex_eur', label: 'Total CAPEX' },
+  { key: 'kpi_total_saved_to_date_eur', label: 'Total saved to date' },
+  { key: 'kpi_total_spend_to_date_eur', label: 'Total spent to date' },
+  { key: 'kpi_net_position_eur', label: 'Net position' },
   { key: 'kpi_total_tickets', label: 'Total tickets' },
+]
+
+const TCO_SERIES = [
+  { key: 'capex_eur', label: 'CAPEX', color: '#2a78d6' },
+  { key: 'license_eur', label: 'Licences', color: '#eb6834' },
+  { key: 'infrastructure_eur', label: 'Infrastructure', color: '#1baf7a' },
+  { key: 'ams_eur', label: 'AMS support', color: '#eda100' },
 ]
 
 export function ExecutivePage() {
   const [company, setCompany] = useState('')
 
-  const filters = useQuery({
-    queryKey: ['metadata', 'filters'],
-    queryFn: fetchFilters,
-  })
+  const filters = useQuery({ queryKey: ['metadata', 'filters'], queryFn: fetchFilters })
   const kpis = useQuery({
     queryKey: ['executive', 'kpis', company],
     queryFn: () => fetchExecutiveKpis(company || undefined),
   })
-  const trends = useQuery({
-    queryKey: ['executive', 'trends'],
-    queryFn: fetchExecutiveTrends,
+  const trends = useQuery({ queryKey: ['executive', 'trends'], queryFn: fetchExecutiveTrends })
+  const tcoTrend = useQuery({
+    queryKey: ['executive', 'tco-trend'],
+    queryFn: fetchExecutiveTcoTrend,
   })
-  const companySummary = useQuery({
-    queryKey: ['executive', 'company-summary'],
-    queryFn: fetchExecutiveCompanySummary,
-  })
-  const costBreakdown = useQuery({
-    queryKey: ['executive', 'cost-breakdown'],
-    queryFn: fetchExecutiveCostBreakdown,
+  const payback = useQuery({
+    queryKey: ['executive', 'savings-payback'],
+    queryFn: fetchExecutiveSavingsPayback,
   })
 
   return (
     <div className="space-y-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-ink">
-            CIO Executive Overview
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">Executive</h1>
           <p className="mt-1 text-slate-600">
-            Portfolio KPIs sourced from PostgreSQL; unavailable metrics are
-            shown as such rather than zero.
+            Portfolio KPIs sourced from PostgreSQL; unavailable metrics are shown as such
+            rather than zero.
           </p>
         </div>
         {filters.data && (
-          <CompanyFilter
-            companies={filters.data.companies}
-            value={company}
-            onChange={setCompany}
-          />
+          <CompanyFilter companies={filters.data.companies} value={company} onChange={setCompany} />
         )}
       </header>
 
@@ -77,19 +71,63 @@ export function ExecutivePage() {
         error={kpis.error}
         loadingLabel="Loading executive KPIs…"
       >
-        <section
-          aria-label="Executive KPIs"
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-        >
+        <section aria-label="Executive KPIs" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {KPI_CARDS.map((card) => (
-            <MetricCard
-              key={card.key}
-              label={card.label}
-              metric={kpis.data?.[card.key]}
-            />
+            <MetricCard key={card.key} label={card.label} metric={kpis.data?.[card.key]} />
           ))}
         </section>
       </AsyncSection>
+
+      <section
+        aria-label="TCO trend"
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <h2 className="mb-4 font-semibold text-ink">TCO by component, by year</h2>
+        <AsyncSection
+          isPending={tcoTrend.isPending}
+          isError={tcoTrend.isError}
+          error={tcoTrend.error}
+          loadingLabel="Loading TCO trend…"
+        >
+          {tcoTrend.data && tcoTrend.data.length > 0 ? (
+            <StackedBarChart
+              data={tcoTrend.data}
+              xKey="year"
+              series={TCO_SERIES}
+              valueFormatter={(value) => formatValue(value, 'eur')}
+            />
+          ) : (
+            <p className="text-sm text-slate-500">No TCO trend data available.</p>
+          )}
+        </AsyncSection>
+      </section>
+
+      <section
+        aria-label="Savings payback"
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <h2 className="mb-4 font-semibold text-ink">
+          Cumulative savings vs. cumulative spend
+        </h2>
+        <AsyncSection
+          isPending={payback.isPending}
+          isError={payback.isError}
+          error={payback.error}
+          loadingLabel="Loading payback trend…"
+        >
+          {payback.data && payback.data.length > 0 ? (
+            <PaybackAreaChart
+              data={payback.data}
+              xKey="year"
+              spendKey="cumulative_spend_eur"
+              savingKey="cumulative_saving_eur"
+              valueFormatter={(value) => formatValue(value, 'eur')}
+            />
+          ) : (
+            <p className="text-sm text-slate-500">No payback trend data available.</p>
+          )}
+        </AsyncSection>
+      </section>
 
       <section aria-label="Trends" className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -108,9 +146,7 @@ export function ExecutivePage() {
                 valueFormatter={(value) => formatValue(value, 'eur')}
               />
             ) : (
-              <p className="text-sm text-slate-500">
-                No saving trend data available.
-              </p>
+              <p className="text-sm text-slate-500">No saving trend data available.</p>
             )}
           </AsyncSection>
         </div>
@@ -130,82 +166,10 @@ export function ExecutivePage() {
                 valueFormatter={(value) => formatValue(value, 'count')}
               />
             ) : (
-              <p className="text-sm text-slate-500">
-                No ticket trend data available.
-              </p>
+              <p className="text-sm text-slate-500">No ticket trend data available.</p>
             )}
           </AsyncSection>
         </div>
-      </section>
-
-      <section aria-label="Company summary">
-        <h2 className="mb-4 font-semibold text-ink">Company summary</h2>
-        <AsyncSection
-          isPending={companySummary.isPending}
-          isError={companySummary.isError}
-          error={companySummary.error}
-          loadingLabel="Loading company summary…"
-        >
-          <DataTable<CompanySummaryRow>
-            caption="Annual saving, CAPEX, ticket volume, and ROI 1.5Y by company"
-            rows={companySummary.data ?? []}
-            getRowKey={(row) => row.company}
-            columns={[
-              { key: 'company', label: 'Company' },
-              {
-                key: 'annual_saving_eur',
-                label: 'Annual saving',
-                align: 'right',
-                format: (value) => formatValue(value as number, 'eur'),
-              },
-              {
-                key: 'capex_eur',
-                label: 'CAPEX',
-                align: 'right',
-                format: (value) => formatValue(value as number, 'eur'),
-              },
-              { key: 'total_tickets', label: 'Tickets', align: 'right' },
-              {
-                key: 'roi_1_5y_pct',
-                label: 'ROI 1.5Y',
-                align: 'right',
-                format: (value) =>
-                  value === null
-                    ? 'Not available'
-                    : formatValue(value as number, 'pct'),
-              },
-            ]}
-          />
-        </AsyncSection>
-      </section>
-
-      <section aria-label="Cost breakdown">
-        <h2 className="mb-4 font-semibold text-ink">
-          Cost breakdown (3Y run cost components)
-        </h2>
-        <AsyncSection
-          isPending={costBreakdown.isPending}
-          isError={costBreakdown.isError}
-          error={costBreakdown.error}
-          loadingLabel="Loading cost breakdown…"
-        >
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <RankBarChart
-              data={(costBreakdown.data ?? [])
-                .filter(
-                  (metric) =>
-                    metric.available && typeof metric.value === 'number',
-                )
-                .map((metric) => ({
-                  label: metric.metric_name
-                    .replace('cost_breakdown_', '')
-                    .replace('_eur', ''),
-                  value: metric.value as number,
-                }))}
-              valueFormatter={(value) => formatValue(value, 'eur')}
-            />
-          </div>
-        </AsyncSection>
       </section>
     </div>
   )
