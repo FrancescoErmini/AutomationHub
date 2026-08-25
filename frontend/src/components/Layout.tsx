@@ -23,14 +23,8 @@ export function Layout() {
             <NavLink to="/executive" className={navClass}>
               Executive
             </NavLink>
-            <NavLink to="/operations" className={navClass}>
-              Operations
-            </NavLink>
             <NavLink to="/simple-ops" className={navClass}>
               Simple Ops
-            </NavLink>
-            <NavLink to="/service-performance" className={navClass}>
-              SLA / Data Quality
             </NavLink>
             <NavLink to="/items" className={navClass}>
               Items
