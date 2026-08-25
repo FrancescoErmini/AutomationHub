@@ -99,6 +99,22 @@ class AnalyticsRepository:
             )
         return Decimal(self._session.scalar(stmt) or 0)
 
+    def capex_by_year(self, *, company: str | None = None) -> dict[int, Decimal]:
+        year = func.extract("year", Process.go_live_date)
+        stmt = (
+            select(year, func.coalesce(func.sum(ProcessEconomics.capex_eur), 0))
+            .select_from(ProcessEconomics)
+            .join(Process, Process.id == ProcessEconomics.process_id)
+            .where(Process.go_live_date.is_not(None))
+            .group_by(year)
+        )
+        if company is not None:
+            stmt = stmt.join(Company, Company.id == Process.company_id).where(
+                Company.name == company
+            )
+        rows = self._session.execute(stmt).tuples().all()
+        return {int(yr): Decimal(total) for yr, total in rows}
+
     def ams_1l_cost_recent_years(self, years: int = 3) -> tuple[Decimal, int]:
         rows = (
             self._session.execute(
@@ -187,7 +203,9 @@ class AnalyticsRepository:
             p90_days=Decimal(str(p90_days)) if p90_days is not None else None,
         )
 
-    def annual_saving_contribution_by_month(self) -> list[tuple[str, Decimal]]:
+    def annual_saving_contribution_by_month(
+        self, *, company: str | None = None
+    ) -> list[tuple[str, Decimal]]:
         """Per-process annual saving (bc_saving * fte_hours_month_actual * 12)
         bucketed by the process's go-live month, for a saving ramp-up trend."""
         bc_saving = self.reference_variable("cost_per_hour_FTE")
@@ -201,6 +219,10 @@ class AnalyticsRepository:
             .group_by(month)
             .order_by(month)
         )
+        if company is not None:
+            stmt = stmt.join(Company, Company.id == Process.company_id).where(
+                Company.name == company
+            )
         rows = self._session.execute(stmt).tuples().all()
         return [(month, bc_saving * Decimal(fte) * 12) for month, fte in rows]
 
