@@ -1,11 +1,14 @@
 from pathlib import Path
 
 import pytest
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.ingestion.rpa_pipeline import run_rpa_ingestion
+from app.models.core import AmsYear
 from app.repositories.analytics import AnalyticsRepository
 from app.services.executive import ExecutiveService
+from app.services.simple_ops import SimpleOpsService
 
 pytestmark = pytest.mark.integration
 
@@ -15,7 +18,17 @@ FIXTURE = Path(__file__).resolve().parents[3] / "data" / "fixtures" / "rpa_sampl
 @pytest.fixture
 def service(db_session: Session) -> ExecutiveService:
     run_rpa_ingestion(db_session, FIXTURE)
-    return ExecutiveService(AnalyticsRepository(db_session))
+    simple_ops = SimpleOpsService(AnalyticsRepository(db_session))
+    return ExecutiveService(AnalyticsRepository(db_session), simple_ops)
+
+
+@pytest.fixture
+def simple_ops(db_session: Session) -> SimpleOpsService:
+    run_rpa_ingestion(db_session, FIXTURE)
+    db_session.execute(update(AmsYear).where(AmsYear.ordinal == 1).values(year=2024))
+    db_session.execute(update(AmsYear).where(AmsYear.ordinal == 2).values(year=2025))
+    db_session.commit()
+    return SimpleOpsService(AnalyticsRepository(db_session))
 
 
 def test_kpis_computes_annual_saving_from_reference_variable_and_economics(
@@ -151,3 +164,46 @@ def test_cost_breakdown_returns_each_run_cost_component(service: ExecutiveServic
     assert breakdown["cost_breakdown_ams_1l_cost_eur"].value == pytest.approx(105000.00)
     assert breakdown["cost_breakdown_ams_2l_cost_eur"].value == pytest.approx(1000.00)
     assert breakdown["cost_breakdown_license_cost_eur"].value == pytest.approx(13000.00)
+
+
+def test_tco_trend_composes_capex_with_simple_ops_running_cost_components(
+    db_session: Session, simple_ops: SimpleOpsService
+) -> None:
+    service = ExecutiveService(AnalyticsRepository(db_session), simple_ops)
+
+    trend = service.tco_trend()
+
+    assert [row["year"] for row in trend] == [2021, 2024, 2025]
+    license_by_year = {p["year"]: p["cost_eur"] for p in simple_ops.license_cost_trend()}
+    infra_by_year = {p["year"]: p["cost_eur"] for p in simple_ops.infrastructure()["trend"]}
+    ams = simple_ops.ams_trend()
+    ams_1l_by_year = {p["year"]: p["cost_eur"] for p in ams["l1"]}
+    ams_2l_by_year = {p["year"]: p["cost_eur"] for p in ams["l2"]}
+
+    for row in trend:
+        yr = row["year"]
+        assert row["license_eur"] == pytest.approx(license_by_year.get(yr, 0.0))
+        assert row["infrastructure_eur"] == pytest.approx(infra_by_year.get(yr, 0.0))
+        assert row["ams_eur"] == pytest.approx(
+            ams_1l_by_year.get(yr, 0.0) + ams_2l_by_year.get(yr, 0.0)
+        )
+        assert row["total_eur"] == pytest.approx(
+            row["capex_eur"] + row["license_eur"] + row["infrastructure_eur"] + row["ams_eur"]
+        )
+
+
+def test_tco_trend_includes_a_year_with_capex_but_no_running_cost_data(
+    db_session: Session, simple_ops: SimpleOpsService
+) -> None:
+    # 2021 has capex (20700.50) but is outside the AMS-year range (2024-2025),
+    # so it has no license/infra/AMS data. tco_trend must still surface it --
+    # a CIO must see where CAPEX landed even if the running-cost feed doesn't
+    # go back that far.
+    service = ExecutiveService(AnalyticsRepository(db_session), simple_ops)
+
+    trend = {row["year"]: row for row in service.tco_trend()}
+
+    assert 2021 in trend
+    assert trend[2021]["capex_eur"] == pytest.approx(20700.50)
+    assert trend[2021]["license_eur"] == pytest.approx(0.0)
+    assert trend[2021]["total_eur"] == pytest.approx(20700.50)

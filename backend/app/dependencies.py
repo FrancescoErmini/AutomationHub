@@ -38,8 +38,17 @@ def get_analytics_repository(session: DbSession) -> AnalyticsRepository:
 AnalyticsRepositoryDependency = Annotated[AnalyticsRepository, Depends(get_analytics_repository)]
 
 
-def get_executive_service(repo: AnalyticsRepositoryDependency) -> ExecutiveService:
-    return ExecutiveService(repo)
+def get_simple_ops_service(repo: AnalyticsRepositoryDependency) -> SimpleOpsService:
+    return SimpleOpsService(repo)
+
+
+SimpleOpsServiceDependency = Annotated[SimpleOpsService, Depends(get_simple_ops_service)]
+
+
+def get_executive_service(
+    repo: AnalyticsRepositoryDependency, simple_ops: SimpleOpsServiceDependency
+) -> ExecutiveService:
+    return ExecutiveService(repo, simple_ops)
 
 
 def get_operations_service(repo: AnalyticsRepositoryDependency) -> OperationsService:
@@ -60,10 +69,6 @@ def get_service_performance_service(
     return ServicePerformanceService(repo)
 
 
-def get_simple_ops_service(repo: AnalyticsRepositoryDependency) -> SimpleOpsService:
-    return SimpleOpsService(repo)
-
-
 ExecutiveServiceDependency = Annotated[ExecutiveService, Depends(get_executive_service)]
 OperationsServiceDependency = Annotated[OperationsService, Depends(get_operations_service)]
 RoiServiceDependency = Annotated[RoiService, Depends(get_roi_service)]
@@ -73,7 +78,6 @@ ProcessCatalogServiceDependency = Annotated[
 ServicePerformanceServiceDependency = Annotated[
     ServicePerformanceService, Depends(get_service_performance_service)
 ]
-SimpleOpsServiceDependency = Annotated[SimpleOpsService, Depends(get_simple_ops_service)]
 
 
 def get_idea_repository(session: DbSession) -> IdeaRepository:

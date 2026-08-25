@@ -13,6 +13,7 @@ from typing import Any
 
 from app.repositories.analytics import AnalyticsRepository
 from app.schemas.metrics import MetricValue, available_metric, unavailable_metric
+from app.services.simple_ops import SimpleOpsService
 
 _MONEY = Decimal("0.01")
 _PCT = Decimal("0.001")
@@ -27,8 +28,9 @@ def _round_pct(fraction: Decimal) -> float:
 
 
 class ExecutiveService:
-    def __init__(self, repo: AnalyticsRepository) -> None:
+    def __init__(self, repo: AnalyticsRepository, simple_ops: SimpleOpsService) -> None:
         self._repo = repo
+        self._simple_ops = simple_ops
 
     def kpis(self, *, company: str | None = None) -> dict[str, MetricValue]:
         filters: dict[str, Any] = {"company": company} if company else {}
@@ -171,3 +173,41 @@ class ExecutiveService:
                 warnings=[] if license_years >= 3 else [f"only {license_years} of 3 license years"],
             ),
         ]
+
+    def tco_trend(self) -> list[dict[str, Any]]:
+        """Per-year TCO decomposition: CAPEX (own query, by go-live year) plus
+        license/infrastructure/AMS running cost, sourced from SimpleOpsService
+        rather than re-derived -- those formulas already live there."""
+        capex_by_year = self._repo.capex_by_year()
+        license_by_year = {p["year"]: p["cost_eur"] for p in self._simple_ops.license_cost_trend()}
+        infra_by_year = {
+            p["year"]: p["cost_eur"] for p in self._simple_ops.infrastructure()["trend"]
+        }
+        ams = self._simple_ops.ams_trend()
+        ams_1l_by_year = {p["year"]: p["cost_eur"] for p in ams["l1"]}
+        ams_2l_by_year = {p["year"]: p["cost_eur"] for p in ams["l2"]}
+
+        years = sorted(
+            set(capex_by_year)
+            | set(license_by_year)
+            | set(infra_by_year)
+            | set(ams_1l_by_year)
+            | set(ams_2l_by_year)
+        )
+        rows = []
+        for year in years:
+            capex = float(capex_by_year.get(year, Decimal("0")))
+            license_eur = license_by_year.get(year, 0.0)
+            infra_eur = infra_by_year.get(year, 0.0)
+            ams_eur = ams_1l_by_year.get(year, 0.0) + ams_2l_by_year.get(year, 0.0)
+            rows.append(
+                {
+                    "year": year,
+                    "capex_eur": round(capex, 2),
+                    "license_eur": round(license_eur, 2),
+                    "infrastructure_eur": round(infra_eur, 2),
+                    "ams_eur": round(ams_eur, 2),
+                    "total_eur": round(capex + license_eur + infra_eur + ams_eur, 2),
+                }
+            )
+        return rows
