@@ -298,14 +298,8 @@ class ProcessSchedule(Base):
     rpa_hours_month: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     # Heatmap bucket for "machine occupancy by time slot". No source column
     # for this exists yet, so every row defaults to 'morning' until real
-    # # values are back-filled per row.
-    # 'night', label: '00-04', count: 0, intensity: 0 },
-    #       { slot: 'early_morning', label: '04-08', count: 0, intensity: 0 },
-    #       { slot: 'morning', label: '08-12', count: 51, intensity: 100 },
-    #       { slot: 'afternoon', label: '12-16', count: 0, intensity: 0 },
-    #       { slot: 'evening', label: '16-20', count: 0, intensity: 0 },
-    #       { slot: 'late_evening label: '20-24', count: 0, intensity: 0
-    time_slot: Mapped[str] = mapped_column(String(20))
+    # values are back-filled per row.
+    time_slot: Mapped[str] = mapped_column(String(20), default="morning")
 
     process: Mapped["Process"] = relationship()
     virtual_machine: Mapped["VirtualMachine | None"] = relationship()
