@@ -71,5 +71,14 @@ class ExecutiveTrends(BaseModel):
     tickets_by_month: list[TrendPoint]
 
 
+class TcoTrendPoint(BaseModel):
+    year: int
+    capex_eur: float
+    license_eur: float
+    infrastructure_eur: float
+    ams_eur: float
+    total_eur: float
+
+
 class FilterOptions(BaseModel):
     companies: list[str]
