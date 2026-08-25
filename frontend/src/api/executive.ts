@@ -42,3 +42,19 @@ export async function fetchExecutiveTcoTrend(): Promise<TcoTrendPoint[]> {
 export async function fetchExecutiveSavingsPayback(): Promise<SavingsPaybackPoint[]> {
   return getJson<SavingsPaybackPoint[]>('/api/v1/executive/savings-payback')
 }
+
+export interface ProcessRoiRow {
+  process: string
+  company: string | null
+  go_live_date: string | null
+  capex_eur: number
+  annual_saving_eur: number
+  payback_months: number | null
+  cumulative_saving_since_go_live_eur: number
+  expected_roi_pct: number | null
+  actual_roi_pct: number | null
+}
+
+export async function fetchExecutiveProcesses(company?: string): Promise<ProcessRoiRow[]> {
+  return getJson<ProcessRoiRow[]>('/api/v1/executive/processes', { company })
+}

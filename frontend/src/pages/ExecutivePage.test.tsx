@@ -37,6 +37,19 @@ function mockRoutes() {
     '/api/v1/executive/savings-payback': [
       { year: 2024, cumulative_spend_eur: 58500, cumulative_saving_eur: 12768 },
     ],
+    '/api/v1/executive/processes': [
+      {
+        process: 'RPA - Test Alpha',
+        company: 'Menarini',
+        go_live_date: '2021-06-01',
+        capex_eur: 12500,
+        annual_saving_eur: 12768,
+        payback_months: 11.75,
+        cumulative_saving_since_go_live_eur: 63840,
+        expected_roi_pct: 410.7,
+        actual_roi_pct: 410.7,
+      },
+    ],
   })
 }
 
@@ -65,6 +78,15 @@ describe('ExecutivePage', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders the single process ROI table, not the old quick-wins/company-summary tables', async () => {
+    mockRoutes()
+    renderWithQueryClient(<ExecutivePage />)
+
+    expect(await screen.findByRole('heading', { name: 'Process ROI' })).toBeInTheDocument()
+    expect(screen.queryByText('Quick wins (fastest payback)')).not.toBeInTheDocument()
+    expect(screen.queryByText('Company ROI summary')).not.toBeInTheDocument()
+  })
+
   it('shows an unavailable metric as text, not a fabricated zero', async () => {
     mockFetchRoutes({
       '/api/v1/metadata/filters': { companies: ['Menarini', 'Codifi'] },
@@ -79,6 +101,7 @@ describe('ExecutivePage', () => {
       '/api/v1/executive/trends': { saving_by_month: [], tickets_by_month: [] },
       '/api/v1/executive/tco-trend': [],
       '/api/v1/executive/savings-payback': [],
+      '/api/v1/executive/processes': [],
     })
     renderWithQueryClient(<ExecutivePage />)
 

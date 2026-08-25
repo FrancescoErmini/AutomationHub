@@ -29,9 +29,6 @@ export function Layout() {
             <NavLink to="/simple-ops" className={navClass}>
               Simple Ops
             </NavLink>
-            <NavLink to="/roi" className={navClass}>
-              ROI
-            </NavLink>
             <NavLink to="/service-performance" className={navClass}>
               SLA / Data Quality
             </NavLink>

@@ -9,7 +9,6 @@ import { IdeaWizardPage } from './pages/IdeaWizardPage'
 import { IdeasPage } from './pages/IdeasPage'
 import { ItemsPage } from './pages/ItemsPage'
 import { OperationsPage } from './pages/OperationsPage'
-import { RoiPage } from './pages/RoiPage'
 import { ServicePerformancePage } from './pages/ServicePerformancePage'
 import { SimpleOpsPage } from './pages/SimpleOpsPage'
 
@@ -23,7 +22,6 @@ export function App() {
         <Route path="executive" element={<ExecutivePage />} />
         <Route path="operations" element={<OperationsPage />} />
         <Route path="simple-ops" element={<SimpleOpsPage />} />
-        <Route path="roi" element={<RoiPage />} />
         <Route
           path="service-performance"
           element={<ServicePerformancePage />}

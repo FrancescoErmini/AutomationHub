@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import {
   fetchExecutiveKpis,
+  fetchExecutiveProcesses,
   fetchExecutiveSavingsPayback,
   fetchExecutiveTcoTrend,
   fetchExecutiveTrends,
@@ -13,6 +14,7 @@ import { AsyncSection } from '../components/AsyncSection'
 import { CompanyFilter } from '../components/CompanyFilter'
 import { MetricCard } from '../components/MetricCard'
 import { PaybackAreaChart } from '../components/PaybackAreaChart'
+import { ProcessRoiTable } from '../components/ProcessRoiTable'
 import { StackedBarChart } from '../components/StackedBarChart'
 import { TrendChart } from '../components/TrendChart'
 
@@ -48,6 +50,10 @@ export function ExecutivePage() {
   const payback = useQuery({
     queryKey: ['executive', 'savings-payback'],
     queryFn: fetchExecutiveSavingsPayback,
+  })
+  const processes = useQuery({
+    queryKey: ['executive', 'processes', company],
+    queryFn: () => fetchExecutiveProcesses(company || undefined),
   })
 
   return (
@@ -170,6 +176,18 @@ export function ExecutivePage() {
             )}
           </AsyncSection>
         </div>
+      </section>
+
+      <section aria-label="Process ROI">
+        <h2 className="mb-4 font-semibold text-ink">Process ROI</h2>
+        <AsyncSection
+          isPending={processes.isPending}
+          isError={processes.isError}
+          error={processes.error}
+          loadingLabel="Loading process ROI…"
+        >
+          <ProcessRoiTable rows={processes.data ?? []} />
+        </AsyncSection>
       </section>
     </div>
   )
