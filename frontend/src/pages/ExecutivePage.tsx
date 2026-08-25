@@ -5,6 +5,7 @@ import {
   fetchExecutiveKpis,
   fetchExecutiveProcesses,
   fetchExecutiveSavingsPayback,
+  fetchExecutiveTcoRoi,
   fetchExecutiveTcoTrend,
   fetchExecutiveTrends,
 } from '../api/executive'
@@ -16,6 +17,7 @@ import { MetricCard } from '../components/MetricCard'
 import { PaybackAreaChart } from '../components/PaybackAreaChart'
 import { ProcessRoiTable } from '../components/ProcessRoiTable'
 import { StackedBarChart } from '../components/StackedBarChart'
+import { TcoRoiChart } from '../components/TcoRoiChart'
 import { TrendChart } from '../components/TrendChart'
 
 const KPI_CARDS: { key: string; label: string; signColor?: boolean }[] = [
@@ -55,6 +57,10 @@ export function ExecutivePage() {
     queryKey: ['executive', 'processes', company],
     queryFn: () => fetchExecutiveProcesses(company || undefined),
   })
+  const tcoRoi = useQuery({
+    queryKey: ['executive', 'tco-roi'],
+    queryFn: fetchExecutiveTcoRoi,
+  })
 
   return (
     <div className="space-y-10">
@@ -70,6 +76,25 @@ export function ExecutivePage() {
           <CompanyFilter companies={filters.data.companies} value={company} onChange={setCompany} />
         )}
       </header>
+
+      <section
+        aria-label="TCO and ROI analysis"
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <h2 className="mb-4 font-semibold text-ink">RPA Total Cost of Ownership (TCO) &amp; ROI Analysis</h2>
+        <AsyncSection
+          isPending={tcoRoi.isPending}
+          isError={tcoRoi.isError}
+          error={tcoRoi.error}
+          loadingLabel="Loading TCO & ROI…"
+        >
+          {tcoRoi.data && tcoRoi.data.length > 0 ? (
+            <TcoRoiChart data={tcoRoi.data} valueFormatter={(value) => formatValue(value, 'eur')} />
+          ) : (
+            <p className="text-sm text-slate-500">No TCO & ROI data available.</p>
+          )}
+        </AsyncSection>
+      </section>
 
       <AsyncSection
         isPending={kpis.isPending}

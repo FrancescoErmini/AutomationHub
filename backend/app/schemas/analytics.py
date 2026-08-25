@@ -70,6 +70,15 @@ class SavingsPaybackPoint(BaseModel):
     cumulative_saving_eur: float
 
 
+class TcoRoiPoint(BaseModel):
+    year: int
+    capex_eur: float
+    opex_eur: float
+    opex_breakdown: dict[str, float]
+    savings_eur: float
+    net_benefit_eur: float
+
+
 class ProcessRoiRow(BaseModel):
     process: str
     company: str | None

@@ -25,6 +25,7 @@ from app.models.core import (
     ProcessSchedule,
     ReferenceVariable,
     RootCause,
+    TcoCost,
     Ticket,
     VirtualMachine,
     VmCost,
@@ -114,6 +115,39 @@ class AnalyticsRepository:
             )
         rows = self._session.execute(stmt).tuples().all()
         return {int(yr): Decimal(total) for yr, total in rows}
+
+    def tco_cost_by_year(self) -> dict[int, dict[str, Decimal]]:
+        """Portfolio CAPEX/OPEX totals by year, from the data/raw/TCO.csv
+        ledger (core.tco_cost) -- source for the TCO & ROI chart."""
+        year = func.extract("year", TcoCost.cost_date)
+        stmt = (
+            select(year, TcoCost.cost_type, func.sum(TcoCost.cost_eur))
+            .group_by(year, TcoCost.cost_type)
+            .order_by(year)
+        )
+        rows = self._session.execute(stmt).tuples().all()
+        by_year: dict[int, dict[str, Decimal]] = {}
+        for yr, cost_type, total in rows:
+            by_year.setdefault(int(yr), {"capex": Decimal("0"), "opex": Decimal("0")})
+            by_year[int(yr)][cost_type.lower()] = Decimal(total)
+        return by_year
+
+    def opex_subtype_by_year(self) -> dict[int, dict[str, Decimal]]:
+        """OPEX broken down by subtype (AMS, CR, LICENSES, INFRA, ...) per
+        year, from core.tco_cost -- detail rows under the TCO & ROI table."""
+        year = func.extract("year", TcoCost.cost_date)
+        subtype = func.coalesce(TcoCost.subtype, "OTHER")
+        stmt = (
+            select(year, subtype, func.sum(TcoCost.cost_eur))
+            .where(TcoCost.cost_type == "OPEX")
+            .group_by(year, subtype)
+            .order_by(year)
+        )
+        rows = self._session.execute(stmt).tuples().all()
+        by_year: dict[int, dict[str, Decimal]] = {}
+        for yr, sub, total in rows:
+            by_year.setdefault(int(yr), {})[str(sub)] = Decimal(total)
+        return by_year
 
     def ams_1l_cost_recent_years(self, years: int = 3) -> tuple[Decimal, int]:
         rows = (

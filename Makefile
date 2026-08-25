@@ -10,7 +10,7 @@ ALEMBIC := .venv/bin/alembic
 DEV_DATABASE_URL := postgresql+psycopg://automation_hub:automation_hub_dev@localhost:$${POSTGRES_PORT:-5432}/automation_hub
 TEST_DATABASE_URL := postgresql+psycopg://automation_hub:automation_hub_dev@localhost:$${POSTGRES_PORT:-5432}/automation_hub_test
 
-.PHONY: help setup install up down dev logs db-up db-down db-reset migrate migration seed ingest ingest-rpa ingest-apqc lint format typecheck test test-unit test-integration test-frontend test-e2e test-all clean health
+.PHONY: help setup install up down dev logs db-up db-down db-reset migrate migration seed ingest ingest-rpa ingest-apqc load-tco-costs lint format typecheck test test-unit test-integration test-frontend test-e2e test-all clean health
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -71,6 +71,9 @@ ingest-rpa: ## Validate and ingest the RPA analytics workbook
 
 ingest-apqc: ## Validate and ingest the APQC taxonomy workbook
 	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli ingest-apqc
+
+load-tco-costs: ## Load data/raw/TCO.csv into core.tco_cost
+	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m scripts.load_tco_costs
 
 lint: ## Check backend and frontend code quality
 	$(RUFF) check backend

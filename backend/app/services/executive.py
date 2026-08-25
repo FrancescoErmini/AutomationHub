@@ -234,6 +234,44 @@ class ExecutiveService:
             )
         return rows
 
+    def tco_roi_chart(self) -> list[dict[str, Any]]:
+        """TCO & ROI combined chart: portfolio CAPEX/OPEX by year (from the
+        data/raw/TCO.csv ledger, core.tco_cost) against cumulative FTE-based
+        savings-to-date, and the resulting net benefit -- cumulative saving
+        minus that year's own spend, not cumulative spend -- one point per
+        year present in the cost ledger. OPEX also carries a subtype
+        breakdown (AMS, CR, LICENSES, ...) for the detail table."""
+        cost_by_year = self._repo.tco_cost_by_year()
+        opex_subtype_by_year = self._repo.opex_subtype_by_year()
+        cumulative_by_month = self.trends()["saving_by_month"]
+
+        rows = []
+        for year in sorted(cost_by_year):
+            capex = cost_by_year[year]["capex"]
+            opex = cost_by_year[year]["opex"]
+            cumulative_saving = Decimal("0")
+            for point in cumulative_by_month:
+                point_year = int(point["period"][:4])
+                if point_year <= year:
+                    cumulative_saving = Decimal(str(point["value"]))
+                else:
+                    break
+            net_benefit = cumulative_saving - (capex + opex)
+            rows.append(
+                {
+                    "year": year,
+                    "capex_eur": _round_money(capex),
+                    "opex_eur": _round_money(opex),
+                    "opex_breakdown": {
+                        subtype: _round_money(amount)
+                        for subtype, amount in opex_subtype_by_year.get(year, {}).items()
+                    },
+                    "savings_eur": _round_money(cumulative_saving),
+                    "net_benefit_eur": _round_money(net_benefit),
+                }
+            )
+        return rows
+
     def process_roi_table(
         self, *, company: str | None = None, as_of: date | None = None
     ) -> list[dict[str, Any]]:

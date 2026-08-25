@@ -43,6 +43,19 @@ export async function fetchExecutiveSavingsPayback(): Promise<SavingsPaybackPoin
   return getJson<SavingsPaybackPoint[]>('/api/v1/executive/savings-payback')
 }
 
+export interface TcoRoiPoint {
+  year: number
+  capex_eur: number
+  opex_eur: number
+  opex_breakdown: Record<string, number>
+  savings_eur: number
+  net_benefit_eur: number
+}
+
+export async function fetchExecutiveTcoRoi(): Promise<TcoRoiPoint[]> {
+  return getJson<TcoRoiPoint[]>('/api/v1/executive/tco-roi')
+}
+
 export interface ProcessRoiRow {
   process: string
   company: string | null

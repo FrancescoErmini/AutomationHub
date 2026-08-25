@@ -6,6 +6,7 @@ from app.schemas.analytics import (
     ExecutiveTrends,
     ProcessRoiRow,
     SavingsPaybackPoint,
+    TcoRoiPoint,
     TcoTrendPoint,
     TrendPoint,
 )
@@ -48,6 +49,11 @@ def get_tco_trend(service: ExecutiveServiceDependency) -> list[TcoTrendPoint]:
 @router.get("/savings-payback", response_model=list[SavingsPaybackPoint])
 def get_savings_payback(service: ExecutiveServiceDependency) -> list[SavingsPaybackPoint]:
     return [SavingsPaybackPoint(**row) for row in service.savings_payback_trend()]
+
+
+@router.get("/tco-roi", response_model=list[TcoRoiPoint])
+def get_tco_roi(service: ExecutiveServiceDependency) -> list[TcoRoiPoint]:
+    return [TcoRoiPoint(**row) for row in service.tco_roi_chart()]
 
 
 @router.get("/processes", response_model=list[ProcessRoiRow])

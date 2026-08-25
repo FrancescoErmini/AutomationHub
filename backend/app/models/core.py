@@ -330,6 +330,24 @@ class AmsRfcCost(Base):
     process: Mapped["Process | None"] = relationship()
 
 
+class TcoCost(Base):
+    """Typed promotion of the curated data/raw/TCO.csv portfolio cost ledger
+    -- one row per line item, CAPEX or OPEX, dated. Distinct from the
+    per-process ProcessEconomics.capex_eur and license/infra/AMS running
+    costs used elsewhere: this is the standalone TCO & ROI chart's source."""
+
+    __tablename__ = "tco_cost"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cost_date: Mapped[date] = mapped_column(Date(), index=True)
+    cost_eur: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    cost_type: Mapped[str] = mapped_column(String(10))
+    subtype: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class ApqcCategory(Base):
     """APQC PCF Life Sciences taxonomy, level 1 (e.g. Hierarchy ID '1.0')."""
 
