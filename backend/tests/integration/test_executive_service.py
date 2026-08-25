@@ -44,74 +44,38 @@ def test_kpis_computes_annual_saving_from_reference_variable_and_economics(
     assert tickets.value == 6
 
 
-def test_kpis_run_cost_and_tco_sum_the_three_run_cost_components(
-    service: ExecutiveService,
-) -> None:
+def test_kpis_expose_spend_vs_saving_headline_metrics(service: ExecutiveService) -> None:
     kpis = service.kpis()
 
-    # ams_1l (2 years=105000) + ams_2l (1000) + license (1 year=13000)
-    run_cost = kpis["kpi_run_cost_3y_eur"]
-    assert run_cost.value == pytest.approx(119000.00)
-    assert any("AMS 1L" in w for w in run_cost.warnings)
-    assert any("license" in w for w in run_cost.warnings)
-
-    tco = kpis["kpi_tco_3y_eur"]
-    assert tco.value == pytest.approx(20700.50 + 119000.00)
-
-    net_benefit = kpis["kpi_net_benefit_3y_eur"]
-    assert net_benefit.value == pytest.approx(17715.60 * 3 - (20700.50 + 119000.00))
+    assert kpis["kpi_annual_saving_eur"].value == pytest.approx(17715.60)
+    assert kpis["kpi_total_capex_eur"].value == pytest.approx(20700.50)
+    assert kpis["kpi_total_saved_to_date_eur"].available
+    assert kpis["kpi_total_spend_to_date_eur"].available
+    assert kpis["kpi_net_position_eur"].value == pytest.approx(
+        kpis["kpi_total_saved_to_date_eur"].value - kpis["kpi_total_spend_to_date_eur"].value
+    )
 
 
-def test_kpis_roi_percentages_match_the_documented_formulas(service: ExecutiveService) -> None:
-    kpis = service.kpis()
-
-    roi_1_5y = kpis["kpi_roi_1_5y_ok_pct"]
-    assert roi_1_5y.available
-    expected_1_5y = (17715.60 * 1.5 - 20700.50) / 20700.50 * 100
-    assert roi_1_5y.value == pytest.approx(expected_1_5y, rel=1e-3)
-
-    roi_3y = kpis["kpi_roi_3y_full_cost_pct"]
-    tco = 20700.50 + 119000.00
-    net_benefit = 17715.60 * 3 - tco
-    expected_3y = net_benefit / tco * 100
-    assert roi_3y.value == pytest.approx(expected_3y, rel=1e-3)
-
-
-def test_kpis_mark_shared_cost_metrics_unavailable_under_a_company_filter(
+def test_kpis_mark_spend_metrics_unavailable_under_a_company_filter(
     service: ExecutiveService,
 ) -> None:
     # AMS 1L and license costs are portfolio-level with no documented
     # per-company allocation rule -- filtering by company must not silently
-    # attribute the full portfolio cost to one company, so every metric
-    # derived from run_cost_3y_eur becomes unavailable once a company filter
-    # is applied, even though the same metrics are available unfiltered.
+    # attribute the full portfolio cost to one company, so any metric
+    # derived from the portfolio running-cost trend becomes unavailable once
+    # a company filter is applied, even though it's available unfiltered.
     kpis = service.kpis(company="Menarini")
 
-    for name in (
-        "kpi_run_cost_3y_eur",
-        "kpi_tco_3y_eur",
-        "kpi_net_benefit_3y_eur",
-        "kpi_roi_3y_full_cost_pct",
-    ):
+    for name in ("kpi_total_spend_to_date_eur", "kpi_net_position_eur"):
         metric = kpis[name]
         assert metric.available is False, name
         assert metric.value is None, name
         assert metric.status == "unavailable", name
 
     # capex and saving ARE legitimately attributable per company/process.
-    assert kpis["kpi_annual_saving_eur"].available
-    assert kpis["kpi_roi_1_5y_ok_pct"].available
-
-
-def test_kpis_are_unavailable_not_zero_when_capex_is_zero(service: ExecutiveService) -> None:
-    # A company filter that matches no economics rows drives capex to zero
-    # for real, through the actual repository/service stack.
-    kpis = service.kpis(company="Nonexistent Co")
-
-    roi_1_5y = kpis["kpi_roi_1_5y_ok_pct"]
-    assert roi_1_5y.available is False
-    assert roi_1_5y.value is None
-    assert roi_1_5y.status == "unavailable"
+    assert kpis["kpi_total_capex_eur"].available
+    assert kpis["kpi_total_capex_eur"].value == pytest.approx(12500.00)
+    assert kpis["kpi_total_saved_to_date_eur"].available
 
 
 def test_kpis_include_the_full_metric_envelope(service: ExecutiveService) -> None:

@@ -44,7 +44,7 @@ def test_executive_kpis_respects_the_company_query_param(seeded_client: TestClie
 
     assert response.status_code == 200
     body = response.json()
-    assert body["kpi_run_cost_3y_eur"]["available"] is False
+    assert body["kpi_total_spend_to_date_eur"]["available"] is False
     assert body["kpi_annual_saving_eur"]["available"] is True
 
 

@@ -38,88 +38,56 @@ class ExecutiveService:
         annual_saving = self._repo.annual_saving_eur(company=company)
         capex = self._repo.capex_eur(company=company)
         ticket_counts = self._repo.ticket_counts(company=company)
+        saving_by_month = self.trends(company=company)["saving_by_month"]
+        total_saved_to_date = (
+            Decimal(str(saving_by_month[-1]["value"])) if saving_by_month else Decimal("0")
+        )
 
         metrics: dict[str, MetricValue] = {
             "kpi_annual_saving_eur": available_metric(
                 "kpi_annual_saving_eur", _round_money(annual_saving), "eur", filters=filters
+            ),
+            "kpi_total_capex_eur": available_metric(
+                "kpi_total_capex_eur", _round_money(capex), "eur", filters=filters
+            ),
+            "kpi_total_saved_to_date_eur": available_metric(
+                "kpi_total_saved_to_date_eur",
+                _round_money(total_saved_to_date),
+                "eur",
+                filters=filters,
             ),
             "kpi_total_tickets": available_metric(
                 "kpi_total_tickets", ticket_counts.total, "count", filters=filters
             ),
         }
 
-        if capex > 0:
-            roi_1_5y = (annual_saving * Decimal("1.5") - capex) / capex
-            metrics["kpi_roi_1_5y_ok_pct"] = available_metric(
-                "kpi_roi_1_5y_ok_pct", _round_pct(roi_1_5y), "pct", filters=filters
-            )
-        else:
-            metrics["kpi_roi_1_5y_ok_pct"] = unavailable_metric(
-                "kpi_roi_1_5y_ok_pct", "pct", reason="capex_eur is zero", filters=filters
-            )
-
-        run_cost_names = (
-            "kpi_run_cost_3y_eur",
-            "kpi_tco_3y_eur",
-            "kpi_net_benefit_3y_eur",
-            "kpi_roi_3y_full_cost_pct",
-        )
         if company is not None:
             reason = (
                 "AMS 1L and license costs are portfolio-level with no documented "
                 "per-company allocation rule"
             )
-            for name in run_cost_names:
-                unit = "pct" if name.endswith("pct") else "eur"
-                metrics[name] = unavailable_metric(name, unit, reason=reason, filters=filters)
+            metrics["kpi_total_spend_to_date_eur"] = unavailable_metric(
+                "kpi_total_spend_to_date_eur", "eur", reason=reason, filters=filters
+            )
+            metrics["kpi_net_position_eur"] = unavailable_metric(
+                "kpi_net_position_eur", "eur", reason=reason, filters=filters
+            )
             return metrics
 
-        ams_1l_cost, ams_1l_years = self._repo.ams_1l_cost_recent_years(3)
-        ams_2l_cost = self._repo.ams_2l_cost_total()
-        license_cost, license_years = self._repo.license_cost_recent_years(3)
-        run_cost_3y = ams_1l_cost + ams_2l_cost + license_cost
-        tco_3y = capex + run_cost_3y
-        net_benefit_3y = annual_saving * 3 - tco_3y
-
-        warnings: list[str] = []
-        if ams_1l_years < 3:
-            warnings.append(f"kpi_run_cost_3y_eur uses only {ams_1l_years} of 3 AMS 1L years")
-        if license_years < 3:
-            warnings.append(f"kpi_run_cost_3y_eur uses only {license_years} of 3 license years")
-
-        metrics["kpi_run_cost_3y_eur"] = available_metric(
-            "kpi_run_cost_3y_eur",
-            _round_money(run_cost_3y),
-            "eur",
-            filters=filters,
-            warnings=warnings,
+        total_spend_to_date = sum(
+            (Decimal(str(row["total_eur"])) for row in self.tco_trend()), Decimal("0")
         )
-        metrics["kpi_tco_3y_eur"] = available_metric(
-            "kpi_tco_3y_eur", _round_money(tco_3y), "eur", filters=filters, warnings=warnings
+        net_position = total_saved_to_date - total_spend_to_date
+        metrics["kpi_total_spend_to_date_eur"] = available_metric(
+            "kpi_total_spend_to_date_eur", _round_money(total_spend_to_date), "eur", filters=filters
         )
-        metrics["kpi_net_benefit_3y_eur"] = available_metric(
-            "kpi_net_benefit_3y_eur",
-            _round_money(net_benefit_3y),
-            "eur",
-            filters=filters,
-            warnings=warnings,
+        metrics["kpi_net_position_eur"] = available_metric(
+            "kpi_net_position_eur", _round_money(net_position), "eur", filters=filters
         )
-        if tco_3y > 0:
-            metrics["kpi_roi_3y_full_cost_pct"] = available_metric(
-                "kpi_roi_3y_full_cost_pct",
-                _round_pct(net_benefit_3y / tco_3y),
-                "pct",
-                filters=filters,
-                warnings=warnings,
-            )
-        else:
-            metrics["kpi_roi_3y_full_cost_pct"] = unavailable_metric(
-                "kpi_roi_3y_full_cost_pct", "pct", reason="tco_3y_eur is zero", filters=filters
-            )
         return metrics
 
-    def trends(self) -> dict[str, list[dict[str, Any]]]:
-        contributions = self._repo.annual_saving_contribution_by_month()
+    def trends(self, *, company: str | None = None) -> dict[str, list[dict[str, Any]]]:
+        contributions = self._repo.annual_saving_contribution_by_month(company=company)
         cumulative = Decimal("0")
         saving_by_month: list[dict[str, Any]] = []
         for period, amount in contributions:
@@ -127,7 +95,8 @@ class ExecutiveService:
             saving_by_month.append({"period": period, "value": _round_money(cumulative)})
 
         tickets_by_month = [
-            {"period": period, "value": count} for period, count in self._repo.tickets_by_month()
+            {"period": period, "value": count}
+            for period, count in self._repo.tickets_by_month(company=company)
         ]
         return {"saving_by_month": saving_by_month, "tickets_by_month": tickets_by_month}
 
