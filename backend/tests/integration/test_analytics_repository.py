@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -43,3 +44,19 @@ def test_annual_saving_contribution_by_month_respects_the_company_filter(
 
     assert float(sum((v for _, v in all_companies), Decimal("0"))) == pytest.approx(17715.60)
     assert float(sum((v for _, v in menarini_only), Decimal("0"))) == pytest.approx(26.60 * 40 * 12)
+
+
+def test_process_roi_rows_includes_go_live_date_and_roi_expected_yr(
+    repo: AnalyticsRepository,
+) -> None:
+    rows = {row[0]: row for row in repo.process_roi_rows()}
+
+    alpha = rows["RPA - Test Alpha"]
+    assert alpha[1] == "Menarini"  # company_name
+    assert alpha[2] == pytest.approx(Decimal("12500.00"))  # capex_eur
+    assert alpha[4] == date(2021, 6, 1)  # go_live_date
+    assert alpha[5] == 5  # roi_expected_yr
+
+    beta = rows["RPA - Test Beta"]
+    assert beta[4] == date(2021, 9, 3)
+    assert beta[5] == 5

@@ -336,6 +336,26 @@ class AnalyticsRepository:
             )
         return [(name, Decimal(str(avg))) for name, avg in self._session.execute(stmt).all()]
 
+    def process_roi_rows(
+        self,
+    ) -> list[tuple[str, str | None, Decimal, Decimal, date | None, int | None]]:
+        """(process_name, company_name, capex_eur, fte_hours_month_actual,
+        go_live_date, roi_expected_yr) per process with an ECONOMICS row."""
+        stmt = (
+            select(
+                Process.canonical_name,
+                Company.name,
+                ProcessEconomics.capex_eur,
+                ProcessEconomics.fte_hours_month_actual,
+                Process.go_live_date,
+                ProcessEconomics.roi_expected_yr,
+            )
+            .join(Process, Process.id == ProcessEconomics.process_id)
+            .outerjoin(Company, Company.id == Process.company_id)
+            .order_by(Process.canonical_name)
+        )
+        return list(self._session.execute(stmt).tuples().all())
+
     def process_economics_rows(self) -> list[tuple[str, str | None, Decimal, Decimal]]:
         """(process_name, company_name, capex_eur, fte_hours_month_actual) per process."""
         stmt = (
