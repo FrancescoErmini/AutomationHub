@@ -77,16 +77,18 @@ class SimpleOpsService:
     def _year_components(self, year: int) -> dict[str, Any]:
         license_eur = self._repo.license_cost_by_year([year]).get(year, Decimal("0"))
         licensed_vm_count = self._repo.licensed_vm_count_by_year([year]).get(year, 0)
+        infra_eur = self._repo.vm_cost_by_year([year]).get(year, Decimal("0"))
         ams_1l_by_year = {y: (fee, n) for y, fee, n in self._repo.ams_1l_by_year()}
         ams_1l_eur, ams_1l_processes = ams_1l_by_year.get(year, (Decimal("0"), None))
         ticket_2l_count = self._repo.ams_2l_ticket_count_by_year([year]).get(year, 0)
         ticket_2l_eur = Decimal(ticket_2l_count) * _FLAT_2L_RATE_EUR
         rfc_eur = self._repo.ams_rfc_cost_by_year([year]).get(year, Decimal("0"))
         rfc_count = self._repo.ams_rfc_count_by_year([year]).get(year, 0)
-        total_eur = license_eur + ams_1l_eur + ticket_2l_eur + rfc_eur
+        total_eur = license_eur + infra_eur + ams_1l_eur + ticket_2l_eur + rfc_eur
         return {
             "license_eur": license_eur,
             "licensed_vm_count": licensed_vm_count,
+            "infra_eur": infra_eur,
             "ams_1l_eur": ams_1l_eur,
             "ams_1l_processes": ams_1l_processes,
             "ticket_2l_count": ticket_2l_count,
@@ -119,6 +121,9 @@ class SimpleOpsService:
             "kpi_licensed_vm_count": available_metric(
                 "kpi_licensed_vm_count", current["licensed_vm_count"], "count"
             ),
+            "kpi_infrastructure_cost_eur": available_metric(
+                "kpi_infrastructure_cost_eur", _round_money(current["infra_eur"]), "eur"
+            ),
             "kpi_ams_1l_cost_eur": available_metric(
                 "kpi_ams_1l_cost_eur", _round_money(current["ams_1l_eur"]), "eur"
             ),
@@ -150,6 +155,7 @@ class SimpleOpsService:
         for metric_key, component_key in (
             ("kpi_total_running_cost_delta_pct", "total_eur"),
             ("kpi_license_cost_delta_pct", "license_eur"),
+            ("kpi_infrastructure_cost_delta_pct", "infra_eur"),
             ("kpi_ams_1l_cost_delta_pct", "ams_1l_eur"),
             ("kpi_ticket_2l_cost_delta_pct", "ticket_2l_eur"),
             ("kpi_change_request_cost_delta_pct", "rfc_eur"),
@@ -416,12 +422,13 @@ class SimpleOpsService:
         )
 
         rows: list[dict[str, Any]] = []
-        for name, license_eur, l2_eur in self._repo.cost_breakdown_by_process(year):
-            total = license_eur + ams_1l_share + l2_eur
+        for name, license_eur, infra_eur, l2_eur in self._repo.cost_breakdown_by_process(year):
+            total = license_eur + infra_eur + ams_1l_share + l2_eur
             rows.append(
                 {
                     "process": name,
                     "license_eur": _round_money(license_eur),
+                    "infrastructure_eur": _round_money(infra_eur),
                     "ams_1l_eur": _round_money(ams_1l_share),
                     "l2_eur": _round_money(l2_eur),
                     "total_eur": _round_money(total),

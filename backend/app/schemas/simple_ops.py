@@ -84,6 +84,7 @@ class QualityBreakdown(BaseModel):
 class ProcessCostRow(BaseModel):
     process: str
     license_eur: float
+    infrastructure_eur: float
     ams_1l_eur: float
     l2_eur: float
     total_eur: float

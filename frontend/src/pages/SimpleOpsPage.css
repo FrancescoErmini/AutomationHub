@@ -245,6 +245,9 @@
 .simple-ops-page .seg-license {
   background: var(--color-accent-300);
 }
+.simple-ops-page .seg-infra {
+  background: var(--color-accent-2-500);
+}
 .simple-ops-page .seg-ams {
   background: var(--color-accent-500);
 }

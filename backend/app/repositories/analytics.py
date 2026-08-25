@@ -526,15 +526,18 @@ class AnalyticsRepository:
         median_days = self._session.scalar(stmt)
         return Decimal(str(median_days)) if median_days is not None else None
 
-    def cost_breakdown_by_process(self, year: int) -> list[tuple[str, Decimal, Decimal]]:
-        """(process_name, license_share_eur, actual_2l_cost_eur) per process, for `year`.
+    def cost_breakdown_by_process(
+        self, year: int
+    ) -> list[tuple[str, Decimal, Decimal, Decimal]]:
+        """(process_name, license_share_eur, infra_share_eur, actual_2l_cost_eur) per
+        process, for `year`.
 
-        License share = license_cost(that process's VM, year) / count of processes
-        assigned to that VM. A process is "assigned" to the VM in its first
+        License/infra share = license_cost/vm_cost(that process's VM, year) / count of
+        processes assigned to that VM. A process is "assigned" to the VM in its first
         process_schedule row (ordered by id) -- a process with no schedule row, or
-        whose first row has no VM, gets a €0 license share. AMS-1L's share is
-        identical for every process (annual fee / total process count) and is
-        added by the caller, not computed per-row here.
+        whose first row has no VM, gets a €0 share. AMS-1L's share is identical for
+        every process (annual fee / total process count) and is added by the caller,
+        not computed per-row here.
         """
         row_number = func.row_number().over(
             partition_by=ProcessSchedule.process_id, order_by=ProcessSchedule.id
@@ -580,6 +583,9 @@ class AnalyticsRepository:
                 func.coalesce(
                     LicenseCost.cost_year_eur / vm_process_counts.c.cnt, Decimal("0")
                 ).label("license_eur"),
+                func.coalesce(
+                    VmCost.cost_eur / vm_process_counts.c.cnt, Decimal("0")
+                ).label("infra_eur"),
                 func.coalesce(l2_by_process.c.l2_eur, 0).label("l2_eur"),
             )
             .select_from(Process)
@@ -593,10 +599,17 @@ class AnalyticsRepository:
                 (LicenseCost.virtual_machine_id == first_schedule.c.virtual_machine_id)
                 & (LicenseCost.year == year),
             )
+            .outerjoin(
+                VmCost,
+                (VmCost.virtual_machine_id == first_schedule.c.virtual_machine_id)
+                & (VmCost.year == year),
+            )
             .outerjoin(l2_by_process, l2_by_process.c.process_id == Process.id)
             .order_by(Process.canonical_name)
         )
         return [
-            (name, Decimal(license_eur), Decimal(l2_eur))
-            for name, license_eur, l2_eur in self._session.execute(stmt).tuples().all()
+            (name, Decimal(license_eur), Decimal(infra_eur), Decimal(l2_eur))
+            for name, license_eur, infra_eur, l2_eur in self._session.execute(stmt)
+            .tuples()
+            .all()
         ]

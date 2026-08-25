@@ -227,7 +227,7 @@ export function SimpleOpsPage() {
                 label="Costo running medio / processo"
                 value={metricNumber(kpis.data, 'kpi_avg_cost_per_process_eur')}
                 unit="eur"
-                subtitle="licenza + AMS + 2L, infra escl."
+                subtitle="licenza + AMS + 2L + infra"
               />
               <KpiCard
                 label="Licenze Blue Prism"
@@ -238,6 +238,15 @@ export function SimpleOpsPage() {
                     ? `${metricNumber(kpis.data, 'kpi_licensed_vm_count')} macchine (VM) licenziate`
                     : null
                 }
+              />
+              <KpiCard
+                label="Infrastruttura"
+                value={metricNumber(kpis.data, 'kpi_infrastructure_cost_eur')}
+                unit="eur"
+                spot
+                subtitle={formatDelta(
+                  metricNumber(kpis.data, 'kpi_infrastructure_cost_delta_pct'),
+                )}
               />
               <KpiCard
                 label="AMS 1L"
@@ -286,8 +295,8 @@ export function SimpleOpsPage() {
               Andamento costo running totale
             </h2>
             <p className="note">
-              Somma licenze + AMS 1L + ticket 2L (tariffa flat) + change request
-              per anno (infrastruttura esclusa). L&apos;ultimo anno è una stima
+              Somma licenze + infrastruttura + AMS 1L + ticket 2L (tariffa
+              flat) + change request per anno. L&apos;ultimo anno è una stima
               lineare basata sulla crescita del numero di processi in AMS.
             </p>
             <AsyncSection
@@ -819,13 +828,18 @@ export function SimpleOpsPage() {
           <section className="blk">
             <h2>Scomposizione costo per processo</h2>
             <p className="note">
-              Licenza (quota per VM) + AMS 1L (quota uniforme / processo) + 2L
-              (costo effettivo), anno {CURRENT_YEAR}.
+              Licenza (quota per VM) + infrastruttura (quota per VM) + AMS 1L
+              (quota uniforme / processo) + 2L (costo effettivo), anno{' '}
+              {CURRENT_YEAR}.
             </p>
             <div className="legend">
               <span>
                 <i className="seg-license" />
                 Licenza (quota)
+              </span>
+              <span>
+                <i className="seg-infra" />
+                Infrastruttura (quota)
               </span>
               <span>
                 <i className="seg-ams" />
@@ -855,6 +869,12 @@ export function SimpleOpsPage() {
                       className="seg-license"
                       style={{
                         width: `${(row.license_eur / maxProcessTotal) * 100}%`,
+                      }}
+                    />
+                    <div
+                      className="seg-infra"
+                      style={{
+                        width: `${(row.infrastructure_eur / maxProcessTotal) * 100}%`,
                       }}
                     />
                     <div

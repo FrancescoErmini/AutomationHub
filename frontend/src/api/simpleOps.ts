@@ -84,6 +84,7 @@ export interface QualityBreakdown {
 export interface ProcessCostRow {
   process: string
   license_eur: number
+  infrastructure_eur: number
   ams_1l_eur: number
   l2_eur: number
   total_eur: number

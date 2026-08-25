@@ -35,6 +35,9 @@ def test_header_kpis_sum_the_four_running_cost_components(service: SimpleOpsServ
     assert kpis["kpi_total_running_cost_eur"].value == pytest.approx(13000 + 45000 + 500)
     assert kpis["kpi_license_cost_eur"].value == pytest.approx(13000)
     assert kpis["kpi_licensed_vm_count"].value == 2
+    # infra (vm_cost) is seeded at 0 in the fixture, mirroring license_cost's
+    # VMs/years -- it's already summed into the total, just contributing 0.
+    assert kpis["kpi_infrastructure_cost_eur"].value == pytest.approx(0)
     assert kpis["kpi_ams_1l_cost_eur"].value == pytest.approx(45000)
     assert kpis["kpi_ticket_2l_cost_eur"].value == pytest.approx(500)
     assert kpis["kpi_ticket_2l_count"].value == 1
@@ -204,18 +207,38 @@ def test_cost_breakdown_by_process_splits_license_by_vm_and_ams1l_evenly(
     rows = {row["process"]: row for row in service.cost_breakdown_by_process(2024)}
 
     assert len(rows) == 5
-    # process on VM1 alone: license 6500 / 1 process
+    # process on VM1 alone: license 6500 / 1 process, infra 0 (fixture seed)
     alpha = rows["RPA - Test Alpha"]
     assert alpha["license_eur"] == pytest.approx(6500)
+    assert alpha["infrastructure_eur"] == pytest.approx(0)
     assert alpha["ams_1l_eur"] == pytest.approx(45000 / 5)
     assert alpha["l2_eur"] == pytest.approx(500)
     assert alpha["total_eur"] == pytest.approx(6500 + 45000 / 5 + 500)
 
-    # process with no process_schedule row at all -> €0 license share
+    # process with no process_schedule row at all -> €0 license/infra share
     delta = rows["RPA - Test Delta"]
     assert delta["license_eur"] == pytest.approx(0)
+    assert delta["infrastructure_eur"] == pytest.approx(0)
     assert delta["ams_1l_eur"] == pytest.approx(45000 / 5)
     assert delta["l2_eur"] == pytest.approx(0)
+
+
+def test_cost_breakdown_by_process_splits_infrastructure_by_vm_like_license(
+    service: SimpleOpsService, db_session: Session
+) -> None:
+    vm1_cost = db_session.scalar(
+        select(VmCost).where(VmCost.year == 2024, VmCost.virtual_machine_id == 1)
+    )
+    assert vm1_cost is not None
+    vm1_cost.cost_eur = 1300
+    db_session.commit()
+
+    rows = {row["process"]: row for row in service.cost_breakdown_by_process(2024)}
+
+    # process on VM1 alone: infra 1300 / 1 process
+    alpha = rows["RPA - Test Alpha"]
+    assert alpha["infrastructure_eur"] == pytest.approx(1300)
+    assert alpha["total_eur"] == pytest.approx(6500 + 1300 + 45000 / 5 + 500)
 
 
 def test_cost_breakdown_by_process_uses_actual_2l_cost_for_the_2l_ticket_process(
@@ -228,6 +251,22 @@ def test_cost_breakdown_by_process_uses_actual_2l_cost_for_the_2l_ticket_process
 
     rows = {row["process"]: row for row in service.cost_breakdown_by_process(2024)}
     assert rows["RPA - Only In PID"]["l2_eur"] == pytest.approx(500)
+
+
+def test_header_kpis_include_infrastructure_cost_once_vm_cost_is_seeded(
+    service: SimpleOpsService, db_session: Session
+) -> None:
+    rows = db_session.scalars(select(VmCost).where(VmCost.year == 2024)).all()
+    for row in rows:
+        row.cost_eur = 600
+    db_session.commit()
+
+    kpis = service.header_kpis(2024)
+
+    assert kpis["kpi_infrastructure_cost_eur"].value == pytest.approx(1200)
+    assert kpis["kpi_total_running_cost_eur"].value == pytest.approx(
+        13000 + 1200 + 45000 + 500
+    )
 
 
 def test_header_kpis_include_a_seeded_ams_rfc_change_request_cost(

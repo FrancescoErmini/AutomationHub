@@ -24,6 +24,11 @@ function mockRoutes() {
       kpi_process_count: metric('kpi_process_count', 68, 'count'),
       kpi_license_cost_eur: metric('kpi_license_cost_eur', 67050.4, 'eur'),
       kpi_licensed_vm_count: metric('kpi_licensed_vm_count', 7, 'count'),
+      kpi_infrastructure_cost_eur: metric(
+        'kpi_infrastructure_cost_eur',
+        0,
+        'eur',
+      ),
       kpi_ams_1l_cost_eur: metric('kpi_ams_1l_cost_eur', 72000, 'eur'),
       kpi_ticket_2l_cost_eur: metric('kpi_ticket_2l_cost_eur', 4000, 'eur'),
       kpi_ticket_2l_count: metric('kpi_ticket_2l_count', 8, 'count'),
@@ -47,6 +52,12 @@ function mockRoutes() {
         'kpi_license_cost_delta_pct',
         0,
         'pct',
+      ),
+      kpi_infrastructure_cost_delta_pct: metric(
+        'kpi_infrastructure_cost_delta_pct',
+        null,
+        'pct',
+        false,
       ),
       kpi_ams_1l_cost_delta_pct: metric('kpi_ams_1l_cost_delta_pct', 20, 'pct'),
       kpi_ticket_2l_cost_delta_pct: metric(
@@ -128,6 +139,7 @@ function mockRoutes() {
       {
         process: 'RPA - Sauron',
         license_eur: 9924.2,
+        infrastructure_eur: 0,
         ams_1l_eur: 1058.82,
         l2_eur: 0,
         total_eur: 10983.02,
@@ -144,6 +156,9 @@ describe('SimpleOpsPage', () => {
     expect(await screen.findByText('Operation Dashboard')).toBeInTheDocument()
     expect(await screen.findByText('AMS 1L')).toBeInTheDocument()
     expect(await screen.findByText('Change Request')).toBeInTheDocument()
+    // "Infrastruttura" also labels the existing standalone infra panel's
+    // heading, so the new KPI card makes this text appear twice.
+    expect(await screen.findAllByText('Infrastruttura')).toHaveLength(2)
   })
 
   it('renders the running cost trend and cost breakdown sections', async () => {
