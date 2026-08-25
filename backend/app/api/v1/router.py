@@ -8,7 +8,6 @@ from app.api.v1 import (
     metadata,
     operations,
     process_catalog,
-    roi,
     service_performance,
     simple_ops,
 )
@@ -19,7 +18,6 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(metadata.router)
 router.include_router(executive.router)
 router.include_router(operations.router)
-router.include_router(roi.router)
 router.include_router(service_performance.router)
 router.include_router(process_catalog.router)
 router.include_router(simple_ops.router)

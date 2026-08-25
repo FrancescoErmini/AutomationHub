@@ -85,25 +85,12 @@ def test_operations_endpoints(seeded_client: TestClient) -> None:
     assert aging.json()["backlog_over_15_days"] == 1
 
 
-def test_roi_endpoints(seeded_client: TestClient) -> None:
-    kpis = seeded_client.get("/api/v1/roi/kpis")
-    assert kpis.status_code == 200
-    assert kpis.json()["roi_status"]["value"] == "improving"
-
-    processes = seeded_client.get("/api/v1/roi/processes")
+def test_executive_processes_endpoint(seeded_client: TestClient) -> None:
+    # The standalone /api/v1/roi/* router was removed once the merged
+    # Executive page took over per-process ROI -- this is its replacement.
+    processes = seeded_client.get("/api/v1/executive/processes")
     assert processes.status_code == 200
     assert len(processes.json()) == 2
-
-    companies = seeded_client.get("/api/v1/roi/companies")
-    assert companies.status_code == 200
-
-    quick_wins = seeded_client.get("/api/v1/roi/quick-wins")
-    assert quick_wins.status_code == 200
-    assert quick_wins.json()[0]["process"] == "RPA - Test Alpha"
-
-    cost_stack = seeded_client.get("/api/v1/roi/cost-stack")
-    assert cost_stack.status_code == 200
-    assert len(cost_stack.json()) == 4
 
 
 def test_service_performance_endpoints(seeded_client: TestClient) -> None:

@@ -25,6 +25,7 @@ from app.models.core import LicenseCost, Ticket
 from app.models.staging import StagingTickets
 from app.repositories.analytics import AnalyticsRepository
 from app.services.executive import ExecutiveService
+from app.services.simple_ops import SimpleOpsService
 
 pytestmark = pytest.mark.integration
 
@@ -111,7 +112,7 @@ def test_l1_and_l2_tickets(
 
 def test_annual_saving_eur(repo: AnalyticsRepository) -> None:
     expected = excel_oracle.compute_annual_saving_eur(WORKBOOK)
-    actual = ExecutiveService(repo).kpis()["kpi_annual_saving_eur"].value
+    actual = ExecutiveService(repo, SimpleOpsService(repo)).kpis()["kpi_annual_saving_eur"].value
     assert actual == pytest.approx(float(expected), rel=1e-6)
 
 

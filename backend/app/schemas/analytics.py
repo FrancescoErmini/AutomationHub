@@ -39,24 +39,6 @@ class BacklogAging(BaseModel):
     backlog_over_15_days: int
 
 
-class RoiProcessRow(BaseModel):
-    process: str
-    company: str | None
-    capex_eur: float
-    annual_saving_eur: float
-    payback_months: float | None
-    roi_1_5y_pct: float | None
-    process_tco_available: bool
-
-
-class RoiCompanyRow(BaseModel):
-    company: str
-    annual_saving_eur: float
-    capex_eur: float
-    roi_1_5y_pct: float | None
-    payback_months: float | None
-
-
 class AvgResolutionRow(BaseModel):
     label: str
     avg_days: float

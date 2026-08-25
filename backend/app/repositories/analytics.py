@@ -356,21 +356,6 @@ class AnalyticsRepository:
         )
         return list(self._session.execute(stmt).tuples().all())
 
-    def process_economics_rows(self) -> list[tuple[str, str | None, Decimal, Decimal]]:
-        """(process_name, company_name, capex_eur, fte_hours_month_actual) per process."""
-        stmt = (
-            select(
-                Process.canonical_name,
-                Company.name,
-                ProcessEconomics.capex_eur,
-                ProcessEconomics.fte_hours_month_actual,
-            )
-            .join(Process, Process.id == ProcessEconomics.process_id)
-            .outerjoin(Company, Company.id == Process.company_id)
-            .order_by(Process.canonical_name)
-        )
-        return list(self._session.execute(stmt).tuples().all())
-
     def pipeline_processes(self) -> list[tuple[str, str | None, str | None, str | None]]:
         """(canonical_name, department_name, description, status) for every pipeline process."""
         stmt = (

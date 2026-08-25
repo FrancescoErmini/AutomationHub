@@ -17,7 +17,6 @@ from app.services.ideas import IdeaService
 from app.services.items import ItemService
 from app.services.operations import OperationsService
 from app.services.process_catalog import ProcessCatalogService
-from app.services.roi import RoiService
 from app.services.service_performance import ServicePerformanceService
 from app.services.simple_ops import SimpleOpsService
 
@@ -55,10 +54,6 @@ def get_operations_service(repo: AnalyticsRepositoryDependency) -> OperationsSer
     return OperationsService(repo)
 
 
-def get_roi_service(repo: AnalyticsRepositoryDependency) -> RoiService:
-    return RoiService(repo)
-
-
 def get_process_catalog_service(repo: AnalyticsRepositoryDependency) -> ProcessCatalogService:
     return ProcessCatalogService(repo)
 
@@ -71,7 +66,6 @@ def get_service_performance_service(
 
 ExecutiveServiceDependency = Annotated[ExecutiveService, Depends(get_executive_service)]
 OperationsServiceDependency = Annotated[OperationsService, Depends(get_operations_service)]
-RoiServiceDependency = Annotated[RoiService, Depends(get_roi_service)]
 ProcessCatalogServiceDependency = Annotated[
     ProcessCatalogService, Depends(get_process_catalog_service)
 ]
