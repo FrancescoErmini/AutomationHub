@@ -80,5 +80,11 @@ class TcoTrendPoint(BaseModel):
     total_eur: float
 
 
+class SavingsPaybackPoint(BaseModel):
+    year: int
+    cumulative_spend_eur: float
+    cumulative_saving_eur: float
+
+
 class FilterOptions(BaseModel):
     companies: list[str]

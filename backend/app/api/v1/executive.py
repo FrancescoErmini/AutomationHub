@@ -1,7 +1,13 @@
 from fastapi import APIRouter, Query
 
 from app.dependencies import ExecutiveServiceDependency
-from app.schemas.analytics import CompanySummaryRow, ExecutiveTrends, TcoTrendPoint, TrendPoint
+from app.schemas.analytics import (
+    CompanySummaryRow,
+    ExecutiveTrends,
+    SavingsPaybackPoint,
+    TcoTrendPoint,
+    TrendPoint,
+)
 from app.schemas.metrics import MetricValue
 
 router = APIRouter(prefix="/executive", tags=["executive"])
@@ -36,3 +42,8 @@ def get_cost_breakdown(service: ExecutiveServiceDependency) -> list[MetricValue]
 @router.get("/tco-trend", response_model=list[TcoTrendPoint])
 def get_tco_trend(service: ExecutiveServiceDependency) -> list[TcoTrendPoint]:
     return [TcoTrendPoint(**row) for row in service.tco_trend()]
+
+
+@router.get("/savings-payback", response_model=list[SavingsPaybackPoint])
+def get_savings_payback(service: ExecutiveServiceDependency) -> list[SavingsPaybackPoint]:
+    return [SavingsPaybackPoint(**row) for row in service.savings_payback_trend()]

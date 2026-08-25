@@ -207,3 +207,22 @@ def test_tco_trend_includes_a_year_with_capex_but_no_running_cost_data(
     assert trend[2021]["capex_eur"] == pytest.approx(20700.50)
     assert trend[2021]["license_eur"] == pytest.approx(0.0)
     assert trend[2021]["total_eur"] == pytest.approx(20700.50)
+
+
+def test_savings_payback_trend_accumulates_spend_and_saving_by_year(
+    db_session: Session, simple_ops: SimpleOpsService
+) -> None:
+    service = ExecutiveService(AnalyticsRepository(db_session), simple_ops)
+
+    payback = service.savings_payback_trend()
+    tco = service.tco_trend()
+
+    years = [row["year"] for row in tco]
+    assert [row["year"] for row in payback] == years
+
+    running_spend = 0.0
+    for tco_row, payback_row in zip(tco, payback, strict=True):
+        running_spend += tco_row["total_eur"]
+        assert payback_row["cumulative_spend_eur"] == pytest.approx(running_spend)
+    savings = [row["cumulative_saving_eur"] for row in payback]
+    assert savings == sorted(savings)

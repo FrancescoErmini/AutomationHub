@@ -211,3 +211,32 @@ class ExecutiveService:
                 }
             )
         return rows
+
+    def savings_payback_trend(self) -> list[dict[str, Any]]:
+        """Cumulative spend (running CAPEX + running-cost total, from
+        tco_trend) vs. cumulative realized saving (from the existing
+        go-live-month saving ramp), one point per real year -- the portfolio
+        payback curve."""
+        tco_rows = self.tco_trend()
+        cumulative_by_month = self.trends()["saving_by_month"]
+
+        rows = []
+        running_spend = Decimal("0")
+        for tco_row in tco_rows:
+            year = tco_row["year"]
+            running_spend += Decimal(str(tco_row["total_eur"]))
+            cumulative_saving = Decimal("0")
+            for point in cumulative_by_month:
+                point_year = int(point["period"][:4])
+                if point_year <= year:
+                    cumulative_saving = Decimal(str(point["value"]))
+                else:
+                    break
+            rows.append(
+                {
+                    "year": year,
+                    "cumulative_spend_eur": _round_money(running_spend),
+                    "cumulative_saving_eur": _round_money(cumulative_saving),
+                }
+            )
+        return rows
