@@ -18,12 +18,12 @@ import { ProcessRoiTable } from '../components/ProcessRoiTable'
 import { StackedBarChart } from '../components/StackedBarChart'
 import { TrendChart } from '../components/TrendChart'
 
-const KPI_CARDS: { key: string; label: string }[] = [
+const KPI_CARDS: { key: string; label: string; signColor?: boolean }[] = [
   { key: 'kpi_annual_saving_eur', label: 'Annual saving' },
   { key: 'kpi_total_capex_eur', label: 'Total CAPEX' },
   { key: 'kpi_total_saved_to_date_eur', label: 'Total saved to date' },
   { key: 'kpi_total_spend_to_date_eur', label: 'Total spent to date' },
-  { key: 'kpi_net_position_eur', label: 'Net position' },
+  { key: 'kpi_net_position_eur', label: 'Net position', signColor: true },
   { key: 'kpi_total_tickets', label: 'Total tickets' },
 ]
 
@@ -79,34 +79,15 @@ export function ExecutivePage() {
       >
         <section aria-label="Executive KPIs" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {KPI_CARDS.map((card) => (
-            <MetricCard key={card.key} label={card.label} metric={kpis.data?.[card.key]} />
+            <MetricCard
+              key={card.key}
+              label={card.label}
+              metric={kpis.data?.[card.key]}
+              signColor={card.signColor}
+            />
           ))}
         </section>
       </AsyncSection>
-
-      <section
-        aria-label="TCO trend"
-        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-      >
-        <h2 className="mb-4 font-semibold text-ink">TCO by component, by year</h2>
-        <AsyncSection
-          isPending={tcoTrend.isPending}
-          isError={tcoTrend.isError}
-          error={tcoTrend.error}
-          loadingLabel="Loading TCO trend…"
-        >
-          {tcoTrend.data && tcoTrend.data.length > 0 ? (
-            <StackedBarChart
-              data={tcoTrend.data}
-              xKey="year"
-              series={TCO_SERIES}
-              valueFormatter={(value) => formatValue(value, 'eur')}
-            />
-          ) : (
-            <p className="text-sm text-slate-500">No TCO trend data available.</p>
-          )}
-        </AsyncSection>
-      </section>
 
       <section
         aria-label="Savings payback"
@@ -135,47 +116,52 @@ export function ExecutivePage() {
         </AsyncSection>
       </section>
 
-      <section aria-label="Trends" className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 font-semibold text-ink">Saving trend</h2>
-          <AsyncSection
-            isPending={trends.isPending}
-            isError={trends.isError}
-            error={trends.error}
-            loadingLabel="Loading saving trend…"
-          >
-            {trends.data && trends.data.saving_by_month.length > 0 ? (
-              <TrendChart
-                data={trends.data.saving_by_month}
-                xKey="period"
-                series={[{ key: 'value', label: 'Cumulative annual saving' }]}
-                valueFormatter={(value) => formatValue(value, 'eur')}
-              />
-            ) : (
-              <p className="text-sm text-slate-500">No saving trend data available.</p>
-            )}
-          </AsyncSection>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 font-semibold text-ink">Ticket trend</h2>
-          <AsyncSection
-            isPending={trends.isPending}
-            isError={trends.isError}
-            error={trends.error}
-            loadingLabel="Loading ticket trend…"
-          >
-            {trends.data && trends.data.tickets_by_month.length > 0 ? (
-              <TrendChart
-                data={trends.data.tickets_by_month}
-                xKey="period"
-                series={[{ key: 'value', label: 'Tickets' }]}
-                valueFormatter={(value) => formatValue(value, 'count')}
-              />
-            ) : (
-              <p className="text-sm text-slate-500">No ticket trend data available.</p>
-            )}
-          </AsyncSection>
-        </div>
+      <section
+        aria-label="TCO trend"
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <h2 className="mb-4 font-semibold text-ink">TCO by component, by year</h2>
+        <AsyncSection
+          isPending={tcoTrend.isPending}
+          isError={tcoTrend.isError}
+          error={tcoTrend.error}
+          loadingLabel="Loading TCO trend…"
+        >
+          {tcoTrend.data && tcoTrend.data.length > 0 ? (
+            <StackedBarChart
+              data={tcoTrend.data}
+              xKey="year"
+              series={TCO_SERIES}
+              valueFormatter={(value) => formatValue(value, 'eur')}
+            />
+          ) : (
+            <p className="text-sm text-slate-500">No TCO trend data available.</p>
+          )}
+        </AsyncSection>
+      </section>
+
+      <section
+        aria-label="Trends"
+        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <h2 className="mb-4 font-semibold text-ink">Saving trend</h2>
+        <AsyncSection
+          isPending={trends.isPending}
+          isError={trends.isError}
+          error={trends.error}
+          loadingLabel="Loading saving trend…"
+        >
+          {trends.data && trends.data.saving_by_month.length > 0 ? (
+            <TrendChart
+              data={trends.data.saving_by_month}
+              xKey="period"
+              series={[{ key: 'value', label: 'Cumulative annual saving' }]}
+              valueFormatter={(value) => formatValue(value, 'eur')}
+            />
+          ) : (
+            <p className="text-sm text-slate-500">No saving trend data available.</p>
+          )}
+        </AsyncSection>
       </section>
 
       <section aria-label="Process ROI">
