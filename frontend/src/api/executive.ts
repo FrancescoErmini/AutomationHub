@@ -37,3 +37,26 @@ export async function fetchExecutiveCompanySummary(): Promise<
 export async function fetchExecutiveCostBreakdown(): Promise<MetricValue[]> {
   return getJson<MetricValue[]>('/api/v1/executive/cost-breakdown')
 }
+
+export interface TcoTrendPoint {
+  year: number
+  capex_eur: number
+  license_eur: number
+  infrastructure_eur: number
+  ams_eur: number
+  total_eur: number
+}
+
+export interface SavingsPaybackPoint {
+  year: number
+  cumulative_spend_eur: number
+  cumulative_saving_eur: number
+}
+
+export async function fetchExecutiveTcoTrend(): Promise<TcoTrendPoint[]> {
+  return getJson<TcoTrendPoint[]>('/api/v1/executive/tco-trend')
+}
+
+export async function fetchExecutiveSavingsPayback(): Promise<SavingsPaybackPoint[]> {
+  return getJson<SavingsPaybackPoint[]>('/api/v1/executive/savings-payback')
+}
