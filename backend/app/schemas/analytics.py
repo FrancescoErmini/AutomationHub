@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel
 
 
@@ -84,6 +86,18 @@ class SavingsPaybackPoint(BaseModel):
     year: int
     cumulative_spend_eur: float
     cumulative_saving_eur: float
+
+
+class ProcessRoiRow(BaseModel):
+    process: str
+    company: str | None
+    go_live_date: date | None
+    capex_eur: float
+    annual_saving_eur: float
+    payback_months: float | None
+    cumulative_saving_since_go_live_eur: float
+    expected_roi_pct: float | None
+    actual_roi_pct: float | None
 
 
 class FilterOptions(BaseModel):

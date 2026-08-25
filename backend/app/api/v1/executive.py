@@ -4,6 +4,7 @@ from app.dependencies import ExecutiveServiceDependency
 from app.schemas.analytics import (
     CompanySummaryRow,
     ExecutiveTrends,
+    ProcessRoiRow,
     SavingsPaybackPoint,
     TcoTrendPoint,
     TrendPoint,
@@ -47,3 +48,10 @@ def get_tco_trend(service: ExecutiveServiceDependency) -> list[TcoTrendPoint]:
 @router.get("/savings-payback", response_model=list[SavingsPaybackPoint])
 def get_savings_payback(service: ExecutiveServiceDependency) -> list[SavingsPaybackPoint]:
     return [SavingsPaybackPoint(**row) for row in service.savings_payback_trend()]
+
+
+@router.get("/processes", response_model=list[ProcessRoiRow])
+def get_processes(
+    service: ExecutiveServiceDependency, company: str | None = Query(default=None)
+) -> list[ProcessRoiRow]:
+    return [ProcessRoiRow(**row) for row in service.process_roi_table(company=company)]

@@ -52,3 +52,41 @@ def test_savings_payback_endpoint_returns_a_list_of_year_rows(
     assert [row["year"] for row in body] == [2021, 2024, 2025]
     for row in body:
         assert set(row) == {"year", "cumulative_spend_eur", "cumulative_saving_eur"}
+
+
+def test_processes_endpoint_returns_process_roi_rows(
+    client: TestClient, db_session: Session
+) -> None:
+    run_rpa_ingestion(db_session, FIXTURE)
+
+    response = client.get("/api/v1/executive/processes")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 2  # Alpha and Beta -- the only ECONOMICS rows in the fixture
+    row = body[0]
+    assert set(row) == {
+        "process",
+        "company",
+        "go_live_date",
+        "capex_eur",
+        "annual_saving_eur",
+        "payback_months",
+        "cumulative_saving_since_go_live_eur",
+        "expected_roi_pct",
+        "actual_roi_pct",
+    }
+
+
+def test_processes_endpoint_respects_the_company_filter(
+    client: TestClient, db_session: Session
+) -> None:
+    run_rpa_ingestion(db_session, FIXTURE)
+
+    response = client.get("/api/v1/executive/processes", params={"company": "Menarini"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["process"] == "RPA - Test Alpha"
+    assert body[0]["company"] == "Menarini"
