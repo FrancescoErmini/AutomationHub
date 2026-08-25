@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -190,3 +191,40 @@ def test_savings_payback_trend_accumulates_spend_and_saving_by_year(
         assert payback_row["cumulative_spend_eur"] == pytest.approx(running_spend)
     savings = [row["cumulative_saving_eur"] for row in payback]
     assert savings == sorted(savings)
+
+
+def test_process_roi_table_computes_expected_and_actual_roi(service: ExecutiveService) -> None:
+    rows = {row["process"]: row for row in service.process_roi_table(as_of=date(2026, 6, 1))}
+
+    alpha = rows["RPA - Test Alpha"]
+    # go-live 2021-06-01 -> as_of 2026-06-01 is exactly 60 whole months.
+    assert alpha["go_live_date"] == date(2021, 6, 1)
+    assert alpha["capex_eur"] == pytest.approx(12500.00)
+    assert alpha["annual_saving_eur"] == pytest.approx(12768.00)
+    expected_cumulative = 12768.00 / 12 * 60
+    assert alpha["cumulative_saving_since_go_live_eur"] == pytest.approx(
+        expected_cumulative, rel=1e-3
+    )
+    expected_actual_roi = (expected_cumulative - 12500.00) / 12500.00 * 100
+    assert alpha["actual_roi_pct"] == pytest.approx(expected_actual_roi, rel=1e-3)
+    expected_roi = (12768.00 * 5 - 12500.00) / 12500.00 * 100  # roi_expected_yr = 5
+    assert alpha["expected_roi_pct"] == pytest.approx(expected_roi, rel=1e-3)
+    assert alpha["payback_months"] == pytest.approx(12500.00 / (12768.00 / 12), rel=1e-3)
+
+
+def test_process_roi_table_orders_best_actual_roi_first(service: ExecutiveService) -> None:
+    rows = service.process_roi_table(as_of=date(2026, 6, 1))
+    scored = [row["actual_roi_pct"] for row in rows if row["actual_roi_pct"] is not None]
+
+    assert scored == sorted(scored, reverse=True)
+
+
+def test_process_roi_table_never_reports_negative_cumulative_saving(
+    service: ExecutiveService,
+) -> None:
+    # Before any process has gone live, cumulative saving must clamp at 0,
+    # never go negative.
+    rows = service.process_roi_table(as_of=date(2020, 1, 1))
+
+    for row in rows:
+        assert row["cumulative_saving_since_go_live_eur"] >= 0

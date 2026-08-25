@@ -8,6 +8,7 @@ becomes unavailable the moment a ``company`` filter is applied -- attributing
 the full portfolio run cost to one company would misrepresent it.
 """
 
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
@@ -17,6 +18,29 @@ from app.services.simple_ops import SimpleOpsService
 
 _MONEY = Decimal("0.01")
 _PCT = Decimal("0.001")
+
+
+def _payback_months(investment: Decimal, annual_saving: Decimal) -> float | None:
+    if annual_saving <= 0:
+        return None
+    return float(
+        (investment / (annual_saving / 12)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+    )
+
+
+def _roi_pct(annual_saving: Decimal, multiplier: Decimal, investment: Decimal) -> float | None:
+    if investment <= 0:
+        return None
+    return _round_pct((annual_saving * multiplier - investment) / investment)
+
+
+def _months_elapsed(start: date, as_of: date) -> int:
+    if as_of < start:
+        return 0
+    months = (as_of.year - start.year) * 12 + (as_of.month - start.month)
+    if as_of.day < start.day:
+        months -= 1
+    return max(months, 0)
 
 
 def _round_money(value: Decimal) -> float:
@@ -208,4 +232,51 @@ class ExecutiveService:
                     "cumulative_saving_eur": _round_money(cumulative_saving),
                 }
             )
+        return rows
+
+    def process_roi_table(
+        self, *, company: str | None = None, as_of: date | None = None
+    ) -> list[dict[str, Any]]:
+        as_of = as_of or date.today()
+        bc_saving = self._repo.reference_variable("cost_per_hour_FTE") or Decimal("0")
+
+        rows: list[dict[str, Any]] = []
+        for (
+            process_name,
+            company_name,
+            capex,
+            fte_hours_month,
+            go_live_date,
+            roi_expected_yr,
+        ) in self._repo.process_roi_rows():
+            if company is not None and company_name != company:
+                continue
+            annual_saving = bc_saving * fte_hours_month * 12
+            months_live = _months_elapsed(go_live_date, as_of) if go_live_date else 0
+            cumulative_saving = (annual_saving / 12) * months_live
+
+            expected_roi_pct = (
+                _roi_pct(annual_saving, Decimal(roi_expected_yr), capex)
+                if roi_expected_yr is not None
+                else None
+            )
+            actual_roi_pct = _roi_pct(cumulative_saving, Decimal("1"), capex)
+
+            rows.append(
+                {
+                    "process": process_name,
+                    "company": company_name,
+                    "go_live_date": go_live_date,
+                    "capex_eur": _round_money(capex),
+                    "annual_saving_eur": _round_money(annual_saving),
+                    "payback_months": _payback_months(capex, annual_saving),
+                    "cumulative_saving_since_go_live_eur": _round_money(cumulative_saving),
+                    "expected_roi_pct": expected_roi_pct,
+                    "actual_roi_pct": actual_roi_pct,
+                }
+            )
+
+        rows.sort(
+            key=lambda row: (row["actual_roi_pct"] is None, -(row["actual_roi_pct"] or 0))
+        )
         return rows
