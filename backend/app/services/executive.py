@@ -18,6 +18,9 @@ from app.services.simple_ops import SimpleOpsService
 
 _MONEY = Decimal("0.01")
 _PCT = Decimal("0.001")
+# 8h/day x 20 working days -- standard FTE-month baseline used to convert
+# summed automated hours/month into a headcount-equivalent figure.
+_FTE_MONTHLY_HOURS = Decimal("160")
 
 
 def _payback_months(investment: Decimal, annual_saving: Decimal) -> float | None:
@@ -51,6 +54,14 @@ def _round_pct(fraction: Decimal) -> float:
     return float((fraction * 100).quantize(_PCT, rounding=ROUND_HALF_UP))
 
 
+def _round1(value: Decimal) -> float:
+    return float(value.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
+
+
+def _round2(value: Decimal) -> float:
+    return float(value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
 class ExecutiveService:
     def __init__(self, repo: AnalyticsRepository, simple_ops: SimpleOpsService) -> None:
         self._repo = repo
@@ -66,6 +77,7 @@ class ExecutiveService:
         total_saved_to_date = (
             Decimal(str(saving_by_month[-1]["value"])) if saving_by_month else Decimal("0")
         )
+        fte_freed = self._repo.total_fte_hours_month(company=company) / _FTE_MONTHLY_HOURS
 
         metrics: dict[str, MetricValue] = {
             "kpi_annual_saving_eur": available_metric(
@@ -83,6 +95,9 @@ class ExecutiveService:
             "kpi_total_tickets": available_metric(
                 "kpi_total_tickets", ticket_counts.total, "count", filters=filters
             ),
+            "kpi_fte_freed": available_metric(
+                "kpi_fte_freed", _round1(fte_freed), "fte", filters=filters
+            ),
         }
 
         if company is not None:
@@ -96,6 +111,12 @@ class ExecutiveService:
             metrics["kpi_net_position_eur"] = unavailable_metric(
                 "kpi_net_position_eur", "eur", reason=reason, filters=filters
             )
+            metrics["kpi_roi_multiple"] = unavailable_metric(
+                "kpi_roi_multiple", "ratio", reason=reason, filters=filters
+            )
+            metrics["kpi_payback_year"] = unavailable_metric(
+                "kpi_payback_year", "year", reason=reason, filters=filters
+            )
             return metrics
 
         total_spend_to_date = sum(
@@ -108,6 +129,37 @@ class ExecutiveService:
         metrics["kpi_net_position_eur"] = available_metric(
             "kpi_net_position_eur", _round_money(net_position), "eur", filters=filters
         )
+
+        if total_spend_to_date > 0:
+            roi_multiple = total_saved_to_date / total_spend_to_date
+            metrics["kpi_roi_multiple"] = available_metric(
+                "kpi_roi_multiple", _round2(roi_multiple), "ratio", filters=filters
+            )
+        else:
+            metrics["kpi_roi_multiple"] = unavailable_metric(
+                "kpi_roi_multiple", "ratio", reason="total spend to date is zero", filters=filters
+            )
+
+        # The earliest year of the *sustained* run where cumulative saving has
+        # stayed at or above cumulative spend through the latest year --
+        # scanning forward for the first crossing would flag a year as
+        # "payback" even if spend later overtakes saving again.
+        payback_row = None
+        for row in reversed(self.savings_payback_trend()):
+            if row["cumulative_saving_eur"] < row["cumulative_spend_eur"]:
+                break
+            payback_row = row
+        if payback_row is not None:
+            metrics["kpi_payback_year"] = available_metric(
+                "kpi_payback_year", payback_row["year"], "year", filters=filters
+            )
+        else:
+            metrics["kpi_payback_year"] = unavailable_metric(
+                "kpi_payback_year",
+                "year",
+                reason="cumulative saving has not yet overtaken cumulative spend",
+                filters=filters,
+            )
         return metrics
 
     def trends(self, *, company: str | None = None) -> dict[str, list[dict[str, Any]]]:

@@ -64,10 +64,7 @@ class AnalyticsRepository:
             select(ReferenceVariable.value).where(ReferenceVariable.name == name)
         )
 
-    def annual_saving_eur(self, *, company: str | None = None) -> Decimal:
-        bc_saving = self.reference_variable("cost_per_hour_FTE")
-        if bc_saving is None:
-            return Decimal("0")
+    def total_fte_hours_month(self, *, company: str | None = None) -> Decimal:
         stmt = select(
             func.coalesce(func.sum(ProcessEconomics.fte_hours_month_actual), 0)
         ).select_from(ProcessEconomics)
@@ -77,8 +74,13 @@ class AnalyticsRepository:
                 .join(Company, Company.id == Process.company_id)
                 .where(Company.name == company)
             )
-        total_fte_hours_month = self._session.scalar(stmt) or Decimal("0")
-        return bc_saving * Decimal(total_fte_hours_month) * 12
+        return Decimal(self._session.scalar(stmt) or 0)
+
+    def annual_saving_eur(self, *, company: str | None = None) -> Decimal:
+        bc_saving = self.reference_variable("cost_per_hour_FTE")
+        if bc_saving is None:
+            return Decimal("0")
+        return bc_saving * self.total_fte_hours_month(company=company) * 12
 
     def extra_annual_saving_eur(self, *, company: str | None = None) -> Decimal:
         stmt = select(func.coalesce(func.sum(ProcessEconomics.extra_annual_saving_eur), 0))

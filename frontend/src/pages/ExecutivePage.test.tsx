@@ -14,28 +14,22 @@ function mockRoutes() {
     '/api/v1/metadata/filters': { companies: ['Menarini', 'Codifi'] },
     '/api/v1/executive/kpis': {
       kpi_annual_saving_eur: metric('kpi_annual_saving_eur', 17715.6, 'eur'),
-      kpi_total_capex_eur: metric('kpi_total_capex_eur', 20700.5, 'eur'),
       kpi_total_saved_to_date_eur: metric('kpi_total_saved_to_date_eur', 12768, 'eur'),
       kpi_total_spend_to_date_eur: metric('kpi_total_spend_to_date_eur', 158700.5, 'eur'),
       kpi_net_position_eur: metric('kpi_net_position_eur', -145932.5, 'eur'),
-      kpi_total_tickets: metric('kpi_total_tickets', 709, 'count'),
+      kpi_roi_multiple: metric('kpi_roi_multiple', 0.08, 'ratio'),
+      kpi_payback_year: metric('kpi_payback_year', 2025, 'year'),
+      kpi_fte_freed: metric('kpi_fte_freed', 5.4, 'fte'),
     },
-    '/api/v1/executive/trends': {
-      saving_by_month: [{ period: '2021-06', value: 12768 }],
-      tickets_by_month: [{ period: '2024-01', value: 5 }],
-    },
-    '/api/v1/executive/tco-trend': [
+    '/api/v1/executive/tco-roi': [
       {
         year: 2024,
         capex_eur: 0,
-        license_eur: 13000,
-        infrastructure_eur: 0,
-        ams_eur: 45500,
-        total_eur: 58500,
+        opex_eur: 58500,
+        opex_breakdown: { AMS: 45500, LICENSES: 13000 },
+        savings_eur: 12768,
+        net_benefit_eur: -45732,
       },
-    ],
-    '/api/v1/executive/savings-payback': [
-      { year: 2024, cumulative_spend_eur: 58500, cumulative_saving_eur: 12768 },
     ],
     '/api/v1/executive/processes': [
       {
@@ -66,15 +60,14 @@ describe('ExecutivePage', () => {
     expect(within(kpiSection).queryByText('ROI 3Y')).not.toBeInTheDocument()
   })
 
-  it('renders the TCO decomposition and payback charts', async () => {
+  it('renders the TCO & ROI chart', async () => {
     mockRoutes()
     renderWithQueryClient(<ExecutivePage />)
 
     expect(
-      await screen.findByRole('heading', { name: 'TCO by component, by year' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: 'Cumulative savings vs. cumulative spend' }),
+      await screen.findByRole('heading', {
+        name: 'RPA Total Cost of Ownership (TCO) & ROI Analysis',
+      }),
     ).toBeInTheDocument()
   })
 
@@ -92,15 +85,14 @@ describe('ExecutivePage', () => {
       '/api/v1/metadata/filters': { companies: ['Menarini', 'Codifi'] },
       '/api/v1/executive/kpis': {
         kpi_annual_saving_eur: metric('kpi_annual_saving_eur', 17715.6, 'eur'),
-        kpi_total_capex_eur: metric('kpi_total_capex_eur', 20700.5, 'eur'),
         kpi_total_saved_to_date_eur: metric('kpi_total_saved_to_date_eur', 12768, 'eur'),
         kpi_total_spend_to_date_eur: metric('kpi_total_spend_to_date_eur', null, 'eur', false),
         kpi_net_position_eur: metric('kpi_net_position_eur', null, 'eur', false),
-        kpi_total_tickets: metric('kpi_total_tickets', 6, 'count'),
+        kpi_roi_multiple: metric('kpi_roi_multiple', null, 'ratio', false),
+        kpi_payback_year: metric('kpi_payback_year', null, 'year', false),
+        kpi_fte_freed: metric('kpi_fte_freed', 5.4, 'fte'),
       },
-      '/api/v1/executive/trends': { saving_by_month: [], tickets_by_month: [] },
-      '/api/v1/executive/tco-trend': [],
-      '/api/v1/executive/savings-payback': [],
+      '/api/v1/executive/tco-roi': [],
       '/api/v1/executive/processes': [],
     })
     renderWithQueryClient(<ExecutivePage />)

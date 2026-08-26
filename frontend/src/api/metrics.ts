@@ -39,6 +39,8 @@ export function formatValue(value: number | string, unit: string): string {
       return `${value.toFixed(1)} mo`
     case 'count':
       return new Intl.NumberFormat('en-IE').format(value)
+    case 'fte':
+      return `${value.toFixed(1)} FTE`
     default:
       return String(value)
   }
