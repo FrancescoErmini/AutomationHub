@@ -55,6 +55,9 @@ services:
       dockerfile: Dockerfile
     environment:
       VITE_API_PROXY_TARGET: http://backend:8000
+      VITE_OIDC_AUTHORITY: ${OIDC_ISSUER:-https://keycloak-dev.menarini.net/auth/realms/menarini}
+      VITE_OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-mg-app_AutomationHub}
+      VITE_OIDC_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-http://localhost:${FRONTEND_PORT:-5173}/auth/callback}
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
