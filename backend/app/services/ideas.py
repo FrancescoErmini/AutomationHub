@@ -30,7 +30,7 @@ class IdeaService:
             raise NotFoundError(f"Idea {idea_id} not found")
         return idea
 
-    def create_idea(self, payload: IdeaCreate) -> dict[str, Any]:
+    def create_idea(self, payload: IdeaCreate, submitter_name: str) -> dict[str, Any]:
         if self._repository.get_process(payload.apqc_process_id) is None:
             raise NotFoundError(f"APQC process {payload.apqc_process_id} not found")
 
@@ -67,7 +67,7 @@ class IdeaService:
 
         idea = Idea(
             title=payload.title,
-            submitter_name=payload.submitter_name,
+            submitter_name=submitter_name,
             apqc_process_id=payload.apqc_process_id,
             primary_goal=payload.primary_goal,
             process_stability=payload.process_stability,

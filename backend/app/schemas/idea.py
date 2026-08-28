@@ -35,7 +35,6 @@ AiOutputRisk = Literal[
 class IdeaCreate(BaseModel):
     # Step 1
     title: str = Field(min_length=1, max_length=300)
-    submitter_name: str = Field(min_length=1, max_length=200)
 
     # Step 2
     apqc_process_id: int
@@ -71,7 +70,7 @@ class IdeaCreate(BaseModel):
     computer_vision: ComputerVision
     ai_output_risk: AiOutputRisk
 
-    @field_validator("title", "submitter_name")
+    @field_validator("title")
     @classmethod
     def strip_and_require(cls, value: str) -> str:
         if not (cleaned := value.strip()):

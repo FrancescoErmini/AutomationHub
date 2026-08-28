@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 
-from app.dependencies import IdeaServiceDependency
+from app.dependencies import CurrentUser, IdeaServiceDependency
 from app.schemas.idea import IdeaCreate, IdeaDetail, IdeaRead
 
 router = APIRouter(prefix="/ideas", tags=["ideas"])
@@ -17,5 +17,8 @@ def get_idea(idea_id: int, service: IdeaServiceDependency) -> IdeaDetail:
 
 
 @router.post("", response_model=IdeaDetail, status_code=status.HTTP_201_CREATED)
-def create_idea(payload: IdeaCreate, service: IdeaServiceDependency) -> IdeaDetail:
-    return IdeaDetail(**service.create_idea(payload))
+def create_idea(
+    payload: IdeaCreate, service: IdeaServiceDependency, user: CurrentUser
+) -> IdeaDetail:
+    submitter_name = user.name or user.preferred_username or user.email or "Unknown"
+    return IdeaDetail(**service.create_idea(payload, submitter_name))
