@@ -7,7 +7,9 @@ from sqlalchemy import create_engine, delete, text
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.dependencies import get_current_user
 from app.main import app
+from app.models.auth import AppUser
 from app.models.item import Item
 
 TEST_DATABASE_URL = os.environ.get(
@@ -66,7 +68,13 @@ def client() -> Generator[TestClient, None, None]:
         with Session(test_engine) as session:
             yield session
 
+    def override_current_user() -> AppUser:
+        return AppUser(
+            id=1, sub="test-sub", email="test@example.com", name="Test User", role="admin"
+        )
+
     app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_user] = override_current_user
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
