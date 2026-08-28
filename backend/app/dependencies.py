@@ -1,11 +1,18 @@
+from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.exceptions import AuthError, ForbiddenError
+from app.core.security import TokenClaims, decode_token
 from app.db.session import get_db
+from app.models.auth import AppUser
 from app.repositories.admin import AdminRepository
 from app.repositories.analytics import AnalyticsRepository
 from app.repositories.ideas import IdeaRepository
@@ -111,3 +118,85 @@ def get_rpa_workbook_path() -> Path:
 
 
 RpaWorkbookPathDependency = Annotated[Path, Depends(get_rpa_workbook_path)]
+
+
+bearer_scheme = HTTPBearer(auto_error=False)
+
+_PROFILE_FIELDS = ("email", "preferred_username", "name", "given_name", "family_name")
+
+
+def _bootstrap_admin_emails() -> set[str]:
+    raw = get_settings().bootstrap_admin_emails
+    return {part.strip().lower() for part in raw.split(",") if part.strip()}
+
+
+def _sync_profile(user: AppUser, claims: TokenClaims) -> bool:
+    changed = False
+    for field in _PROFILE_FIELDS:
+        new_value = getattr(claims, field)
+        if new_value is not None and getattr(user, field) != new_value:
+            setattr(user, field, new_value)
+            changed = True
+    return changed
+
+
+def _maybe_promote(user: AppUser, email: str | None) -> bool:
+    if email and email.lower() in _bootstrap_admin_emails() and user.role != "admin":
+        user.role = "admin"
+        return True
+    return False
+
+
+def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    session: DbSession,
+) -> AppUser:
+    if credentials is None:
+        raise AuthError("Missing bearer token")
+    claims = decode_token(credentials.credentials)
+
+    user = session.scalar(select(AppUser).where(AppUser.sub == claims.sub))
+    if user is None:
+        user = AppUser(
+            sub=claims.sub,
+            email=claims.email,
+            preferred_username=claims.preferred_username,
+            name=claims.name,
+            given_name=claims.given_name,
+            family_name=claims.family_name,
+            role="user",
+        )
+        _maybe_promote(user, claims.email)
+        session.add(user)
+        try:
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            user = session.scalar(select(AppUser).where(AppUser.sub == claims.sub))
+            if user is None:
+                raise
+        else:
+            session.refresh(user)
+            return user
+
+    changed = _sync_profile(user, claims)
+    changed = _maybe_promote(user, claims.email) or changed
+    if changed:
+        session.commit()
+        session.refresh(user)
+    return user
+
+
+CurrentUser = Annotated[AppUser, Depends(get_current_user)]
+
+
+def require_role(*allowed: str) -> Callable[..., AppUser]:
+    def dependency(user: CurrentUser) -> AppUser:
+        if user.role == "admin" or user.role in allowed:
+            return user
+        raise ForbiddenError(f"Requires role: {' or '.join(allowed)}")
+
+    return dependency
+
+
+RequireEditor = Annotated[AppUser, Depends(require_role("editor"))]
