@@ -5,6 +5,7 @@ from app.api.v1 import (
     apqc,
     executive,
     ideas,
+    me,
     metadata,
     operations,
     process_catalog,
@@ -23,6 +24,7 @@ router.include_router(process_catalog.router)
 router.include_router(simple_ops.router)
 router.include_router(apqc.router)
 router.include_router(ideas.router)
+router.include_router(me.router)
 router.include_router(admin.router)
 
 
