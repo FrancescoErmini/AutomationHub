@@ -120,7 +120,8 @@ class ExecutiveService:
             return metrics
 
         total_spend_to_date = sum(
-            (Decimal(str(row["total_eur"])) for row in self.tco_trend()), Decimal("0")
+            (year_costs["capex"] + year_costs["opex"] for year_costs in self._repo.tco_cost_by_year().values()),
+            Decimal("0"),
         )
         net_position = total_saved_to_date - total_spend_to_date
         metrics["kpi_total_spend_to_date_eur"] = available_metric(
@@ -358,6 +359,7 @@ class ExecutiveService:
                     "company": company_name,
                     "go_live_date": go_live_date,
                     "capex_eur": _round_money(capex),
+                    "fte_hours_month_actual": _round2(fte_hours_month),
                     "annual_saving_eur": _round_money(annual_saving),
                     "payback_months": _payback_months(capex, annual_saving),
                     "cumulative_saving_since_go_live_eur": _round_money(cumulative_saving),

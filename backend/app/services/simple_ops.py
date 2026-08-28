@@ -14,7 +14,6 @@ plain dicts, matching ExecutiveService/OperationsService conventions.
 
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
-from itertools import pairwise
 from typing import Any
 
 from app.repositories.analytics import AnalyticsRepository
@@ -170,40 +169,27 @@ class SimpleOpsService:
         return metrics
 
     def running_cost_trend(self) -> list[dict[str, Any]]:
-        """Real totals for every year with a full AMS-1L record (2024-2026
-        today), plus a linear-extrapolation estimate for the following year,
-        scaled by AMS-1L baseline process-count growth -- per the mockup's own
-        note ("2027 e' una stima lineare basata sulla crescita del numero di
-        processi")."""
-        baselines = {y: n for y, _, n in self._repo.ams_1l_by_year()}
-        years = sorted(baselines)
+        """Per-year breakdown (license + infrastructure + AMS 1L + 2L tickets
+        flat rate + change requests) for every year with a full AMS-1L record
+        (2024-2026 today). Only real data -- no forward-looking estimate."""
+        years = sorted(y for y, _, _ in self._repo.ams_1l_by_year())
         if not years:
             return []
 
-        points = [
-            {
-                "year": year,
-                "total_eur": _round_money(self._year_components(year)["total_eur"]),
-                "estimate": False,
-            }
-            for year in years
-        ]
-
-        if len(years) >= 2:
-            steps = [baselines[b] - baselines[a] for a, b in pairwise(years)]
-            avg_step = sum(steps) / len(steps)
-            last_year = years[-1]
-            if baselines[last_year] > 0:
-                projected_processes = baselines[last_year] + avg_step
-                growth_factor = Decimal(projected_processes) / Decimal(baselines[last_year])
-                last_total = Decimal(str(points[-1]["total_eur"]))
-                points.append(
-                    {
-                        "year": last_year + 1,
-                        "total_eur": _round_money(last_total * growth_factor),
-                        "estimate": True,
-                    }
-                )
+        points = []
+        for year in years:
+            c = self._year_components(year)
+            points.append(
+                {
+                    "year": year,
+                    "license_eur": _round_money(c["license_eur"]),
+                    "infrastructure_eur": _round_money(c["infra_eur"]),
+                    "ams_1l_eur": _round_money(c["ams_1l_eur"]),
+                    "ticket_2l_eur": _round_money(c["ticket_2l_eur"]),
+                    "change_request_eur": _round_money(c["rfc_eur"]),
+                    "total_eur": _round_money(c["total_eur"]),
+                }
+            )
         return points
 
     def license_cost_trend(self) -> list[dict[str, Any]]:

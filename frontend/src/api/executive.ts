@@ -29,6 +29,7 @@ export interface ProcessRoiRow {
   company: string | null
   go_live_date: string | null
   capex_eur: number
+  fte_hours_month_actual: number
   annual_saving_eur: number
   payback_months: number | null
   cumulative_saving_since_go_live_eur: number

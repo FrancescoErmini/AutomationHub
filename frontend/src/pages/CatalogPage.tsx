@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { fetchProcessCatalog } from '../api/processCatalog'
 import { AsyncSection } from '../components/AsyncSection'
 import { ProcessCatalogCard } from '../components/ProcessCatalogCard'
+import { SelectFilter } from '../components/SelectFilter'
 
 type View = 'live' | 'pipeline'
 
@@ -12,16 +13,40 @@ const toggleClass = (active: boolean) =>
     active ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-100'
   }`
 
+function uniqueSorted(values: (string | null)[]): string[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))].sort()
+}
+
 export function CatalogPage() {
   const [view, setView] = useState<View>('live')
+  const [company, setCompany] = useState('')
+  const [department, setDepartment] = useState('')
+  const [application, setApplication] = useState('')
   const catalog = useQuery({
     queryKey: ['process-catalog'],
     queryFn: fetchProcessCatalog,
   })
 
-  const items = (catalog.data ?? []).filter((item) =>
-    view === 'live' ? item.is_live : !item.is_live,
+  const companyOptions = useMemo(
+    () => uniqueSorted((catalog.data ?? []).map((item) => item.company)),
+    [catalog.data],
   )
+  const departmentOptions = useMemo(
+    () => uniqueSorted((catalog.data ?? []).map((item) => item.department)),
+    [catalog.data],
+  )
+  const applicationOptions = useMemo(
+    () => uniqueSorted((catalog.data ?? []).flatMap((item) => item.applications)),
+    [catalog.data],
+  )
+
+  const items = (catalog.data ?? []).filter((item) => {
+    if (view === 'live' ? !item.is_live : item.is_live) return false
+    if (company && item.company !== company) return false
+    if (department && item.department !== department) return false
+    if (application && !item.applications.includes(application)) return false
+    return true
+  })
   const emptyLabel =
     view === 'live'
       ? 'No live automations yet.'
@@ -45,7 +70,31 @@ export function CatalogPage() {
         error={catalog.error}
         loadingLabel="Loading automation catalog…"
       >
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4">
+          <SelectFilter
+            label="Company"
+            placeholder="All companies"
+            options={companyOptions}
+            value={company}
+            onChange={setCompany}
+          />
+          <SelectFilter
+            label="Department"
+            placeholder="All departments"
+            options={departmentOptions}
+            value={department}
+            onChange={setDepartment}
+          />
+          <SelectFilter
+            label="Application"
+            placeholder="All applications"
+            options={applicationOptions}
+            value={application}
+            onChange={setApplication}
+          />
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <div
             role="radiogroup"
             aria-label="View"

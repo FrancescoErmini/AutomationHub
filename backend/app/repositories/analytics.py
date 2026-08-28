@@ -10,7 +10,7 @@ from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import Date, Integer, cast, func, literal, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.core import (
     Ams1LCost,
@@ -392,15 +392,35 @@ class AnalyticsRepository:
         )
         return list(self._session.execute(stmt).tuples().all())
 
-    def pipeline_processes(self) -> list[tuple[str, str | None, str | None, str | None]]:
-        """(canonical_name, department_name, description, status) for every pipeline process."""
+    def pipeline_processes(
+        self,
+    ) -> list[tuple[str, str | None, str | None, str | None, str | None, date | None, list[str]]]:
+        """(canonical_name, department_name, description, status, company_name,
+        go_live_date, application_names) for every pipeline process."""
         stmt = (
-            select(Process.canonical_name, Department.name, Process.description, Process.status)
+            select(Process)
             .outerjoin(Department, Department.id == Process.department_id)
+            .options(
+                selectinload(Process.department),
+                selectinload(Process.company),
+                selectinload(Process.applications),
+            )
             .where(Process.in_pipeline.is_(True))
             .order_by(Department.name, Process.canonical_name)
         )
-        return list(self._session.execute(stmt).tuples().all())
+        processes = self._session.scalars(stmt).unique().all()
+        return [
+            (
+                process.canonical_name,
+                process.department.name if process.department else None,
+                process.description,
+                process.status,
+                process.company.name if process.company else None,
+                process.go_live_date,
+                [application.name for application in process.applications],
+            )
+            for process in processes
+        ]
 
     def companies(self) -> list[str]:
         return list(self._session.scalars(select(Company.name).order_by(Company.name)).all())

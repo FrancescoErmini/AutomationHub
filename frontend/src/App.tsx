@@ -11,6 +11,7 @@ import { ItemsPage } from './pages/ItemsPage'
 import { OperationsPage } from './pages/OperationsPage'
 import { ServicePerformancePage } from './pages/ServicePerformancePage'
 import { SimpleOpsPage } from './pages/SimpleOpsPage'
+import { SlaKpiPage } from './pages/SlaKpiPage'
 
 export function App() {
   return (
@@ -22,6 +23,7 @@ export function App() {
         <Route path="executive" element={<ExecutivePage />} />
         <Route path="operations" element={<OperationsPage />} />
         <Route path="simple-ops" element={<SimpleOpsPage />} />
+        <Route path="sla-kpi" element={<SlaKpiPage />} />
         <Route
           path="service-performance"
           element={<ServicePerformancePage />}

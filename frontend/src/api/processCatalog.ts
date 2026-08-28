@@ -6,6 +6,9 @@ export interface ProcessCatalogItem {
   description: string | null
   status: string | null
   is_live: boolean
+  company: string | null
+  go_live_date: string | null
+  applications: string[]
 }
 
 export async function fetchProcessCatalog(): Promise<ProcessCatalogItem[]> {

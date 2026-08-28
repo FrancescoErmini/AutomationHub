@@ -9,25 +9,15 @@ import {
   fetchInfrastructure,
   fetchLicenseCostTrend,
   fetchOccupancyHeatmap,
-  fetchQualityBreakdown,
   fetchRunningCostTrend,
   fetchSimpleOpsKpis,
-  fetchSlaKpis,
 } from '../api/simpleOps'
-import type { QualityDonut, RunningCostTrendPoint } from '../api/simpleOps'
 import { AsyncSection } from '../components/AsyncSection'
+import { RunningCostTrendChart } from '../components/RunningCostTrendChart'
 import './SimpleOpsPage.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const PROCESS_PAGE_SIZE = 10
-
-const DONUT_COLORS = [
-  'var(--color-accent-700)',
-  'var(--color-accent-500)',
-  'var(--color-accent-300)',
-  'var(--color-neutral-400)',
-  'var(--color-neutral-300)',
-]
 
 function metricNumber(map: MetricMap | undefined, key: string): number | null {
   const metric = map?.[key]
@@ -40,44 +30,6 @@ function formatDelta(value: number | null): string | null {
   if (value === null) return null
   const sign = value >= 0 ? '+' : ''
   return `${sign}${value.toFixed(0)}% vs last year`
-}
-
-interface TrendPointXY extends RunningCostTrendPoint {
-  x: number
-  y: number
-}
-
-function layoutTrend(points: RunningCostTrendPoint[]): TrendPointXY[] {
-  const left = 40
-  const right = 460
-  const top = 20
-  const bottom = 120
-  const values = points.map((p) => p.total_eur)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const span = max - min || 1
-  return points.map((point, i) => ({
-    ...point,
-    x:
-      points.length === 1
-        ? left
-        : left + (i * (right - left)) / (points.length - 1),
-    y: bottom - ((point.total_eur - min) / span) * (bottom - top),
-  }))
-}
-
-function donutRootCauseGradient(donut: QualityDonut): string {
-  let acc = 0
-  const stops = donut.root_causes.map((row, i) => {
-    const start = acc
-    acc += row.pct
-    return `${DONUT_COLORS[i % DONUT_COLORS.length]} ${start}% ${acc}%`
-  })
-  return `conic-gradient(${stops.join(', ')})`
-}
-
-function donutTypeGradient(donut: QualityDonut, incidentColor: string): string {
-  return `conic-gradient(${incidentColor} 0% ${donut.incident_pct}%, var(--color-neutral-200) ${donut.incident_pct}% 100%)`
 }
 
 interface KpiCardProps {
@@ -130,14 +82,6 @@ export function SimpleOpsPage() {
     queryKey: ['simple-ops', 'ams-trend'],
     queryFn: fetchAmsTrend,
   })
-  const slaKpis = useQuery({
-    queryKey: ['simple-ops', 'sla-kpis'],
-    queryFn: () => fetchSlaKpis(),
-  })
-  const qualityBreakdown = useQuery({
-    queryKey: ['simple-ops', 'quality-breakdown'],
-    queryFn: () => fetchQualityBreakdown(),
-  })
   const costBreakdown = useQuery({
     queryKey: ['simple-ops', 'cost-breakdown-by-process'],
     queryFn: () => fetchCostBreakdownByProcess(),
@@ -156,13 +100,6 @@ export function SimpleOpsPage() {
     1,
     ...processRows.map((row) => row.total_eur),
   )
-
-  const trendLayout = runningCostTrend.data
-    ? layoutTrend(runningCostTrend.data)
-    : []
-  const realPoints = trendLayout.filter((p) => !p.estimate)
-  const estimatePoint = trendLayout.find((p) => p.estimate)
-  const lastRealPoint = realPoints[realPoints.length - 1]
 
   const maxLicense = Math.max(
     1,
@@ -189,15 +126,10 @@ export function SimpleOpsPage() {
     <div className="simple-ops-page">
       <div className="opt-wrap">
         <div className="sheet">
-          <span className="dash-kicker">RPA Program · Running Cost</span>
           <h1 className="dash-h1">Operations Dashboard</h1>
           <p className="dash-sub">
-            Running costs for the RPA platform and AMS service quality: Blue
-            Prism licences, AMS support (1L), specialist support tickets
-            (2L), infrastructure, and change requests. Reference year{' '}
-            {CURRENT_YEAR}, data from PostgreSQL.
+            A comprehensive view of your RPA maintenance and execution costs.
           </p>
-          <hr className="rh" />
 
           <AsyncSection
             isPending={kpis.isPending}
@@ -296,8 +228,7 @@ export function SimpleOpsPage() {
             </h2>
             <p className="note">
               Sum of licences + infrastructure + AMS 1L + 2L tickets (flat
-              rate) + change requests per year. The final year is a linear
-              estimate based on AMS process-count growth.
+              rate) + change requests per year, by component.
             </p>
             <AsyncSection
               isPending={runningCostTrend.isPending}
@@ -305,99 +236,8 @@ export function SimpleOpsPage() {
               error={runningCostTrend.error}
               loadingLabel="Loading trend…"
             >
-              {trendLayout.length > 1 ? (
-                <>
-                  <svg
-                    className="line-chart"
-                    viewBox="0 0 500 150"
-                    preserveAspectRatio="none"
-                  >
-                    <line
-                      x1="30"
-                      y1="20"
-                      x2="470"
-                      y2="20"
-                      stroke="var(--color-neutral-200)"
-                    />
-                    <line
-                      x1="30"
-                      y1="70"
-                      x2="470"
-                      y2="70"
-                      stroke="var(--color-neutral-200)"
-                    />
-                    <line
-                      x1="30"
-                      y1="120"
-                      x2="470"
-                      y2="120"
-                      stroke="var(--color-neutral-300)"
-                    />
-                    <polyline
-                      points={realPoints.map((p) => `${p.x},${p.y}`).join(' ')}
-                      fill="none"
-                      stroke="var(--color-neutral-700)"
-                      strokeWidth="2.5"
-                    />
-                    {estimatePoint && lastRealPoint && (
-                      <line
-                        x1={lastRealPoint.x}
-                        y1={lastRealPoint.y}
-                        x2={estimatePoint.x}
-                        y2={estimatePoint.y}
-                        stroke="var(--color-accent-700)"
-                        strokeWidth="2.5"
-                        strokeDasharray="6 5"
-                      />
-                    )}
-                    {realPoints.map((p) => (
-                      <circle
-                        key={p.year}
-                        cx={p.x}
-                        cy={p.y}
-                        r="4"
-                        fill="var(--color-neutral-600)"
-                      />
-                    ))}
-                    {estimatePoint && (
-                      <circle
-                        cx={estimatePoint.x}
-                        cy={estimatePoint.y}
-                        r="5"
-                        fill="#fff"
-                        stroke="var(--color-accent-700)"
-                        strokeWidth="2"
-                      />
-                    )}
-                    {trendLayout.map((p) => (
-                      <text
-                        key={p.year}
-                        x={p.x}
-                        y="138"
-                        fontSize="11"
-                        fill={
-                          p.estimate
-                            ? 'var(--color-accent-700)'
-                            : 'var(--color-text)'
-                        }
-                        fontFamily="var(--font-heading)"
-                        textAnchor="middle"
-                      >
-                        {p.year}
-                        {p.estimate ? '*' : ''}
-                      </text>
-                    ))}
-                  </svg>
-                  <p className="kpi-delta">
-                    {trendLayout
-                      .map(
-                        (p) =>
-                          formatValue(p.total_eur, 'eur') +
-                          (p.estimate ? ` (${p.year}, estimate*)` : ''),
-                      )
-                      .join(' → ')}
-                  </p>
-                </>
+              {(runningCostTrend.data ?? []).length > 0 ? (
+                <RunningCostTrendChart data={runningCostTrend.data ?? []} />
               ) : (
                 <p className="kpi-delta">Not enough data for the trend.</p>
               )}
@@ -628,202 +468,6 @@ export function SimpleOpsPage() {
           </section>
 
           <section className="blk">
-            <h2>
-              <span
-                className="h2-dot"
-                style={{ background: 'var(--color-accent-700)' }}
-              />
-              Operational quality — SLA and KPI status
-            </h2>
-            <p className="note">
-              Health indicators for the RPA program for {CURRENT_YEAR}, with
-              Green / Amber / Red thresholds.
-            </p>
-            <div className="range-row">
-              <span className="kpi-label" style={{ margin: 0 }}>
-                Period
-              </span>
-              <div
-                className="seg"
-                role="radiogroup"
-                aria-label="Time range"
-              >
-                <label className="seg-opt">
-                  <input
-                    type="radio"
-                    name="simple-ops-range"
-                    defaultChecked
-                    readOnly
-                  />
-                  Current year
-                </label>
-              </div>
-            </div>
-            <AsyncSection
-              isPending={slaKpis.isPending}
-              isError={slaKpis.isError}
-              error={slaKpis.error}
-              loadingLabel="Loading SLA KPIs…"
-            >
-              <div className="kpi-card-grid">
-                {(slaKpis.data ?? []).map((card) => (
-                  <div className="card" key={card.key}>
-                    <div className="card-kicker">{card.label}</div>
-                    <div
-                      className="card-title"
-                      style={{
-                        color:
-                          card.status === 'green'
-                            ? 'var(--status-green)'
-                            : card.status === 'red'
-                              ? 'var(--status-red)'
-                              : 'var(--status-amber)',
-                      }}
-                    >
-                      {card.available
-                        ? formatValue(card.value as number, card.unit)
-                        : 'N/A'}
-                    </div>
-                    <div className="card-meta">
-                      <span
-                        className={`thr-dot t${card.status === 'green' ? 'g' : card.status === 'red' ? 'r' : 'a'}`}
-                      />
-                      {card.target_label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </AsyncSection>
-          </section>
-
-          <section className="blk">
-            <h2>
-              <span
-                className="h2-dot"
-                style={{ background: 'var(--color-accent-700)' }}
-              />
-              Root cause &amp; Service Request vs Incident — 1L / 2L
-            </h2>
-            <p className="note">
-              Breakdown of requests handled by 1L and 2L: root cause (top 4 +
-              Other) and Service Request vs. Incident share, {CURRENT_YEAR}.
-            </p>
-            <AsyncSection
-              isPending={qualityBreakdown.isPending}
-              isError={qualityBreakdown.isError}
-              error={qualityBreakdown.error}
-              loadingLabel="Loading quality breakdown…"
-            >
-              {qualityBreakdown.data && (
-                <div className="two-col">
-                  {(['l1', 'l2'] as const).map((level) => {
-                    const donut = qualityBreakdown.data![level]
-                    const incidentColor =
-                      level === 'l1'
-                        ? 'var(--color-accent-500)'
-                        : 'var(--color-accent-700)'
-                    return (
-                      <div className="l1l2-col" key={level}>
-                        <p className="l1l2-head">{level.toUpperCase()}</p>
-                        {donut.total_tickets === 0 ? (
-                          <p className="kpi-delta">
-                            No tickets for the selected year.
-                          </p>
-                        ) : (
-                          <div className="donut-row">
-                            <div className="donut-block">
-                              <p className="dtitle">Root cause</p>
-                              <div
-                                className="donut"
-                                style={{
-                                  background: donutRootCauseGradient(donut),
-                                }}
-                              >
-                                <div className="donut-label">
-                                  <span className="n">
-                                    {donut.root_causes[0]
-                                      ? `${donut.root_causes[0].pct.toFixed(0)}%`
-                                      : '—'}
-                                  </span>
-                                  <span className="l">
-                                    {donut.root_causes[0]?.label ?? ''}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="mini-legend">
-                                {donut.root_causes.map((row, i) => (
-                                  <p className="ml-row" key={row.label}>
-                                    <span
-                                      className="sw"
-                                      style={{
-                                        background:
-                                          DONUT_COLORS[i % DONUT_COLORS.length],
-                                      }}
-                                    />
-                                    {row.label}
-                                    <span className="ml-val">
-                                      {row.pct.toFixed(0)}%
-                                    </span>
-                                  </p>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="donut-block">
-                              <p className="dtitle">
-                                Service Request vs Incident
-                              </p>
-                              <div
-                                className="donut"
-                                style={{
-                                  background: donutTypeGradient(
-                                    donut,
-                                    incidentColor,
-                                  ),
-                                }}
-                              >
-                                <div className="donut-label">
-                                  <span className="n">
-                                    {donut.incident_pct.toFixed(0)}%
-                                  </span>
-                                  <span className="l">incident</span>
-                                </div>
-                              </div>
-                              <div className="mini-legend">
-                                <p className="ml-row">
-                                  <span
-                                    className="sw"
-                                    style={{
-                                      background: 'var(--color-neutral-200)',
-                                    }}
-                                  />
-                                  Service Request
-                                  <span className="ml-val">
-                                    {donut.service_request_pct.toFixed(0)}%
-                                  </span>
-                                </p>
-                                <p className="ml-row">
-                                  <span
-                                    className="sw"
-                                    style={{ background: incidentColor }}
-                                  />
-                                  Incident
-                                  <span className="ml-val">
-                                    {donut.incident_pct.toFixed(0)}%
-                                  </span>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </AsyncSection>
-          </section>
-
-          <section className="blk">
             <h2>Cost breakdown by process</h2>
             <p className="note">
               Licence (per-VM share) + infrastructure (per-VM share) + AMS 1L
@@ -918,9 +562,7 @@ export function SimpleOpsPage() {
           </section>
 
           <footer className="dnote">
-            Data from PostgreSQL (core schema). Infrastructure opex is
-            awaiting confirmation; the occupancy heatmap is degenerate until
-            real time slots are populated per process.
+            
           </footer>
         </div>
       </div>

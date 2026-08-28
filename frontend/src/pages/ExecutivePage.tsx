@@ -58,17 +58,30 @@ export function ExecutivePage() {
 
   return (
     <div className="space-y-10">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-ink">Executive Dashboard</h1>
-          <p className="mt-1 text-slate-600">
-            A strategic overview of the RPA program's economics and process-level ROI.
-          </p>
-        </div>
-        {filters.data && (
-          <CompanyFilter companies={filters.data.companies} value={company} onChange={setCompany} />
-        )}
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight text-ink">Executive Dashboard</h1>
+        <p className="mt-1 text-slate-600">
+          A strategic overview of the RPA program's economics and process-level ROI.
+        </p>
       </header>
+
+      <AsyncSection
+        isPending={kpis.isPending}
+        isError={kpis.isError}
+        error={kpis.error}
+        loadingLabel="Loading executive KPIs…"
+      >
+        <section aria-label="Executive KPIs" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {KPI_CARDS.map((card) => (
+            <MetricCard
+              key={card.key}
+              label={card.label}
+              metric={kpis.data?.[card.key]}
+              signColor={card.signColor}
+            />
+          ))}
+        </section>
+      </AsyncSection>
 
       <section
         aria-label="TCO and ROI analysis"
@@ -89,24 +102,6 @@ export function ExecutivePage() {
         </AsyncSection>
       </section>
 
-      <AsyncSection
-        isPending={kpis.isPending}
-        isError={kpis.isError}
-        error={kpis.error}
-        loadingLabel="Loading executive KPIs…"
-      >
-        <section aria-label="Executive KPIs" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {KPI_CARDS.map((card) => (
-            <MetricCard
-              key={card.key}
-              label={card.label}
-              metric={kpis.data?.[card.key]}
-              signColor={card.signColor}
-            />
-          ))}
-        </section>
-      </AsyncSection>
-
       <section aria-label="Process ROI">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
           <h2 className="font-semibold text-ink">Process ROI</h2>
@@ -124,6 +119,11 @@ export function ExecutivePage() {
             </p>
           )}
         </div>
+        {filters.data && (
+          <div className="mb-4">
+            <CompanyFilter companies={filters.data.companies} value={company} onChange={setCompany} />
+          </div>
+        )}
         <AsyncSection
           isPending={processes.isPending}
           isError={processes.isError}

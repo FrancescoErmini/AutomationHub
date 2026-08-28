@@ -84,6 +84,7 @@ class ProcessRoiRow(BaseModel):
     company: str | None
     go_live_date: date | None
     capex_eur: float
+    fte_hours_month_actual: float
     annual_saving_eur: float
     payback_months: float | None
     cumulative_saving_since_go_live_eur: float

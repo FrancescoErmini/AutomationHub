@@ -21,6 +21,11 @@ class ProcessCatalogService:
                 "description": description,
                 "status": status,
                 "is_live": status == _LIVE_STATUS,
+                "company": company,
+                "go_live_date": go_live_date,
+                "applications": applications,
             }
-            for name, department, description, status in self._repo.pipeline_processes()
+            for name, department, description, status, company, go_live_date, applications in (
+                self._repo.pipeline_processes()
+            )
         ]

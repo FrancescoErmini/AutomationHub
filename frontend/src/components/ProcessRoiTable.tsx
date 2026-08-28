@@ -78,7 +78,8 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <caption className="sr-only">
-            Per-process ROI: go-live date, CAPEX, annual saving, payback, expected vs. actual ROI
+            Per-process ROI: go-live date, CAPEX, hours saved per month, annual saving, payback,
+            expected vs. actual ROI
           </caption>
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -90,6 +91,9 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
               </th>
               <th scope="col" className="px-4 py-3 text-right">
                 CAPEX
+              </th>
+              <th scope="col" className="px-4 py-3 text-right">
+                Hours saved / month
               </th>
               <th scope="col" className="px-4 py-3 text-right">
                 Annual saving
@@ -115,6 +119,9 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
                 <td className="px-4 py-3">{row.go_live_date ?? 'Not live'}</td>
                 <td className="px-4 py-3 text-right tabular-nums">
                   {formatValue(row.capex_eur, 'eur')}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums">
+                  {row.fte_hours_month_actual.toFixed(1)} h/mo
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
                   {formatValue(row.annual_saving_eur, 'eur')}

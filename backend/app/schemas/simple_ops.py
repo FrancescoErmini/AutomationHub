@@ -3,8 +3,12 @@ from pydantic import BaseModel
 
 class RunningCostTrendPoint(BaseModel):
     year: int
+    license_eur: float
+    infrastructure_eur: float
+    ams_1l_eur: float
+    ticket_2l_eur: float
+    change_request_eur: float
     total_eur: float
-    estimate: bool
 
 
 class LicenseCostTrendPoint(BaseModel):

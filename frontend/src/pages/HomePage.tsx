@@ -7,11 +7,11 @@ export function HomePage() {
         Menarini · RPA Program
       </p>
       <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-        Automation that pays for itself.
+        Automation Hub Portal
       </h1>
       <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
         From first idea to measured ROI — track cost, savings, and payback
-        across every automation in the portfolio, backed by live data.
+        across every automation in the portfolio.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link

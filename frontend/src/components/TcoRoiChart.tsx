@@ -193,7 +193,12 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
                 Net benefit
               </th>
               {data.map((point) => (
-                <td key={point.year} className="px-4 py-3 text-right tabular-nums">
+                <td
+                  key={point.year}
+                  className={`px-4 py-3 text-right tabular-nums ${
+                    point.net_benefit_eur >= 0 ? 'bg-green-50' : 'bg-red-50'
+                  }`}
+                >
                   {valueFormatter(point.net_benefit_eur)}
                 </td>
               ))}
@@ -201,6 +206,15 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
           </tbody>
         </table>
       </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+        * Figures here follow net cash flow — the year money is actually
+        spent — which is the more accurate view for financial reporting.
+        But licences are bought in 3-year batches and ticket bundles are
+        purchased upfront, so a given year's cost may not reflect that
+        year's actual usage; see the Operations page for a per-year,
+        usage-based view.
+      </p>
     </div>
   )
 }

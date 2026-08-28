@@ -3,8 +3,12 @@ import type { MetricMap } from './metrics'
 
 export interface RunningCostTrendPoint {
   year: number
+  license_eur: number
+  infrastructure_eur: number
+  ams_1l_eur: number
+  ticket_2l_eur: number
+  change_request_eur: number
   total_eur: number
-  estimate: boolean
 }
 
 export interface LicenseCostTrendPoint {
