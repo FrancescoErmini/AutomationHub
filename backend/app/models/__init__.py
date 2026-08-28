@@ -4,6 +4,7 @@ from app.models.audit import (
     IngestionBatch,
     RelationshipReconciliation,
 )
+from app.models.auth import AppUser
 from app.models.core import (
     Ams1LCost,
     Ams2LCost,
@@ -55,6 +56,7 @@ __all__ = [
     "Ams2LCost",
     "AmsRfcCost",
     "AmsYear",
+    "AppUser",
     "ApqcCategory",
     "ApqcProcess",
     "ApqcProcessGroup",
