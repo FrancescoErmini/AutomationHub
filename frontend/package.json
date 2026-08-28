@@ -14,8 +14,10 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.62.8",
+    "oidc-client-ts": "3.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "react-oidc-context": "3.2.1",
     "react-router-dom": "7.18.2",
     "recharts": "3.10.1"
   },

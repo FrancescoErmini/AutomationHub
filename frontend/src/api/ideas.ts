@@ -1,4 +1,4 @@
-import { getJson, parseResponse } from './client'
+import { apiFetch, getJson, parseResponse } from './client'
 
 export type PrimaryGoal =
   | 'Cost Reduction'
@@ -59,7 +59,6 @@ export type AiOutputRisk =
 
 export interface IdeaCreate {
   title: string
-  submitter_name: string
   apqc_process_id: number
   primary_goal: PrimaryGoal
   process_stability: ProcessStability
@@ -139,7 +138,7 @@ export async function fetchIdea(id: number): Promise<IdeaDetail> {
 
 export async function createIdea(payload: IdeaCreate): Promise<IdeaDetail> {
   return parseResponse<IdeaDetail>(
-    await fetch('/api/v1/ideas', {
+    await apiFetch('/api/v1/ideas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
