@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     admin_password: str = "admin"
     admin_secret_key: str = "insecure-local-admin-secret-change-me"
 
+    oidc_issuer: str = "https://keycloak-dev.menarini.net/auth/realms/menarini"
+    oidc_client_id: str = "mg-app_AutomationHub"
+    oidc_jwks_url: str | None = None
+    bootstrap_admin_emails: str = ""
+
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
 
 

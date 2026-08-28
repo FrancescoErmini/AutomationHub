@@ -16,3 +16,13 @@ class DataValidationError(AppError):
 class NotFoundError(AppError):
     status_code = 404
     code = "not_found"
+
+
+class AuthError(AppError):
+    status_code = 401
+    code = "unauthorized"
+
+
+class ForbiddenError(AppError):
+    status_code = 403
+    code = "forbidden"
