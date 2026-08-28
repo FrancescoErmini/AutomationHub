@@ -2,7 +2,6 @@ import type { IdeaCreate } from '../../api/ideas'
 
 export interface WizardState {
   title: string
-  submitterName: string
   categoryId: number | undefined
   processGroupId: number | undefined
   processId: number | undefined
@@ -31,7 +30,6 @@ export interface WizardState {
 
 export const INITIAL_WIZARD_STATE: WizardState = {
   title: '',
-  submitterName: '',
   categoryId: undefined,
   processGroupId: undefined,
   processId: undefined,
@@ -91,7 +89,7 @@ function isNonNegativeNumber(value: string): boolean {
 export function isStepValid(step: number, state: WizardState): boolean {
   switch (step) {
     case 1:
-      return isNonEmpty(state.title) && isNonEmpty(state.submitterName)
+      return isNonEmpty(state.title)
     case 2:
       return state.processId !== undefined
     case 3:
@@ -141,7 +139,6 @@ export function toIdeaCreate(state: WizardState): IdeaCreate {
   }
   return {
     title: state.title.trim(),
-    submitter_name: state.submitterName.trim(),
     apqc_process_id: state.processId,
     primary_goal: state.primaryGoal as IdeaCreate['primary_goal'],
     process_stability:

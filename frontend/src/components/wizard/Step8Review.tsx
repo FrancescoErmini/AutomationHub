@@ -79,7 +79,6 @@ export function Step8Review({ value }: StepProps) {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="mb-2 font-semibold text-ink">Summary</h3>
         <SummaryRow label="Title" answer={value.title} />
-        <SummaryRow label="Submitter" answer={value.submitterName} />
         <SummaryRow
           label="Process"
           answer={[l1Name, l2Name, l3Name].filter(Boolean).join(' → ')}

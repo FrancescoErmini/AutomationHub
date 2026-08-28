@@ -109,11 +109,6 @@ describe('IdeaWizardPage', () => {
     fireEvent.change(screen.getByLabelText('Idea title'), {
       target: { value: 'Automate invoice matching' },
     })
-    expect(nextButton()).toBeDisabled()
-
-    fireEvent.change(screen.getByLabelText('Submitter name'), {
-      target: { value: 'Test User' },
-    })
     expect(nextButton()).not.toBeDisabled()
   })
 
@@ -124,9 +119,6 @@ describe('IdeaWizardPage', () => {
     fireEvent.change(screen.getByLabelText('Idea title'), {
       target: { value: 'My idea' },
     })
-    fireEvent.change(screen.getByLabelText('Submitter name'), {
-      target: { value: 'Ann' },
-    })
     fireEvent.click(nextButton())
 
     await screen.findByRole('heading', { name: 'Process Mapping' })
@@ -134,7 +126,6 @@ describe('IdeaWizardPage', () => {
 
     await screen.findByRole('heading', { name: 'Basic Info' })
     expect(screen.getByLabelText('Idea title')).toHaveValue('My idea')
-    expect(screen.getByLabelText('Submitter name')).toHaveValue('Ann')
   })
 
   it('walks through all 8 steps and submits the expected payload', async () => {
@@ -144,9 +135,6 @@ describe('IdeaWizardPage', () => {
     // Step 1
     fireEvent.change(screen.getByLabelText('Idea title'), {
       target: { value: 'Automate invoice matching' },
-    })
-    fireEvent.change(screen.getByLabelText('Submitter name'), {
-      target: { value: 'Test User' },
     })
     fireEvent.click(nextButton())
 
@@ -267,7 +255,6 @@ describe('IdeaWizardPage', () => {
     )
     expect(submitCall?.body).toMatchObject({
       title: 'Automate invoice matching',
-      submitter_name: 'Test User',
       apqc_process_id: PROCESS.id,
       primary_goal: 'Cost Reduction',
       task_frequency: 'Daily',

@@ -11,12 +11,6 @@ export function Step1BasicInfo({ value, onChange }: StepProps) {
         onChange={(title) => onChange({ title })}
         maxLength={300}
       />
-      <TextField
-        label="Submitter name"
-        value={value.submitterName}
-        onChange={(submitterName) => onChange({ submitterName })}
-        maxLength={200}
-      />
     </div>
   )
 }
