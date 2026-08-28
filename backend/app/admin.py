@@ -55,6 +55,7 @@ _HIDDEN_MODULES = ("app.models.staging",)
 # form to the handful of fields a human actually sets.
 _FORM_COLUMNS_OVERRIDE: dict[str, tuple[str, ...]] = {
     "Idea": ("status",),
+    "AppUser": ("role",),
 }
 
 _SCHEMA_CATEGORY = {
@@ -366,6 +367,21 @@ def _view_overrides() -> dict[str, dict[str, Any]]:
                     ProcessEconomics.extra_annual_saving_eur, title="Extra annual saving (EUR)"
                 ),
             ],
+        },
+        "AppUser": {
+            "column_list": [
+                "sub",
+                "email",
+                "preferred_username",
+                "name",
+                "role",
+                "created_at",
+            ],
+            "column_default_sort": ("created_at", True),
+            "can_create": False,
+            "can_delete": False,
+            "form_choices": {"role": [("user", "user"), ("editor", "editor"), ("admin", "admin")]},
+            "category": "Access",
         },
     }
 
