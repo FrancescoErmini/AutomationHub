@@ -45,7 +45,7 @@ export function ServicePerformancePage() {
   })
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight text-ink">
           SLA / Service Performance / Data Quality
@@ -78,7 +78,7 @@ export function ServicePerformancePage() {
 
       <section
         aria-label="SLA trend"
-        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        className="rounded-xl border border-slate-200 bg-white p-5"
       >
         <h2 className="mb-4 font-semibold text-ink">SLA trend</h2>
         <AsyncSection
@@ -112,7 +112,7 @@ export function ServicePerformancePage() {
           aria-label="Resolution analyses"
           className="grid gap-6 lg:grid-cols-3"
         >
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
             <h2 className="mb-4 font-semibold text-ink">
               Avg resolution by root cause
             </h2>
@@ -124,7 +124,7 @@ export function ServicePerformancePage() {
               valueFormatter={(value) => formatValue(value, 'days')}
             />
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
             <h2 className="mb-4 font-semibold text-ink">
               Avg resolution by process
             </h2>
@@ -134,10 +134,10 @@ export function ServicePerformancePage() {
                 value: row.avg_days,
               }))}
               valueFormatter={(value) => formatValue(value, 'days')}
-              color="#eb6834"
+              color="#b5762e"
             />
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
             <h2 className="mb-4 font-semibold text-ink">
               Avg resolution by company
             </h2>
@@ -147,7 +147,7 @@ export function ServicePerformancePage() {
                 value: row.avg_days,
               }))}
               valueFormatter={(value) => formatValue(value, 'days')}
-              color="#1baf7a"
+              color="#0f7b6c"
             />
           </div>
         </section>

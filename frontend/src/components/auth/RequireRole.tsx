@@ -6,7 +6,7 @@ import { RequireAuth } from './RequireAuth'
 
 function Denied({ role }: { role: Role }) {
   return (
-    <div className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+    <div className="mx-auto max-w-lg rounded-xl border border-slate-200 bg-white p-8 text-center">
       <h1 className="text-xl font-semibold text-ink">Access restricted</h1>
       <p className="mt-2 text-slate-600">
         This page needs the <strong>{role}</strong> role. Ask an administrator

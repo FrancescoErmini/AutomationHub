@@ -37,6 +37,7 @@ function mockRoutes() {
         company: 'Menarini',
         go_live_date: '2021-06-01',
         capex_eur: 12500,
+        fte_hours_month_actual: 18,
         annual_saving_eur: 12768,
         payback_months: 11.75,
         cumulative_saving_since_go_live_eur: 63840,

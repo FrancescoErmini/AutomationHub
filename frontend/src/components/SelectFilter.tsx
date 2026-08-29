@@ -13,7 +13,7 @@ export function SelectFilter({ label, placeholder, options, value, onChange }: S
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-blue-100"
+        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-red-100"
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (

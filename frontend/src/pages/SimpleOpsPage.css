@@ -1,15 +1,16 @@
-/* Operations dashboard -- shares the rest of the app's Tailwind design
-   tokens (slate/ink/brand palette, system sans, rounded-2xl cards) via CSS
+/* Operations / SLA dashboards -- share the rest of the app's design tokens
+   (IBM Plex, semantic teal/ochre palette, flat hairline cards) via CSS
    custom properties, so the hand-rolled SVG/CSS charts below don't need to
    be rewritten to pick up the app's look. Every selector is scoped under
-   .simple-ops-page so it can never leak into the rest of the app. */
+   .simple-ops-page so it can never leak into the rest of the app.
+   accent = savings/teal, accent-2 = spend/ochre -- matches chartColors.ts. */
 
 .simple-ops-page {
   --color-bg: #f8fafc;
   --color-surface: #f1f5f9;
   --color-text: #172033;
-  --color-accent: #2a78d6;
-  --color-accent-2: #eb6834;
+  --color-accent: #0f7b6c;
+  --color-accent-2: #b5762e;
   --color-divider: color-mix(in srgb, #172033 12%, transparent);
 
   --color-neutral-100: #f8fafc;
@@ -22,43 +23,43 @@
   --color-neutral-800: #1e293b;
   --color-neutral-900: #0f172a;
 
-  --color-accent-100: #e8f1fc;
-  --color-accent-200: #cde2fb;
-  --color-accent-300: #9ec5f4;
-  --color-accent-400: #5598e7;
-  --color-accent-500: #2a78d6;
-  --color-accent-600: #256abf;
-  --color-accent-700: #1c5cab;
-  --color-accent-800: #184f95;
-  --color-accent-900: #104281;
+  --color-accent-100: #e3f0ee;
+  --color-accent-200: #c7e1dc;
+  --color-accent-300: #9bcbc2;
+  --color-accent-400: #5ca99c;
+  --color-accent-500: #0f7b6c;
+  --color-accent-600: #0c6d60;
+  --color-accent-700: #0a5a50;
+  --color-accent-800: #084a42;
+  --color-accent-900: #063a34;
 
-  --color-accent-2-100: #fdeee7;
-  --color-accent-2-200: #fbd9c9;
-  --color-accent-2-300: #f6b48e;
-  --color-accent-2-400: #f19458;
-  --color-accent-2-500: #eb6834;
-  --color-accent-2-600: #d95926;
-  --color-accent-2-700: #b8481c;
-  --color-accent-2-800: #8f3714;
-  --color-accent-2-900: #66280f;
+  --color-accent-2-100: #f6ecdd;
+  --color-accent-2-200: #ecd8bb;
+  --color-accent-2-300: #ddb985;
+  --color-accent-2-400: #c9944f;
+  --color-accent-2-500: #b5762e;
+  --color-accent-2-600: #9e6526;
+  --color-accent-2-700: #82521f;
+  --color-accent-2-800: #653f18;
+  --color-accent-2-900: #4a2e12;
 
-  --status-green: #0ca30c;
-  --status-amber: #b8860b;
-  --status-red: #d03b3b;
+  --status-green: #0f7b6c;
+  --status-amber: #b5762e;
+  --status-red: #a23b2e;
 
-  --font-heading: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-heading-weight: 600;
-  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
 
   --space-1: 5px;
   --space-2: 10px;
   --space-3: 15px;
   --space-4: 20px;
 
-  --radius-sm: 12px;
-  --radius-md: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
 
-  --shadow-lg: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-lg: none;
 
   background: var(--color-bg);
   color: var(--color-text);

@@ -9,8 +9,9 @@ import {
   YAxis,
 } from 'recharts'
 
-// Validated categorical palette (dataviz skill), slots 1-2: blue, orange.
-const SERIES_COLORS = ['#2a78d6', '#eb6834']
+import { chart, chartSeries } from '../lib/chartColors'
+
+const SERIES_COLORS = chartSeries
 
 interface Series {
   key: string
@@ -39,15 +40,15 @@ export function TrendChart({
           data={data}
           margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
         >
-          <CartesianGrid stroke="#e1e0d9" vertical={false} />
+          <CartesianGrid stroke={chart.grid} vertical={false} />
           <XAxis
             dataKey={xKey}
-            tick={{ fill: '#898781', fontSize: 12 }}
-            stroke="#c3c2b7"
+            tick={{ fill: chart.tick, fontSize: 12 }}
+            stroke={chart.axis}
           />
           <YAxis
-            tick={{ fill: '#898781', fontSize: 12 }}
-            stroke="#c3c2b7"
+            tick={{ fill: chart.tick, fontSize: 12 }}
+            stroke={chart.axis}
             width={56}
             tickFormatter={valueFormatter}
           />
@@ -57,7 +58,7 @@ export function TrendChart({
             }
             contentStyle={{
               borderRadius: 8,
-              borderColor: '#e1e0d9',
+              borderColor: chart.tooltipBorder,
               fontSize: 13,
             }}
           />

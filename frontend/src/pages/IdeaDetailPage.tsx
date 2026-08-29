@@ -49,7 +49,7 @@ export function IdeaDetailPage() {
               </p>
             </div>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
               <h2 className="mb-2 font-semibold text-ink">Scoring</h2>
               <Row
                 label="Gross ROI / year"
@@ -70,7 +70,7 @@ export function IdeaDetailPage() {
               <Row label="Status" value={idea.data.status} />
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
               <h2 className="mb-2 font-semibold text-ink">Submission</h2>
               <Row label="Submitter" value={idea.data.submitter_name} />
               <Row
@@ -88,7 +88,7 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
               <h2 className="mb-2 font-semibold text-ink">
                 Volumetry & Human Effort
               </h2>
@@ -124,7 +124,7 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
               <h2 className="mb-2 font-semibold text-ink">
                 Complexity & Standardisation
               </h2>
@@ -136,7 +136,7 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
               <h2 className="mb-2 font-semibold text-ink">
                 Systems & Environment
               </h2>
@@ -154,7 +154,7 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-slate-200 bg-white p-5">
               <h2 className="mb-2 font-semibold text-ink">AI Assessment</h2>
               <Row
                 label="Unstructured data"

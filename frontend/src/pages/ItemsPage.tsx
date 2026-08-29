@@ -31,7 +31,7 @@ export function ItemsPage() {
         </p>
         <form
           onSubmit={submit}
-          className="mt-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-6"
         >
           <label className="block text-sm font-semibold" htmlFor="name">
             Name
@@ -42,7 +42,7 @@ export function ItemsPage() {
             onChange={(event) => setName(event.target.value)}
             required
             maxLength={120}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-red-100"
           />
           <label className="block text-sm font-semibold" htmlFor="description">
             Description
@@ -53,7 +53,7 @@ export function ItemsPage() {
             onChange={(event) => setDescription(event.target.value)}
             maxLength={2000}
             rows={4}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-red-100"
           />
           {create.error && (
             <p role="alert" className="text-sm text-red-700">
@@ -63,7 +63,7 @@ export function ItemsPage() {
           <button
             type="submit"
             disabled={create.isPending || !name.trim()}
-            className="w-full rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {create.isPending ? 'Creating…' : 'Create item'}
           </button>
@@ -97,7 +97,7 @@ export function ItemsPage() {
             {items.data.map((item) => (
               <li
                 key={item.id}
-                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="rounded-xl border border-slate-200 bg-white p-5"
               >
                 <h2 className="font-semibold text-ink">{item.name}</h2>
                 <p className="mt-1 text-sm text-slate-600">

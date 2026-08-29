@@ -28,7 +28,7 @@ export function CascadingSelect({
           const raw = event.target.value
           onChange(raw === '' ? undefined : Number(raw))
         }}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
       >
         <option value="">
           {disabled ? 'Select the level above first' : `Select ${label}`}

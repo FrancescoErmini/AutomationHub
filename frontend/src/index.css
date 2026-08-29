@@ -12,4 +12,10 @@
   textarea {
     font-family: inherit;
   }
+
+  /* Money data is everywhere here — lock table figures to tabular so
+     columns of € values line up digit-for-digit. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
 }

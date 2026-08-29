@@ -65,7 +65,7 @@ export function IdeaWizardPage() {
 
       <Stepper currentStep={currentStep} labels={STEP_LABELS} />
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-6">
         <StepComponent value={state} onChange={patch} />
       </div>
 
@@ -89,7 +89,7 @@ export function IdeaWizardPage() {
             type="button"
             onClick={() => submit.mutate(toIdeaCreate(state))}
             disabled={!canAdvance || submit.isPending}
-            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submit.isPending ? 'Submitting…' : 'Submit idea'}
           </button>
@@ -100,7 +100,7 @@ export function IdeaWizardPage() {
               setCurrentStep((step) => Math.min(TOTAL_STEPS, step + 1))
             }
             disabled={!canAdvance}
-            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>

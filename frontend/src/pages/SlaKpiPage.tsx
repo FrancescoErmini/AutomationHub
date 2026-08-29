@@ -337,7 +337,7 @@ export function SlaKpiPage() {
                       value: row.count,
                     }))}
                     valueFormatter={(value) => formatValue(value, 'count')}
-                    color="#2a78d6"
+                    color="#0f7b6c"
                   />
                 </div>
                 <div>
@@ -348,7 +348,7 @@ export function SlaKpiPage() {
                       value: row.avg_days,
                     }))}
                     valueFormatter={(value) => formatValue(value, 'days')}
-                    color="#eb6834"
+                    color="#b5762e"
                   />
                 </div>
               </div>
@@ -377,7 +377,7 @@ export function SlaKpiPage() {
               <RankBarChart
                 data={backlogRows}
                 valueFormatter={(value) => formatValue(value, 'count')}
-                color="#1c5cab"
+                color="#0a5a50"
               />
             </AsyncSection>
           </section>

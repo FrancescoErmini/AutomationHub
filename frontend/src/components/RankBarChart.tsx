@@ -8,6 +8,8 @@ import {
   YAxis,
 } from 'recharts'
 
+import { chart, chartSeries } from '../lib/chartColors'
+
 interface RankBarChartProps {
   data: { label: string; value: number }[]
   height?: number
@@ -19,7 +21,7 @@ export function RankBarChart({
   data,
   height,
   valueFormatter,
-  color = '#2a78d6',
+  color = chartSeries[0],
 }: RankBarChartProps) {
   const computedHeight = height ?? Math.max(160, data.length * 36)
 
@@ -31,19 +33,19 @@ export function RankBarChart({
           layout="vertical"
           margin={{ top: 4, right: 24, bottom: 4, left: 8 }}
         >
-          <CartesianGrid stroke="#e1e0d9" horizontal={false} />
+          <CartesianGrid stroke={chart.grid} horizontal={false} />
           <XAxis
             type="number"
-            tick={{ fill: '#898781', fontSize: 12 }}
-            stroke="#c3c2b7"
+            tick={{ fill: chart.tick, fontSize: 12 }}
+            stroke={chart.axis}
             tickFormatter={valueFormatter}
           />
           <YAxis
             type="category"
             dataKey="label"
             width={180}
-            tick={{ fill: '#52514e', fontSize: 12 }}
-            stroke="#c3c2b7"
+            tick={{ fill: chart.neutral, fontSize: 12 }}
+            stroke={chart.axis}
           />
           <Tooltip
             formatter={(value) =>
@@ -51,7 +53,7 @@ export function RankBarChart({
             }
             contentStyle={{
               borderRadius: 8,
-              borderColor: '#e1e0d9',
+              borderColor: chart.tooltipBorder,
               fontSize: 13,
             }}
           />

@@ -75,8 +75,6 @@ export function RunningCostTrendChart({
                 name={segment.name}
                 stackId="cost"
                 fill={segment.color}
-                stroke="var(--color-bg, #fff)"
-                strokeWidth={1}
               />
             ))}
             <Line

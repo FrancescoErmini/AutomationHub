@@ -33,7 +33,7 @@ export function HomePage() {
         <div className="mt-12 flex flex-wrap gap-4">
           <Link
             to="/executive"
-            className="inline-flex rounded-xl bg-brand px-6 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            className="inline-flex rounded-xl bg-brand px-6 py-3.5 text-base font-semibold text-white shadow-sm transition hover:brightness-95"
           >
             Open the Executive overview
           </Link>

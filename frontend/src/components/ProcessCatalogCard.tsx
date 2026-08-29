@@ -18,7 +18,7 @@ function formatGoLiveDate(goLiveDate: string | null): string {
 export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const tagClass = item.is_live
-    ? 'bg-blue-100 text-brand'
+    ? 'bg-positive/10 text-positive'
     : 'bg-amber-100 text-amber-800'
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
 
   return (
     <>
-      <article className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <article className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5">
         <span
           className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold ${tagClass}`}
         >
@@ -73,7 +73,7 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">

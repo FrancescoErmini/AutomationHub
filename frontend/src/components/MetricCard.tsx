@@ -15,14 +15,14 @@ export function MetricCard({ label, metric, signColor }: MetricCardProps) {
   const valueClass =
     available && signColor && numericValue !== null
       ? numericValue >= 0
-        ? 'text-[#0ca30c]'
-        : 'text-[#d03b3b]'
+        ? 'text-positive'
+        : 'text-negative'
       : available
         ? 'text-ink'
         : 'text-slate-400'
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white p-5">
       <p className="text-sm font-semibold text-slate-500">{label}</p>
       <p className={`mt-2 text-2xl font-bold tracking-tight ${valueClass}`}>
         {formatMetric(metric)}

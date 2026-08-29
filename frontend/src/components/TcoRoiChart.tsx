@@ -11,11 +11,12 @@ import {
 } from 'recharts'
 
 import type { TcoRoiPoint } from '../api/executive'
+import { chart } from '../lib/chartColors'
 
-const CAPEX_COLOR = '#1d4ed8'
-const OPEX_COLOR = '#60a5fa'
-const SAVINGS_COLOR = '#047857'
-const NET_BENEFIT_COLOR = '#d97706'
+const CAPEX_COLOR = chart.spendDark
+const OPEX_COLOR = chart.spendLight
+const SAVINGS_COLOR = chart.positive
+const NET_BENEFIT_COLOR = chart.neutral
 
 interface TcoRoiChartProps {
   data: TcoRoiPoint[]
@@ -43,35 +44,21 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="#e1e0d9" vertical={false} />
-            <XAxis dataKey="year" tick={{ fill: '#898781', fontSize: 12 }} stroke="#c3c2b7" />
+            <CartesianGrid stroke={chart.grid} vertical={false} />
+            <XAxis dataKey="year" tick={{ fill: chart.tick, fontSize: 12 }} stroke={chart.axis} />
             <YAxis
-              tick={{ fill: '#898781', fontSize: 12 }}
-              stroke="#c3c2b7"
+              tick={{ fill: chart.tick, fontSize: 12 }}
+              stroke={chart.axis}
               width={72}
               tickFormatter={valueFormatter}
             />
             <Tooltip
               formatter={(value) => valueFormatter(Number(value))}
-              contentStyle={{ borderRadius: 8, borderColor: '#e1e0d9', fontSize: 13 }}
+              contentStyle={{ borderRadius: 8, borderColor: chart.tooltipBorder, fontSize: 13 }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar
-              dataKey="capex_eur"
-              name="CAPEX"
-              stackId="cost"
-              fill={CAPEX_COLOR}
-              stroke="#fcfcfb"
-              strokeWidth={2}
-            />
-            <Bar
-              dataKey="opex_eur"
-              name="OPEX"
-              stackId="cost"
-              fill={OPEX_COLOR}
-              stroke="#fcfcfb"
-              strokeWidth={2}
-            />
+            <Bar dataKey="capex_eur" name="CAPEX" stackId="cost" fill={CAPEX_COLOR} />
+            <Bar dataKey="opex_eur" name="OPEX" stackId="cost" fill={OPEX_COLOR} />
             <Line
               type="monotone"
               dataKey="savings_eur"
@@ -94,7 +81,7 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
         <table className="w-full text-sm">
           <caption className="sr-only">TCO &amp; ROI by year: CAPEX, OPEX, savings, and net benefit</caption>
           <thead>
@@ -196,7 +183,7 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
                 <td
                   key={point.year}
                   className={`px-4 py-3 text-right tabular-nums ${
-                    point.net_benefit_eur >= 0 ? 'bg-green-50' : 'bg-red-50'
+                    point.net_benefit_eur >= 0 ? 'bg-positive/10' : 'bg-negative/10'
                   }`}
                 >
                   {valueFormatter(point.net_benefit_eur)}

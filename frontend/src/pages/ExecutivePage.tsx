@@ -57,7 +57,7 @@ export function ExecutivePage() {
   })()
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight text-ink">Executive Dashboard</h1>
         <p className="mt-1 text-slate-600">
@@ -85,7 +85,7 @@ export function ExecutivePage() {
 
       <section
         aria-label="TCO and ROI analysis"
-        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        className="rounded-xl border border-slate-200 bg-white p-5"
       >
         <h2 className="mb-4 font-semibold text-ink">RPA Total Cost of Ownership (TCO) &amp; ROI Analysis</h2>
         <AsyncSection

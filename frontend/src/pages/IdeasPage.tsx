@@ -6,23 +6,23 @@ import { formatValue } from '../api/metrics'
 import { AsyncSection } from '../components/AsyncSection'
 
 const CLASSIFICATION_STYLES: Record<string, string> = {
-  'Quick Win': 'bg-emerald-100 text-emerald-800',
-  'Strategic Investment': 'bg-blue-100 text-brand',
+  'Quick Win': 'bg-positive/10 text-positive',
+  'Strategic Investment': 'bg-sky-100 text-sky-800',
   'Low-Hanging Fruit': 'bg-amber-100 text-amber-800',
   'Deprioritize / Avoid': 'bg-slate-200 text-slate-600',
 }
 
 const FEASIBILITY_STYLES: Record<string, string> = {
-  High: 'text-emerald-700',
+  High: 'text-positive',
   Medium: 'text-amber-700',
-  Low: 'text-red-700',
+  Low: 'text-negative',
 }
 
 export function IdeasPage() {
   const ideas = useQuery({ queryKey: ['ideas'], queryFn: fetchIdeas })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Idea Pipeline</h1>
@@ -32,7 +32,7 @@ export function IdeasPage() {
         </div>
         <Link
           to="/ideas/new"
-          className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:bg-blue-700"
+          className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:brightness-95"
         >
           Submit new idea
         </Link>
@@ -61,7 +61,7 @@ export function IdeasPage() {
               <li key={idea.id}>
                 <Link
                   to={`/ideas/${idea.id}`}
-                  className="flex h-full flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-brand"
+                  className="flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5 hover:border-brand"
                 >
                   <span
                     className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold ${

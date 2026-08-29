@@ -73,7 +73,7 @@ export function OperationsPage() {
     : []
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-ink">
@@ -115,7 +115,7 @@ export function OperationsPage() {
 
       <section
         aria-label="L1 vs L2 trend"
-        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        className="rounded-xl border border-slate-200 bg-white p-5"
       >
         <h2 className="mb-4 font-semibold text-ink">L1 vs L2 ticket trend</h2>
         <AsyncSection
@@ -146,7 +146,7 @@ export function OperationsPage() {
         aria-label="Root cause and top processes"
         className="grid gap-6 lg:grid-cols-2"
       >
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="mb-4 font-semibold text-ink">Root cause pareto</h2>
           <AsyncSection
             isPending={rootCausePareto.isPending}
@@ -163,7 +163,7 @@ export function OperationsPage() {
             />
           </AsyncSection>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="mb-4 font-semibold text-ink">
             Top processes by ticket volume
           </h2>
@@ -179,7 +179,7 @@ export function OperationsPage() {
                 value: row.ticket_count,
               }))}
               valueFormatter={(value) => formatValue(value, 'count')}
-              color="#eb6834"
+              color="#b5762e"
             />
           </AsyncSection>
         </div>
@@ -187,7 +187,7 @@ export function OperationsPage() {
 
       <section
         aria-label="Backlog aging"
-        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        className="rounded-xl border border-slate-200 bg-white p-5"
       >
         <h2 className="mb-4 font-semibold text-ink">
           Backlog aging (open tickets)

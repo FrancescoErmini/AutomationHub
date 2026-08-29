@@ -14,7 +14,7 @@ function RoiCell({ pct }: { pct: number | null }) {
   if (pct === null) return <span className="text-slate-400">Not available</span>
   const positive = pct >= 0
   return (
-    <span className={positive ? 'text-[#0ca30c]' : 'text-[#d03b3b]'}>
+    <span className={positive ? 'text-positive' : 'text-negative'}>
       {positive ? '▲' : '▼'} {positive ? '+' : ''}
       {pct.toFixed(1)}%
     </span>
@@ -75,7 +75,7 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
         </label>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-sm">
           <caption className="sr-only">
             Per-process ROI: go-live date, CAPEX, hours saved per month, annual saving, payback,
