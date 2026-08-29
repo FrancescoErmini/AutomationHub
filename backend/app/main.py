@@ -30,7 +30,9 @@ setup_admin(app, engine)
 
 
 @app.exception_handler(AppError)
-async def handle_app_error(_: Request, exc: AppError) -> JSONResponse:
+async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
+    if exc.status_code in (401, 403):
+        logger.warning("auth_rejected path=%s code=%s reason=%s", request.url.path, exc.code, exc)
     return JSONResponse(
         status_code=exc.status_code,
         content={"error": {"code": exc.code, "message": str(exc)}},
