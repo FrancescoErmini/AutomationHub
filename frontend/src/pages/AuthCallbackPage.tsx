@@ -9,7 +9,7 @@ export function AuthCallbackPage() {
   }
   if (auth.error) {
     return (
-      <div className="p-12 text-center text-red-700">
+      <div className="p-12 text-center text-brand">
         Sign-in failed: {auth.error.message}
       </div>
     )

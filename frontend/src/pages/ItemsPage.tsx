@@ -42,7 +42,7 @@ export function ItemsPage() {
             onChange={(event) => setName(event.target.value)}
             required
             maxLength={120}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-red-100"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
           <label className="block text-sm font-semibold" htmlFor="description">
             Description
@@ -53,10 +53,10 @@ export function ItemsPage() {
             onChange={(event) => setDescription(event.target.value)}
             maxLength={2000}
             rows={4}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-red-100"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
           {create.error && (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-brand">
               {create.error.message}
             </p>
           )}
@@ -79,7 +79,7 @@ export function ItemsPage() {
         {items.isError && (
           <div
             role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800"
+            className="rounded-xl border border-brand/30 bg-brand/5 p-6 text-brand"
           >
             Could not load items: {items.error.message}
           </div>

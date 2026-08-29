@@ -179,7 +179,7 @@ export function OperationsPage() {
                 value: row.ticket_count,
               }))}
               valueFormatter={(value) => formatValue(value, 'count')}
-              color="#b5762e"
+              color="#bfa6d8"
             />
           </AsyncSection>
         </div>

@@ -4,10 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { formatValue } from '../api/metrics'
 import type { MetricMap } from '../api/metrics'
 import {
-  fetchAmsTrend,
   fetchCostBreakdownByProcess,
   fetchInfrastructure,
-  fetchLicenseCostTrend,
   fetchOccupancyHeatmap,
   fetchRunningCostTrend,
   fetchSimpleOpsKpis,
@@ -66,10 +64,6 @@ export function SimpleOpsPage() {
     queryKey: ['simple-ops', 'running-cost-trend'],
     queryFn: fetchRunningCostTrend,
   })
-  const licenseCostTrend = useQuery({
-    queryKey: ['simple-ops', 'license-cost-trend'],
-    queryFn: fetchLicenseCostTrend,
-  })
   const infrastructure = useQuery({
     queryKey: ['simple-ops', 'infrastructure'],
     queryFn: fetchInfrastructure,
@@ -77,10 +71,6 @@ export function SimpleOpsPage() {
   const heatmap = useQuery({
     queryKey: ['simple-ops', 'heatmap'],
     queryFn: fetchOccupancyHeatmap,
-  })
-  const amsTrend = useQuery({
-    queryKey: ['simple-ops', 'ams-trend'],
-    queryFn: fetchAmsTrend,
   })
   const costBreakdown = useQuery({
     queryKey: ['simple-ops', 'cost-breakdown-by-process'],
@@ -101,22 +91,11 @@ export function SimpleOpsPage() {
     ...processRows.map((row) => row.total_eur),
   )
 
-  const maxLicense = Math.max(
-    1,
-    ...(licenseCostTrend.data ?? []).map((p) => p.cost_eur),
+  const avgCostPerProcess = metricNumber(
+    kpis.data,
+    'kpi_avg_cost_per_process_eur',
   )
-  const maxInfra = Math.max(
-    1,
-    ...(infrastructure.data?.trend ?? []).map((p) => p.cost_eur),
-  )
-  const maxAms1l = Math.max(
-    1,
-    ...(amsTrend.data?.l1 ?? []).map((p) => p.cost_eur),
-  )
-  const maxAms2l = Math.max(
-    1,
-    ...(amsTrend.data?.l2 ?? []).map((p) => p.cost_eur),
-  )
+
   const maxHeatCount = Math.max(
     1,
     ...(heatmap.data ?? []).flatMap((row) => row.cells.map((c) => c.count)),
@@ -153,13 +132,6 @@ export function SimpleOpsPage() {
                 ]
                   .filter(Boolean)
                   .join(' · ')}
-              />
-              <KpiCard
-                hero
-                label="Average running cost / process"
-                value={metricNumber(kpis.data, 'kpi_avg_cost_per_process_eur')}
-                unit="eur"
-                subtitle="licence + AMS + 2L + infra"
               />
               <KpiCard
                 label="Blue Prism licences"
@@ -245,233 +217,19 @@ export function SimpleOpsPage() {
           </section>
 
           <section className="blk">
-            <div className="dual-col">
-              <div>
-                <h2>
-                  <span
-                    className="h2-dot"
-                    style={{ background: 'var(--color-accent-500)' }}
-                  />
-                  Blue Prism licences
-                </h2>
-                <p className="note">
-                  Annual fee per licensed virtual machine, summed by year.
+            <div className="blk-head">
+              <h2>Cost breakdown by process</h2>
+              {avgCostPerProcess !== null && (
+                <p className="blk-head-stat">
+                  Avg. cost per process:{' '}
+                  <span>{formatValue(avgCostPerProcess, 'eur')}</span>
                 </p>
-                <AsyncSection
-                  isPending={licenseCostTrend.isPending}
-                  isError={licenseCostTrend.isError}
-                  error={licenseCostTrend.error}
-                  loadingLabel="Loading license trend…"
-                >
-                  {(licenseCostTrend.data ?? []).map((point) => (
-                    <div className="bar-row" key={point.year}>
-                      <div className="lbl">{point.year}</div>
-                      <div className="bar-track">
-                        <div
-                          className="bar-fill"
-                          style={{
-                            width: `${(point.cost_eur / maxLicense) * 100}%`,
-                            background:
-                              point.cost_eur === maxLicense
-                                ? 'var(--color-accent-700)'
-                                : undefined,
-                          }}
-                        />
-                      </div>
-                      <div className="bar-val">
-                        {formatValue(point.cost_eur, 'eur')}
-                      </div>
-                    </div>
-                  ))}
-                </AsyncSection>
-                <div className="sub-block">
-                  <p className="kpi-label" style={{ marginBottom: 4 }}>
-                    Machine occupancy by time slot
-                  </p>
-                  <AsyncSection
-                    isPending={heatmap.isPending}
-                    isError={heatmap.isError}
-                    error={heatmap.error}
-                    loadingLabel="Loading heatmap…"
-                  >
-                    {(heatmap.data ?? []).length > 0 ? (
-                      <div className="heat-grid">
-                        <div />
-                        {heatmap.data?.[0]?.cells.map((cell) => (
-                          <div className="heat-head" key={cell.slot}>
-                            {cell.label}
-                          </div>
-                        ))}
-                        {(heatmap.data ?? []).map((row) => (
-                          <Fragment key={row.vm}>
-                            <div className="heat-row-label">{row.vm}</div>
-                            {row.cells.map((cell) => (
-                              <div
-                                className="heat-cell"
-                                key={`${row.vm}-${cell.slot}`}
-                                title={`${cell.count} processes`}
-                                style={{
-                                  background:
-                                    cell.count > 0
-                                      ? `color-mix(in srgb, var(--color-accent) ${Math.max(
-                                          5,
-                                          Math.round(
-                                            (cell.count / maxHeatCount) * 95,
-                                          ),
-                                        )}%, #fff)`
-                                      : 'var(--color-neutral-200)',
-                                }}
-                              />
-                            ))}
-                          </Fragment>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="kpi-delta">
-                        No scheduling data available.
-                      </p>
-                    )}
-                  </AsyncSection>
-                </div>
-              </div>
-              <div>
-                <h2>
-                  <span
-                    className="h2-dot"
-                    style={{ background: 'var(--color-accent-2-500)' }}
-                  />
-                  Infrastructure
-                </h2>
-                <p className="note">Annual opex for VMs and databases.</p>
-                <AsyncSection
-                  isPending={infrastructure.isPending}
-                  isError={infrastructure.isError}
-                  error={infrastructure.error}
-                  loadingLabel="Loading infrastructure…"
-                >
-                  {(infrastructure.data?.trend ?? []).map((point) => (
-                    <div className="bar-row" key={point.year}>
-                      <div className="lbl">{point.year}</div>
-                      <div className="bar-track">
-                        <div
-                          className="bar-fill"
-                          style={{
-                            width: `${(point.cost_eur / maxInfra) * 100}%`,
-                            background: 'var(--color-accent-2-500)',
-                          }}
-                        />
-                      </div>
-                      <div className="bar-val">
-                        {formatValue(point.cost_eur, 'eur')}
-                      </div>
-                    </div>
-                  ))}
-                  {infrastructure.data?.tbd && (
-                    <div
-                      className="tbd"
-                      style={{ borderColor: 'var(--color-accent-2-300)' }}
-                    >
-                      Indicative opex data (€0) — awaiting confirmation from
-                      the infrastructure team.
-                    </div>
-                  )}
-                  <div className="sub-block">
-                    <p className="stat-line">
-                      <span>VM count</span>
-                      <span
-                        className="v"
-                        style={{ color: 'var(--color-accent-2-700)' }}
-                      >
-                        {infrastructure.data?.vm_count ?? '—'}
-                      </span>
-                    </p>
-                    <p className="stat-line" style={{ borderBottom: 'none' }}>
-                      <span>Database count</span>
-                      <span
-                        className="v"
-                        style={{ color: 'var(--color-accent-2-700)' }}
-                      >
-                        {infrastructure.data?.db_count ?? '—'}
-                      </span>
-                    </p>
-                  </div>
-                </AsyncSection>
-              </div>
+              )}
             </div>
-          </section>
-
-          <section className="blk">
-            <h2>
-              <span
-                className="h2-dot"
-                style={{ background: 'var(--color-accent-700)' }}
-              />
-              AMS 1L &amp; AMS 2L
-            </h2>
-            <p className="note">
-              AMS 1L: annual fee based on the baseline process count. AMS 2L:
-              actual cost per ticket (variable, distinct from the flat rate
-              used in the header KPI).
-            </p>
-            <AsyncSection
-              isPending={amsTrend.isPending}
-              isError={amsTrend.isError}
-              error={amsTrend.error}
-              loadingLabel="Loading AMS trend…"
-            >
-              <div className="two-col">
-                <div className="l1l2-col">
-                  <p className="l1l2-head">AMS 1L</p>
-                  {(amsTrend.data?.l1 ?? []).map((point) => (
-                    <div className="bar-row" key={point.year}>
-                      <div className="lbl">
-                        {point.year} — {point.process_count} procs.
-                      </div>
-                      <div className="bar-track">
-                        <div
-                          className="bar-fill"
-                          style={{
-                            width: `${(point.cost_eur / maxAms1l) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <div className="bar-val">
-                        {formatValue(point.cost_eur, 'eur')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="l1l2-col">
-                  <p className="l1l2-head">AMS 2L</p>
-                  {(amsTrend.data?.l2 ?? []).map((point) => (
-                    <div className="bar-row" key={point.year}>
-                      <div className="lbl">
-                        {point.year} — {point.ticket_count} tickets
-                      </div>
-                      <div className="bar-track">
-                        <div
-                          className="bar-fill"
-                          style={{
-                            width: `${(point.cost_eur / maxAms2l) * 100}%`,
-                            background: 'var(--color-accent-700)',
-                          }}
-                        />
-                      </div>
-                      <div className="bar-val">
-                        {formatValue(point.cost_eur, 'eur')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </AsyncSection>
-          </section>
-
-          <section className="blk">
-            <h2>Cost breakdown by process</h2>
             <p className="note">
               Licence (per-VM share) + infrastructure (per-VM share) + AMS 1L
               (even share / process) + 2L (actual cost), {CURRENT_YEAR}.
+              Annual totals per component are in the running-cost table above.
             </p>
             <div className="legend">
               <span>
@@ -561,8 +319,108 @@ export function SimpleOpsPage() {
             </AsyncSection>
           </section>
 
+          <section className="blk">
+            <h2>
+              <span
+                className="h2-dot"
+                style={{ background: 'var(--color-accent-2-500)' }}
+              />
+              Infrastructure &amp; machine utilisation
+            </h2>
+            <p className="note">
+              Current VM and database fleet, and how process executions spread
+              across machines and time slots. Annual infrastructure spend is in
+              the running-cost table above.
+            </p>
+            <div className="dual-col">
+              <div>
+                <p className="kpi-label" style={{ marginBottom: 4 }}>
+                  Machine occupancy by time slot
+                </p>
+                <AsyncSection
+                  isPending={heatmap.isPending}
+                  isError={heatmap.isError}
+                  error={heatmap.error}
+                  loadingLabel="Loading heatmap…"
+                >
+                  {(heatmap.data ?? []).length > 0 ? (
+                    <div className="heat-grid">
+                      <div />
+                      {heatmap.data?.[0]?.cells.map((cell) => (
+                        <div className="heat-head" key={cell.slot}>
+                          {cell.label}
+                        </div>
+                      ))}
+                      {(heatmap.data ?? []).map((row) => (
+                        <Fragment key={row.vm}>
+                          <div className="heat-row-label">{row.vm}</div>
+                          {row.cells.map((cell) => (
+                            <div
+                              className="heat-cell"
+                              key={`${row.vm}-${cell.slot}`}
+                              title={`${cell.count} processes`}
+                              style={{
+                                background:
+                                  cell.count > 0
+                                    ? `color-mix(in srgb, var(--color-accent) ${Math.max(
+                                        5,
+                                        Math.round(
+                                          (cell.count / maxHeatCount) * 95,
+                                        ),
+                                      )}%, #fff)`
+                                    : 'var(--color-neutral-200)',
+                              }}
+                            />
+                          ))}
+                        </Fragment>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="kpi-delta">No scheduling data available.</p>
+                  )}
+                </AsyncSection>
+              </div>
+              <div>
+                <AsyncSection
+                  isPending={infrastructure.isPending}
+                  isError={infrastructure.isError}
+                  error={infrastructure.error}
+                  loadingLabel="Loading infrastructure…"
+                >
+                  <p className="stat-line">
+                    <span>VM count</span>
+                    <span
+                      className="v"
+                      style={{ color: 'var(--color-accent-2-700)' }}
+                    >
+                      {infrastructure.data?.vm_count ?? '—'}
+                    </span>
+                  </p>
+                  <p className="stat-line" style={{ borderBottom: 'none' }}>
+                    <span>Database count</span>
+                    <span
+                      className="v"
+                      style={{ color: 'var(--color-accent-2-700)' }}
+                    >
+                      {infrastructure.data?.db_count ?? '—'}
+                    </span>
+                  </p>
+                  {infrastructure.data?.tbd && (
+                    <div
+                      className="tbd"
+                      style={{ borderColor: 'var(--color-accent-2-300)' }}
+                    >
+                      Indicative opex data (€0) — awaiting confirmation from
+                      the infrastructure team.
+                    </div>
+                  )}
+                </AsyncSection>
+              </div>
+            </div>
+          </section>
+
           <footer className="dnote">
-            
+
           </footer>
         </div>
       </div>

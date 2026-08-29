@@ -17,7 +17,7 @@ export function Stepper({ currentStep, labels }: StepperProps) {
               isCurrent
                 ? 'bg-brand text-white'
                 : isDone
-                  ? 'bg-red-50 text-brand'
+                  ? 'bg-brand/10 text-brand'
                   : 'bg-slate-100 text-slate-500'
             }`}
           >

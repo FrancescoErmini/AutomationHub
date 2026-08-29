@@ -41,7 +41,7 @@ export function Layout() {
               Operations
             </NavLink>
             <NavLink to="/sla-kpi" className={navClass}>
-              SLA/KPI
+               Performances
             </NavLink>
           </nav>
           {auth.isAuthenticated ? (

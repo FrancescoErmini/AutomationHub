@@ -7,14 +7,14 @@ import { AsyncSection } from '../components/AsyncSection'
 
 const CLASSIFICATION_STYLES: Record<string, string> = {
   'Quick Win': 'bg-positive/10 text-positive',
-  'Strategic Investment': 'bg-sky-100 text-sky-800',
-  'Low-Hanging Fruit': 'bg-amber-100 text-amber-800',
-  'Deprioritize / Avoid': 'bg-slate-200 text-slate-600',
+  'Strategic Investment': 'bg-brand/10 text-brand',
+  'Low-Hanging Fruit': 'bg-slate-100 text-slate-600',
+  'Deprioritize / Avoid': 'bg-slate-200 text-slate-700',
 }
 
 const FEASIBILITY_STYLES: Record<string, string> = {
   High: 'text-positive',
-  Medium: 'text-amber-700',
+  Medium: 'text-slate-500',
   Low: 'text-negative',
 }
 

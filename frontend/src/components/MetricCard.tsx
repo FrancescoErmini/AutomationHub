@@ -28,7 +28,7 @@ export function MetricCard({ label, metric, signColor }: MetricCardProps) {
         {formatMetric(metric)}
       </p>
       {metric && metric.warnings.length > 0 && (
-        <p className="mt-2 text-xs text-amber-700">{metric.warnings[0]}</p>
+        <p className="mt-2 text-xs text-slate-500">{metric.warnings[0]}</p>
       )}
     </div>
   )

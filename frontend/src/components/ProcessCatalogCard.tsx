@@ -19,7 +19,7 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const tagClass = item.is_live
     ? 'bg-positive/10 text-positive'
-    : 'bg-amber-100 text-amber-800'
+    : 'bg-slate-100 text-slate-600'
 
   useEffect(() => {
     if (!isOpen) return

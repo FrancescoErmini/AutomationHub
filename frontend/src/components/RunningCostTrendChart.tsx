@@ -24,12 +24,12 @@ const SEGMENTS: {
     name: 'Infrastructure',
     color: 'var(--color-accent-2-500)',
   },
-  { key: 'ams_1l_eur', name: 'AMS 1L', color: 'var(--color-accent-700)' },
+  { key: 'ams_1l_eur', name: 'AMS 1L', color: 'var(--color-accent-800)' },
   { key: 'ticket_2l_eur', name: '2L tickets', color: 'var(--color-accent-300)' },
   {
     key: 'change_request_eur',
     name: 'Change requests',
-    color: 'var(--color-neutral-400)',
+    color: 'var(--color-neutral-500)',
   },
 ]
 

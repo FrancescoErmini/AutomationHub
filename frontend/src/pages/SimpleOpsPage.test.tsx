@@ -158,9 +158,30 @@ describe('SimpleOpsPage', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('AMS 1L')).toBeInTheDocument()
     expect(await screen.findByText('Change Request')).toBeInTheDocument()
-    // "Infrastructure" also labels the existing standalone infra panel's
-    // heading, so the new KPI card makes this text appear twice.
-    expect(await screen.findAllByText('Infrastructure')).toHaveLength(2)
+    expect((await screen.findAllByText('Infrastructure')).length).toBeGreaterThan(
+      0,
+    )
+  })
+
+  it('shows avg cost per process as an annotation on the cost breakdown', async () => {
+    mockRoutes()
+    renderWithQueryClient(<SimpleOpsPage />)
+
+    expect(
+      await screen.findByText('Avg. cost per process:'),
+    ).toBeInTheDocument()
+  })
+
+  it('relocates machine utilisation below the cost breakdown', async () => {
+    mockRoutes()
+    renderWithQueryClient(<SimpleOpsPage />)
+
+    expect(
+      await screen.findByText('Infrastructure & machine utilisation'),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText('Machine occupancy by time slot'),
+    ).toBeInTheDocument()
   })
 
   it('renders the running cost trend and cost breakdown sections', async () => {

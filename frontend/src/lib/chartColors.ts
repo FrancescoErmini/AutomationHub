@@ -1,26 +1,27 @@
 /**
  * One chart language across the app. recharts needs literal color values
- * (not CSS variables), so the data-semantic palette is mirrored here from
- * the Tailwind theme: savings = teal, spend = ochre, losses = brick.
+ * (not CSS variables), so the "moonlit slate" palette is mirrored here.
+ * The palette carries no good/bad hue pair, so money charts lean on weight:
+ * savings = mint, cost = greys, totals/losses = slate.
  */
 export const chart = {
-  positive: '#0F7B6C',
-  spend: '#B5762E',
-  spendDark: '#6F471B',
-  spendLight: '#C68F55',
-  negative: '#A23B2E',
-  neutral: '#57534E',
+  positive: '#4ECCA3', // savings / net gain
+  spend: '#8D99AE', // run-cost / money out
+  spendDark: '#8D99AE', // capex band
+  spendLight: '#BFA6D8', // opex band — wisteria keeps the two bands apart
+  negative: '#2B2D42', // losses / SLA breach
+  neutral: '#2B2D42', // net-benefit line / totals
 
   // shared axis / grid treatment
-  grid: '#E7E4DF',
-  axis: '#C9C5BF',
-  tick: '#8A8580',
-  tooltipBorder: '#E7E4DF',
+  grid: '#E3E9ED',
+  axis: '#C7CED7',
+  tick: '#8D99AE',
+  tooltipBorder: '#D4DBE2',
 } as const
 
 /**
  * Categorical slots for generic trend/rank charts with no good/bad meaning
- * (Operations / SLA pages). Drawn from the same teal/ochre family as the
- * money charts so the whole app reads as one chart language.
+ * (Operations / SLA pages) — the whole palette, darkest to lightest, so
+ * adjacent series always separate.
  */
-export const chartSeries = ['#0f7b6c', '#b5762e', '#3f6c7b', '#8a7a52'] as const
+export const chartSeries = ['#BFA6D8', '#2B2D42', '#8D99AE', '#4ECCA3'] as const

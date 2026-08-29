@@ -20,7 +20,7 @@ const DONUT_COLORS = [
   'var(--color-accent-700)',
   'var(--color-accent-500)',
   'var(--color-accent-300)',
-  'var(--color-neutral-400)',
+  'var(--color-accent-2-500)',
   'var(--color-neutral-300)',
 ]
 
@@ -337,7 +337,7 @@ export function SlaKpiPage() {
                       value: row.count,
                     }))}
                     valueFormatter={(value) => formatValue(value, 'count')}
-                    color="#0f7b6c"
+                    color="#bfa6d8"
                   />
                 </div>
                 <div>
@@ -348,7 +348,7 @@ export function SlaKpiPage() {
                       value: row.avg_days,
                     }))}
                     valueFormatter={(value) => formatValue(value, 'days')}
-                    color="#b5762e"
+                    color="#8d99ae"
                   />
                 </div>
               </div>
@@ -377,7 +377,7 @@ export function SlaKpiPage() {
               <RankBarChart
                 data={backlogRows}
                 valueFormatter={(value) => formatValue(value, 'count')}
-                color="#0a5a50"
+                color="#2b2d42"
               />
             </AsyncSection>
           </section>

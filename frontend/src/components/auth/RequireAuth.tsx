@@ -26,7 +26,7 @@ export function RequireAuth({ children }: { children?: ReactNode }) {
 
   if (auth.error) {
     return (
-      <div className="p-12 text-center text-rose-600">
+      <div className="p-12 text-center text-brand">
         Sign-in failed: {auth.error.message}
       </div>
     )

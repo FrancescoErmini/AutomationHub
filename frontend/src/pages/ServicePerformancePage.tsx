@@ -134,7 +134,7 @@ export function ServicePerformancePage() {
                 value: row.avg_days,
               }))}
               valueFormatter={(value) => formatValue(value, 'days')}
-              color="#b5762e"
+              color="#8d99ae"
             />
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -147,7 +147,7 @@ export function ServicePerformancePage() {
                 value: row.avg_days,
               }))}
               valueFormatter={(value) => formatValue(value, 'days')}
-              color="#0f7b6c"
+              color="#bfa6d8"
             />
           </div>
         </section>
