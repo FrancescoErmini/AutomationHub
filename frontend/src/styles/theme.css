@@ -1,0 +1,54 @@
+/* Canonical design tokens for the Automation Hub portal.
+   This file is the single source of truth for the palette. tailwind.config.js
+   mirrors these hex values; plain-CSS pages and charts read the variables directly.
+   Light theme only — see docs/superpowers/specs/2026-08-31-portal-ui-redesign-design.md */
+
+:root {
+  /* Surfaces */
+  --ah-canvas: #f7f7f7;
+  --ah-surface: #ffffff;
+  --ah-surface-sunken: #f2f4f7;
+
+  /* Lines & elevation */
+  --ah-border: #e0e0e0;
+  --ah-border-strong: #d9d9d9;
+  --ah-shadow-card: 0 1px 2px rgba(0, 28, 62, 0.06), 0 8px 24px -12px rgba(0, 28, 62, 0.18);
+  --ah-shadow-pop: 0 8px 28px rgba(0, 28, 62, 0.16);
+
+  /* Ink */
+  --ah-ink: #1a1a1a;
+  --ah-ink-2: #444444;
+  --ah-ink-3: #666666;
+
+  /* Structure & interaction */
+  --ah-navy: #001c3e;
+  --ah-navy-hover: #0a2c55;
+  --ah-indigo: #4a1a7d;
+  --ah-indigo-hover: #5b2c90;
+  --ah-brand-red: #e2001a; /* logo/wordmark only */
+
+  /* Semantic status */
+  --ah-positive: #2e8b57;
+  --ah-positive-bg: #e8f3ec;
+  --ah-negative: #cc0000;
+  --ah-negative-bg: #fbeaea;
+  --ah-pending: #a0a0a0;
+  --ah-pending-bg: #f0f0f0;
+
+  /* Chart palette */
+  --ah-chart-capex: #1e3a8a;
+  --ah-chart-opex-personnel: #2f855a;
+  --ah-chart-opex-infra: #9ca3af;
+  --ah-chart-opex-licensing: #4fd1c5;
+  --ah-chart-grid: #e0e0e0;
+  --ah-chart-axis: #c7ced7;
+  --ah-chart-tick: #666666;
+
+  /* Type */
+  --ah-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Radius */
+  --ah-radius-sm: 8px;
+  --ah-radius-md: 12px;
+  --ah-radius-lg: 16px;
+}

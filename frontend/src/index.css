@@ -1,15 +1,21 @@
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply m-0 min-w-80 bg-slate-50 font-sans text-ink antialiased;
+    @apply m-0 min-w-80 antialiased;
+    background: var(--ah-canvas);
+    color: var(--ah-ink);
+    font-family: var(--ah-font-sans);
   }
 
   button,
   input,
-  textarea {
+  textarea,
+  select {
     font-family: inherit;
   }
 
