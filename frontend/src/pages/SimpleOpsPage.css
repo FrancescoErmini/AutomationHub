@@ -1,66 +1,68 @@
-/* Operations / SLA dashboards -- share the rest of the app's design tokens
-   (IBM Plex, "moonlit slate" wisteria-on-cool-grey palette, flat hairline
-   cards) via CSS custom properties, so the hand-rolled SVG/CSS charts below
-   don't need to be rewritten to pick up the app's look. Every selector is
-   scoped under .simple-ops-page so it can never leak into the rest of the app.
-   accent = wisteria (nav/charts), accent-2 = cool grey -- matches chartColors.ts.
-   Palette source hexes: #BFA6D8 #2B2D42 #8D99AE #EDF2F4 #4ECCA3. */
+/* Operations / SLA dashboards -- consume the global design tokens defined in
+   src/styles/theme.css (--ah-*). The local --color-* names below are thin
+   aliases kept only because SlaKpiPage.tsx and some inline styles reference
+   them directly; theme.css is the source of truth. Every selector is scoped
+   under .simple-ops-page so it can never leak into the rest of the app.
+   accent ramp = enterprise blue (#1E3A8A), accent-2 ramp = neutral grey. */
 
 .simple-ops-page {
-  --color-bg: #edf2f4;
-  --color-surface: #ffffff;
-  --color-text: #2b2d42;
-  --color-accent: #bfa6d8;
-  --color-accent-2: #8d99ae;
-  --color-divider: color-mix(in srgb, #2b2d42 12%, transparent);
+  /* All design tokens now alias the global layer in src/styles/theme.css.
+     Local --color-* names are kept because SlaKpiPage.tsx and inline styles
+     reference them directly. accent ramp = enterprise blue, accent-2 = grey. */
+  --color-bg: var(--ah-canvas);
+  --color-surface: var(--ah-surface);
+  --color-text: var(--ah-ink);
+  --color-accent: #1e3a8a;
+  --color-accent-2: #9ca3af;
+  --color-divider: var(--ah-border);
 
-  --color-neutral-100: #f4f7f9;
-  --color-neutral-200: #e3e9ed;
-  --color-neutral-300: #d4dbe2;
-  --color-neutral-400: #8d99ae;
-  --color-neutral-500: #6c7789;
-  --color-neutral-600: #515a6b;
-  --color-neutral-700: #3d4453;
-  --color-neutral-800: #2f3341;
-  --color-neutral-900: #2b2d42;
+  --color-neutral-100: #f7f7f7;
+  --color-neutral-200: #e0e0e0;
+  --color-neutral-300: #d9d9d9;
+  --color-neutral-400: #a0a0a0;
+  --color-neutral-500: #808080;
+  --color-neutral-600: #666666;
+  --color-neutral-700: #444444;
+  --color-neutral-800: #2a2a2a;
+  --color-neutral-900: #1a1a1a;
 
-  --color-accent-100: #f1ecf7;
-  --color-accent-200: #e4d9f0;
-  --color-accent-300: #d9cce9;
-  --color-accent-400: #cbb8e0;
-  --color-accent-500: #bfa6d8;
-  --color-accent-600: #a98cc9;
-  --color-accent-700: #8a6db0;
-  --color-accent-800: #71578f;
-  --color-accent-900: #5a446f;
+  --color-accent-100: #eaf0fa;
+  --color-accent-200: #d5e0f4;
+  --color-accent-300: #b0c4e8;
+  --color-accent-400: #6d8fce;
+  --color-accent-500: #1e3a8a;
+  --color-accent-600: #1b337b;
+  --color-accent-700: #172c6a;
+  --color-accent-800: #132456;
+  --color-accent-900: #0d1a40;
 
-  --color-accent-2-100: #edf0f3;
-  --color-accent-2-200: #dde2e8;
-  --color-accent-2-300: #c7ced7;
-  --color-accent-2-400: #a9b2c0;
-  --color-accent-2-500: #8d99ae;
-  --color-accent-2-600: #737f96;
-  --color-accent-2-700: #5b6478;
-  --color-accent-2-800: #454c5c;
-  --color-accent-2-900: #333845;
+  --color-accent-2-100: #f3f4f6;
+  --color-accent-2-200: #e5e7eb;
+  --color-accent-2-300: #d1d5db;
+  --color-accent-2-400: #b3b8c0;
+  --color-accent-2-500: #9ca3af;
+  --color-accent-2-600: #6b7280;
+  --color-accent-2-700: #4b5563;
+  --color-accent-2-800: #374151;
+  --color-accent-2-900: #1f2937;
 
-  --status-green: #1f7d5f;
-  --status-amber: #6c7789;
-  --status-red: #2b2d42;
+  --status-green: var(--ah-positive);
+  --status-amber: var(--ah-pending);
+  --status-red: var(--ah-negative);
 
-  --font-heading: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  --font-heading-weight: 600;
-  --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-heading: var(--ah-font-sans);
+  --font-heading-weight: 700;
+  --font-body: var(--ah-font-sans);
 
   --space-1: 5px;
   --space-2: 10px;
   --space-3: 15px;
   --space-4: 20px;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
+  --radius-sm: var(--ah-radius-sm);
+  --radius-md: var(--ah-radius-md);
 
-  --shadow-lg: none;
+  --shadow-lg: var(--ah-shadow-card);
 
   color: var(--color-text);
   font-family: var(--font-body);
@@ -134,8 +136,9 @@
   gap: 6px;
   padding: var(--space-3);
   background: var(--color-surface);
-  border: 1px solid var(--color-divider);
+  border: 1px solid var(--ah-border);
   border-radius: var(--radius-md);
+  box-shadow: var(--ah-shadow-card);
 }
 .simple-ops-page .kpi-hero {
   background: color-mix(in srgb, var(--color-accent) 7%, var(--color-surface));
@@ -607,6 +610,8 @@
   padding: var(--space-3);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+  border: 1px solid var(--ah-border);
+  box-shadow: var(--ah-shadow-card);
 }
 .simple-ops-page .card-kicker {
   font-size: 10px;
