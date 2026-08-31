@@ -12,7 +12,7 @@ const TASK_FREQUENCY_OPTIONS = [
 export function Step4Volumetry({ value, onChange }: StepProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-ink">
+      <h2 className="text-xl font-bold tracking-tight text-ink">
         Volumetry & Human Effort
       </h2>
       <SelectField

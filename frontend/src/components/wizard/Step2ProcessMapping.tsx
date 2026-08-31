@@ -26,7 +26,9 @@ export function Step2ProcessMapping({ value, onChange }: StepProps) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-ink">Process Mapping</h2>
+      <h2 className="text-xl font-bold tracking-tight text-ink">
+        Process Mapping
+      </h2>
       <p className="text-sm text-slate-600">
         Map this idea to the APQC process taxonomy. Each level filters the next.
       </p>

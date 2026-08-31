@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-31
 **Branch:** `master` (working inline)
-**Status:** Implemented (shell + simple-ops); other pages pending their polish passes
+**Status:** Implemented across the whole portal (shell + all pages)
 **Plan:** `docs/superpowers/plans/2026-08-31-portal-ui-redesign.md`
 
 ## Problem
@@ -259,6 +259,29 @@ Deviations from the design:
 - **`brandHover` / `accentHover` Tailwind tokens** were added but are currently
   only used via `var(--ah-*)` in `Layout.tsx`; kept for later pages.
 
-Follow-up polish passes still owed: `/sla-kpi`, `/executive`, `/ideas`,
-`/catalog`, `/` (home), the idea wizard, and idea detail. `MetricCard` should
-be re-expressed over `KpiStat` during the executive pass.
+### Whole-portal rollout (second pass, same day)
+
+Extended to every remaining page after the user approved the direction:
+
+- **`boxShadow.card` / `boxShadow.pop`** Tailwind tokens added (mirror
+  `--ah-shadow-*`); `shadow-card` applied to every card / table / panel
+  surface across the app so nothing reads flat.
+- **`PageHeader`** now used by Executive, Performances (sla-kpi), Automations,
+  Ideas, Idea detail, Idea wizard, Process Economics. Gained an optional
+  `action` slot (Ideas' "Submit new idea" button).
+- **Section headings** standardised: standalone → `SectionHeading`; card-internal
+  → `text-base font-bold tracking-tight`. Wizard step headings → `font-bold`.
+- **Focus rings** moved from `brand` (navy) to `accent` (indigo) on all inputs
+  / selects — matches palette.md "selected filter highlights".
+- **Buttons** `hover:brightness-95` (invisible on navy) → `hover:bg-brandHover`.
+- **Error text** `text-brand` → `text-negative` in the wizard and Process
+  Economics.
+- **`MetricCard`** kept (not folded into `KpiStat`) but restyled — old wisteria
+  hex `#71578f` → `text-accent`, added `shadow-card`, tabular numerals.
+- **Home page** rebuilt: the cinematic space-gear hero image is gone. Now a
+  light hero panel (kicker / Inter display / two buttons) plus a 3-card grid of
+  section entry points, all on the standard canvas. `src/images/home-background.jpg`
+  is now unreferenced (left in the repo, unused).
+- **sla-kpi** hardcoded chart hexes (`#bfa6d8` etc.) → `chartColors` exports.
+  Its five `<h2 class="h2-dot">` headings were left as-is — the scoped CSS
+  already renders them bold in the aliased blue; not worth per-heading churn.

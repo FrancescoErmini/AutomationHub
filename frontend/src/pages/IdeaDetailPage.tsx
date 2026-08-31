@@ -41,16 +41,18 @@ export function IdeaDetailPage() {
         {idea.data && (
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
+              <h1 className="text-3xl font-bold tracking-tight text-ink">
                 {idea.data.title}
               </h1>
-              <p className="mt-2 text-slate-600">
+              <p className="mt-2 text-sm text-slate-600">
                 {idea.data.l1_name} → {idea.data.l2_name} → {idea.data.l3_name}
               </p>
             </div>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="mb-2 font-semibold text-ink">Scoring</h2>
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+              <h2 className="mb-2 text-base font-bold tracking-tight text-ink">
+                Scoring
+              </h2>
               <Row
                 label="Gross ROI / year"
                 value={formatValue(Number(idea.data.gross_roi_eur), 'eur')}
@@ -70,8 +72,10 @@ export function IdeaDetailPage() {
               <Row label="Status" value={idea.data.status} />
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="mb-2 font-semibold text-ink">Submission</h2>
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+              <h2 className="mb-2 text-base font-bold tracking-tight text-ink">
+                Submission
+              </h2>
               <Row label="Submitter" value={idea.data.submitter_name} />
               <Row
                 label="Submitted"
@@ -88,8 +92,8 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="mb-2 font-semibold text-ink">
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+              <h2 className="mb-2 text-base font-bold tracking-tight text-ink">
                 Volumetry & Human Effort
               </h2>
               <Row label="Task frequency" value={idea.data.task_frequency} />
@@ -124,8 +128,8 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="mb-2 font-semibold text-ink">
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+              <h2 className="mb-2 text-base font-bold tracking-tight text-ink">
                 Complexity & Standardisation
               </h2>
               <Row label="Number of steps" value={idea.data.number_of_steps} />
@@ -136,8 +140,8 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="mb-2 font-semibold text-ink">
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+              <h2 className="mb-2 text-base font-bold tracking-tight text-ink">
                 Systems & Environment
               </h2>
               <Row
@@ -154,8 +158,10 @@ export function IdeaDetailPage() {
               />
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="mb-2 font-semibold text-ink">AI Assessment</h2>
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+              <h2 className="mb-2 text-base font-bold tracking-tight text-ink">
+                AI Assessment
+              </h2>
               <Row
                 label="Unstructured data"
                 value={idea.data.unstructured_data}

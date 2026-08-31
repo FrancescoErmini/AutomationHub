@@ -74,10 +74,14 @@ export function Step8Review({ value }: StepProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-ink">Review & Submit</h2>
+      <h2 className="text-xl font-bold tracking-tight text-ink">
+        Review & Submit
+      </h2>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="mb-2 font-semibold text-ink">Summary</h3>
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+        <h3 className="mb-2 text-base font-bold tracking-tight text-ink">
+          Summary
+        </h3>
         <SummaryRow label="Title" answer={value.title} />
         <SummaryRow
           label="Process"
@@ -133,8 +137,10 @@ export function Step8Review({ value }: StepProps) {
         />
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 className="mb-2 font-semibold text-ink">Live score preview</h3>
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+        <h3 className="mb-2 text-base font-bold tracking-tight text-ink">
+          Live score preview
+        </h3>
         <p className="mb-3 text-xs text-slate-500">
           Estimated client-side. The authoritative scores are computed on the
           server when you submit.

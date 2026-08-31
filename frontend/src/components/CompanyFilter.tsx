@@ -15,7 +15,7 @@ export function CompanyFilter({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
       >
         <option value="">All companies</option>
         {companies.map((company) => (

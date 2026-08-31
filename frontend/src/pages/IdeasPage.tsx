@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { fetchIdeas } from '../api/ideas'
 import { formatValue } from '../api/metrics'
 import { AsyncSection } from '../components/AsyncSection'
+import { PageHeader } from '../components/ui'
 
 const CLASSIFICATION_STYLES: Record<string, string> = {
   'Quick Win': 'bg-positive/10 text-positive',
@@ -23,20 +24,18 @@ export function IdeasPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Idea Pipeline</h1>
-          <p className="mt-2 text-slate-600">
-            Automation candidates submitted through the assessment wizard.
-          </p>
-        </div>
-        <Link
-          to="/ideas/new"
-          className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:brightness-95"
-        >
-          Submit new idea
-        </Link>
-      </div>
+      <PageHeader
+        title="Idea Pipeline"
+        subtitle="Automation candidates submitted through the assessment wizard."
+        action={
+          <Link
+            to="/ideas/new"
+            className="inline-flex rounded-lg bg-brand px-4 py-2 font-semibold text-white transition hover:bg-brandHover"
+          >
+            Submit new idea
+          </Link>
+        }
+      />
 
       <AsyncSection
         isPending={ideas.isPending}
@@ -61,7 +60,7 @@ export function IdeasPage() {
               <li key={idea.id}>
                 <Link
                   to={`/ideas/${idea.id}`}
-                  className="flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5 hover:border-brand"
+                  className="flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5 shadow-card transition hover:border-accent hover:shadow-pop"
                 >
                   <span
                     className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold ${

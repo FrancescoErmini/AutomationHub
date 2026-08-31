@@ -22,9 +22,13 @@ export function MetricCard({ label, metric, signColor }: MetricCardProps) {
         : 'text-slate-400'
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
-      <p className="text-[10px] uppercase tracking-widest text-[#71578f]">{label}</p>
-      <p className={`mt-2 text-2xl font-bold tracking-tight ${valueClass}`}>
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-accent">
+        {label}
+      </p>
+      <p
+        className={`mt-2 text-2xl font-bold tracking-tight [font-feature-settings:'pnum'_1] ${valueClass}`}
+      >
         {formatMetric(metric)}
       </p>
       {metric && metric.warnings.length > 0 && (

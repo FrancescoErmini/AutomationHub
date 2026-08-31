@@ -17,7 +17,7 @@ const PROCESS_VARIATIONS_OPTIONS = [
 export function Step5Complexity({ value, onChange }: StepProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-ink">
+      <h2 className="text-xl font-bold tracking-tight text-ink">
         Complexity & Standardisation
       </h2>
       <SelectField

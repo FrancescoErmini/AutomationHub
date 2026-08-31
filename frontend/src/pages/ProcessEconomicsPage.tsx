@@ -13,6 +13,7 @@ import {
   type ProcessEconomicsUpdate,
 } from '../api/processEconomics'
 import { AsyncSection } from '../components/AsyncSection'
+import { PageHeader } from '../components/ui'
 
 const ROI_YEAR_OPTIONS = [1, 2, 3, 5]
 
@@ -70,12 +71,12 @@ function isFormValid(form: RowFormState): boolean {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-slate-300 px-2 py-1 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30'
+  'w-full rounded-lg border border-slate-300 px-2 py-1 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30'
 const numberCell = 'px-3 py-2 text-right tabular-nums'
 const ghostButton =
   'rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50'
 const primaryButton =
-  'rounded-lg bg-brand px-3 py-1 text-sm font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50'
+  'rounded-lg bg-brand px-3 py-1 text-sm font-semibold text-white transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50'
 
 function FormFields({
   form,
@@ -217,7 +218,7 @@ function EconomicsRow({ row }: { row: ProcessEconomicsRow }) {
           <tr>
             <td
               colSpan={7}
-              className="px-3 py-1 text-sm text-brand"
+              className="px-3 py-1 text-sm text-negative"
               role="alert"
             >
               {save.error.message}
@@ -269,7 +270,11 @@ function EconomicsRow({ row }: { row: ProcessEconomicsRow }) {
       </tr>
       {remove.error && (
         <tr>
-          <td colSpan={7} className="px-3 py-1 text-sm text-brand" role="alert">
+          <td
+            colSpan={7}
+            className="px-3 py-1 text-sm text-negative"
+            role="alert"
+          >
             {remove.error.message}
           </td>
         </tr>
@@ -321,7 +326,7 @@ function AddRow({ takenProcessIds }: { takenProcessIds: Set<number> }) {
   const canSave = processId !== '' && isFormValid(form) && !create.isPending
 
   return (
-    <div className="w-full basis-full rounded-xl border border-slate-200 bg-white p-4">
+    <div className="w-full basis-full rounded-xl border border-slate-200 bg-white p-4 shadow-card">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
@@ -401,7 +406,7 @@ function AddRow({ takenProcessIds }: { takenProcessIds: Set<number> }) {
         </p>
       )}
       {create.error && (
-        <p className="mt-2 text-sm text-brand" role="alert">
+        <p className="mt-2 text-sm text-negative" role="alert">
           {create.error.message}
         </p>
       )}
@@ -427,15 +432,10 @@ export function ProcessEconomicsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
-          Process Economics
-        </h1>
-        <p className="mt-1 text-slate-600">
-          Maintain the per-process business case: CAPEX, expected ROI horizon,
-          actual FTE hours saved per month, and any extra annual saving.
-        </p>
-      </header>
+      <PageHeader
+        title="Process Economics"
+        subtitle="Maintain the per-process business case: CAPEX, expected ROI horizon, actual FTE hours saved per month, and any extra annual saving."
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <input
@@ -443,7 +443,7 @@ export function ProcessEconomicsPage() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search by process name…"
-          className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+          className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
         />
         <AddRow takenProcessIds={takenProcessIds} />
       </div>
@@ -454,7 +454,7 @@ export function ProcessEconomicsPage() {
         error={rows.error}
         loadingLabel="Loading process economics…"
       >
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">

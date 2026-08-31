@@ -34,6 +34,11 @@ export default {
           950: '#111111',
         },
       },
+      boxShadow: {
+        // Mirrors --ah-shadow-* in src/styles/theme.css.
+        card: '0 1px 2px rgba(0, 28, 62, 0.06), 0 8px 24px -12px rgba(0, 28, 62, 0.18)',
+        pop: '0 8px 28px rgba(0, 28, 62, 0.16)',
+      },
       fontFamily: {
         sans: [
           'Inter',

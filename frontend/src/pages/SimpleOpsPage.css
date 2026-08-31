@@ -96,33 +96,8 @@
   width: 100%;
   margin: 0 auto;
 }
-.simple-ops-page .dash-kicker {
-  display: block;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-text) 70%, transparent);
-  margin: 0 0 8px;
-  font-feature-settings: 'pnum' 1;
-}
-.simple-ops-page .dash-h1 {
-  font-size: 34px;
-  letter-spacing: -0.015em;
-}
-.simple-ops-page .dash-sub {
-  font-size: 15px;
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--color-text) 78%, transparent);
-  max-width: 72ch;
-  margin: 10px 0 0;
-}
-.simple-ops-page hr.rh {
-  height: 5px;
-  border: 0;
-  margin: 22px 0 0;
-  border-top: 2px solid var(--color-text);
-  border-bottom: 1px solid var(--color-text);
-}
+/* Page title + section headings now come from the shared <PageHeader> /
+   <SectionHeading> primitives; the old .dash-* / hr.rh rules were removed. */
 
 .simple-ops-page .kpi-row {
   display: grid;

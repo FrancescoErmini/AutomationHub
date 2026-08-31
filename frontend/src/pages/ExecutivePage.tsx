@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchExecutiveKpis, fetchExecutiveProcesses, fetchExecutiveTcoRoi } from '../api/executive'
+import {
+  fetchExecutiveKpis,
+  fetchExecutiveProcesses,
+  fetchExecutiveTcoRoi,
+} from '../api/executive'
 import { fetchFilters } from '../api/metadata'
 import { formatValue } from '../api/metrics'
 import { AsyncSection } from '../components/AsyncSection'
@@ -9,6 +13,7 @@ import { CompanyFilter } from '../components/CompanyFilter'
 import { MetricCard } from '../components/MetricCard'
 import { ProcessRoiTable } from '../components/ProcessRoiTable'
 import { TcoRoiChart } from '../components/TcoRoiChart'
+import { PageHeader, SectionHeading } from '../components/ui'
 
 const KPI_CARDS: { key: string; label: string; signColor?: boolean }[] = [
   { key: 'kpi_total_saved_to_date_eur', label: 'Total saved to date' },
@@ -24,13 +29,18 @@ function median(values: number[]): number | null {
   if (values.length === 0) return null
   const sorted = [...values].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid]
 }
 
 export function ExecutivePage() {
   const [company, setCompany] = useState('')
 
-  const filters = useQuery({ queryKey: ['metadata', 'filters'], queryFn: fetchFilters })
+  const filters = useQuery({
+    queryKey: ['metadata', 'filters'],
+    queryFn: fetchFilters,
+  })
   const kpis = useQuery({
     queryKey: ['executive', 'kpis', company],
     queryFn: () => fetchExecutiveKpis(company || undefined),
@@ -52,18 +62,17 @@ export function ExecutivePage() {
       .filter((value): value is number => value !== null)
     const medianPaybackMonths = median(paybackMonths)
     if (medianPaybackMonths === null) return null
-    const avgCapexEur = rows.reduce((sum, row) => sum + row.capex_eur, 0) / rows.length
+    const avgCapexEur =
+      rows.reduce((sum, row) => sum + row.capex_eur, 0) / rows.length
     return { medianPaybackMonths, avgCapexEur }
   })()
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">Executive Dashboard</h1>
-        <p className="mt-1 text-slate-600">
-          A strategic overview of the RPA program's economics and process-level ROI.
-        </p>
-      </header>
+      <PageHeader
+        title="Executive Dashboard"
+        subtitle="A strategic overview of the RPA program's economics and process-level ROI."
+      />
 
       <AsyncSection
         isPending={kpis.isPending}
@@ -71,7 +80,10 @@ export function ExecutivePage() {
         error={kpis.error}
         loadingLabel="Loading executive KPIs…"
       >
-        <section aria-label="Executive KPIs" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section
+          aria-label="Executive KPIs"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
           {KPI_CARDS.map((card) => (
             <MetricCard
               key={card.key}
@@ -85,9 +97,11 @@ export function ExecutivePage() {
 
       <section
         aria-label="TCO and ROI analysis"
-        className="rounded-xl border border-slate-200 bg-white p-5"
+        className="rounded-xl border border-slate-200 bg-white p-5 shadow-card"
       >
-        <h2 className="mb-4 font-semibold text-ink">RPA Total Cost of Ownership (TCO) &amp; ROI Analysis</h2>
+        <h2 className="mb-4 text-base font-bold tracking-tight text-ink">
+          RPA Total Cost of Ownership (TCO) &amp; ROI Analysis
+        </h2>
         <AsyncSection
           isPending={tcoRoi.isPending}
           isError={tcoRoi.isError}
@@ -95,33 +109,47 @@ export function ExecutivePage() {
           loadingLabel="Loading TCO & ROI…"
         >
           {tcoRoi.data && tcoRoi.data.length > 0 ? (
-            <TcoRoiChart data={tcoRoi.data} valueFormatter={(value) => formatValue(value, 'eur')} />
+            <TcoRoiChart
+              data={tcoRoi.data}
+              valueFormatter={(value) => formatValue(value, 'eur')}
+            />
           ) : (
-            <p className="text-sm text-slate-500">No TCO & ROI data available.</p>
+            <p className="text-sm text-slate-500">
+              No TCO & ROI data available.
+            </p>
           )}
         </AsyncSection>
       </section>
 
       <section aria-label="Process ROI">
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <h2 className="font-semibold text-ink">Process ROI</h2>
-          {processRoiStats && (
-            <p className="text-sm text-slate-500">
-              Median payback:{' '}
-              <span className="font-semibold text-ink">
-                {formatValue(processRoiStats.medianPaybackMonths, 'months')}
-              </span>
-              {' · '}
-              Avg. cost per automation:{' '}
-              <span className="font-semibold text-ink">
-                {formatValue(processRoiStats.avgCapexEur, 'eur')}
-              </span>
-            </p>
-          )}
+        <div className="mb-4">
+          <SectionHeading
+            stat={
+              processRoiStats ? (
+                <>
+                  Median payback:{' '}
+                  <span className="font-bold text-ink">
+                    {formatValue(processRoiStats.medianPaybackMonths, 'months')}
+                  </span>
+                  {' · '}
+                  Avg. cost per automation:{' '}
+                  <span className="font-bold text-ink">
+                    {formatValue(processRoiStats.avgCapexEur, 'eur')}
+                  </span>
+                </>
+              ) : undefined
+            }
+          >
+            Process ROI
+          </SectionHeading>
         </div>
         {filters.data && (
           <div className="mb-4">
-            <CompanyFilter companies={filters.data.companies} value={company} onChange={setCompany} />
+            <CompanyFilter
+              companies={filters.data.companies}
+              value={company}
+              onChange={setCompany}
+            />
           </div>
         )}
         <AsyncSection

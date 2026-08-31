@@ -5,6 +5,7 @@ import { fetchProcessCatalog } from '../api/processCatalog'
 import { AsyncSection } from '../components/AsyncSection'
 import { ProcessCatalogCard } from '../components/ProcessCatalogCard'
 import { SelectFilter } from '../components/SelectFilter'
+import { PageHeader } from '../components/ui'
 
 type View = 'live' | 'pipeline'
 
@@ -14,7 +15,9 @@ const toggleClass = (active: boolean) =>
   }`
 
 function uniqueSorted(values: (string | null)[]): string[] {
-  return [...new Set(values.filter((value): value is string => Boolean(value)))].sort()
+  return [
+    ...new Set(values.filter((value): value is string => Boolean(value))),
+  ].sort()
 }
 
 export function CatalogPage() {
@@ -36,7 +39,8 @@ export function CatalogPage() {
     [catalog.data],
   )
   const applicationOptions = useMemo(
-    () => uniqueSorted((catalog.data ?? []).flatMap((item) => item.applications)),
+    () =>
+      uniqueSorted((catalog.data ?? []).flatMap((item) => item.applications)),
     [catalog.data],
   )
 
@@ -54,15 +58,10 @@ export function CatalogPage() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
-          Menarini Process Automation
-        </h1>
-        <p className="mt-2 max-w-2xl text-slate-600">
-          Every automated process running today, and every process still in the
-          pipeline — organized by department in one place.
-        </p>
-      </header>
+      <PageHeader
+        title="Menarini Process Automation"
+        subtitle="Every automated process running today, and every process still in the pipeline — organized by department in one place."
+      />
 
       <AsyncSection
         isPending={catalog.isPending}

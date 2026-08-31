@@ -17,7 +17,9 @@ const SYSTEM_INTERFACE_OPTIONS = [
 export function Step6Systems({ value, onChange }: StepProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-ink">Systems & Environment</h2>
+      <h2 className="text-xl font-bold tracking-tight text-ink">
+        Systems & Environment
+      </h2>
       <SelectField
         label="Primary input format"
         value={value.primaryInputFormat}

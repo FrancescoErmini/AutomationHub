@@ -3,7 +3,11 @@ import { useMemo, useState } from 'react'
 import { formatValue } from '../api/metrics'
 import type { ProcessRoiRow } from '../api/executive'
 
-type SortKey = 'actual_roi_pct' | 'payback_months' | 'annual_saving_eur' | 'go_live_date'
+type SortKey =
+  | 'actual_roi_pct'
+  | 'payback_months'
+  | 'annual_saving_eur'
+  | 'go_live_date'
 type StatusFilter = 'all' | 'positive' | 'negative'
 
 interface ProcessRoiTableProps {
@@ -28,7 +32,9 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
   const visibleRows = useMemo(() => {
     let filtered = rows
     if (statusFilter === 'positive') {
-      filtered = filtered.filter((row) => (row.actual_roi_pct ?? -Infinity) >= 0)
+      filtered = filtered.filter(
+        (row) => (row.actual_roi_pct ?? -Infinity) >= 0,
+      )
     } else if (statusFilter === 'negative') {
       filtered = filtered.filter((row) => (row.actual_roi_pct ?? Infinity) < 0)
     }
@@ -65,7 +71,9 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
           ROI status
           <select
             value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as StatusFilter)
+            }
             className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
           >
             <option value="all">All</option>
@@ -75,11 +83,11 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
         </label>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card">
         <table className="w-full text-sm">
           <caption className="sr-only">
-            Per-process ROI: go-live date, CAPEX, hours saved per month, annual saving, payback,
-            expected vs. actual ROI
+            Per-process ROI: go-live date, CAPEX, hours saved per month, annual
+            saving, payback, expected vs. actual ROI
           </caption>
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -114,7 +122,10 @@ export function ProcessRoiTable({ rows }: ProcessRoiTableProps) {
           </thead>
           <tbody>
             {visibleRows.map((row) => (
-              <tr key={row.process} className="border-b border-slate-100 last:border-0">
+              <tr
+                key={row.process}
+                className="border-b border-slate-100 last:border-0"
+              >
                 <td className="px-4 py-3">{row.process}</td>
                 <td className="px-4 py-3">{row.go_live_date ?? 'Not live'}</td>
                 <td className="px-4 py-3 text-right tabular-nums">

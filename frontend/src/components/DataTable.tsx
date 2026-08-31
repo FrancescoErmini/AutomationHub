@@ -19,7 +19,7 @@ export function DataTable<T>({
   getRowKey,
 }: DataTableProps<T>) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card">
       <table className="w-full text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead>

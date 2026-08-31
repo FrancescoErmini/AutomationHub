@@ -12,6 +12,8 @@ import type { QualityDonut } from '../api/simpleOps'
 import { AsyncSection } from '../components/AsyncSection'
 import { RankBarChart } from '../components/RankBarChart'
 import { TrendChart } from '../components/TrendChart'
+import { PageHeader } from '../components/ui'
+import { chart, chartSeries } from '../lib/chartColors'
 import './SimpleOpsPage.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -69,7 +71,10 @@ export function SlaKpiPage() {
         { label: '0-3 days', value: backlogAging.data.backlog_0_3_days },
         { label: '4-7 days', value: backlogAging.data.backlog_4_7_days },
         { label: '8-15 days', value: backlogAging.data.backlog_8_15_days },
-        { label: 'Over 15 days', value: backlogAging.data.backlog_over_15_days },
+        {
+          label: 'Over 15 days',
+          value: backlogAging.data.backlog_over_15_days,
+        },
       ]
     : []
 
@@ -77,10 +82,10 @@ export function SlaKpiPage() {
     <div className="simple-ops-page">
       <div className="opt-wrap">
         <div className="sheet">
-          <h1 className="dash-h1">SLA / KPI</h1>
-          <p className="dash-sub">
-            Service-level and quality health of the RPA program.
-          </p>
+          <PageHeader
+            title="SLA / KPI"
+            subtitle="Service-level and quality health of the RPA program."
+          />
 
           <section className="blk">
             <h2>
@@ -283,9 +288,9 @@ export function SlaKpiPage() {
               Ticket volume &amp; shift-left trend
             </h2>
             <p className="note">
-              1L vs 2L ticket volume by month, across all available years —
-              the clearest read on whether the desk is absorbing more work
-              and whether 1L is taking a growing share of it.
+              1L vs 2L ticket volume by month, across all available years — the
+              clearest read on whether the desk is absorbing more work and
+              whether 1L is taking a growing share of it.
             </p>
             <AsyncSection
               isPending={supportLevelTrend.isPending}
@@ -318,9 +323,9 @@ export function SlaKpiPage() {
               Where quality is lost — root causes &amp; resolution speed
             </h2>
             <p className="note">
-              What breaks most often (all years), and how long each root
-              cause takes to resolve on average — the two views together
-              show where to focus improvement effort.
+              What breaks most often (all years), and how long each root cause
+              takes to resolve on average — the two views together show where to
+              focus improvement effort.
             </p>
             <AsyncSection
               isPending={rootCausePareto.isPending || resolution.isPending}
@@ -337,7 +342,7 @@ export function SlaKpiPage() {
                       value: row.count,
                     }))}
                     valueFormatter={(value) => formatValue(value, 'count')}
-                    color="#bfa6d8"
+                    color={chartSeries[0]}
                   />
                 </div>
                 <div>
@@ -348,7 +353,7 @@ export function SlaKpiPage() {
                       value: row.avg_days,
                     }))}
                     valueFormatter={(value) => formatValue(value, 'days')}
-                    color="#8d99ae"
+                    color={chartSeries[1]}
                   />
                 </div>
               </div>
@@ -364,9 +369,9 @@ export function SlaKpiPage() {
               Backlog aging — open tickets right now
             </h2>
             <p className="note">
-              Age distribution of the current open backlog. Ties directly
-              into the Open Backlog Aging KPI above — this is what's
-              actually sitting past the 14-day target.
+              Age distribution of the current open backlog. Ties directly into
+              the Open Backlog Aging KPI above — this is what's actually sitting
+              past the 14-day target.
             </p>
             <AsyncSection
               isPending={backlogAging.isPending}
@@ -377,7 +382,7 @@ export function SlaKpiPage() {
               <RankBarChart
                 data={backlogRows}
                 valueFormatter={(value) => formatValue(value, 'count')}
-                color="#2b2d42"
+                color={chart.neutral}
               />
             </AsyncSection>
           </section>

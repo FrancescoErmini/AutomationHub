@@ -32,13 +32,15 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
 
   return (
     <>
-      <article className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5">
+      <article className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5 shadow-card">
         <span
           className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold ${tagClass}`}
         >
           {item.department}
         </span>
-        <h3 className="font-semibold text-ink">{item.title}</h3>
+        <h3 className="text-base font-bold tracking-tight text-ink">
+          {item.title}
+        </h3>
         <p className="line-clamp-3 text-sm text-slate-600">
           {item.description || 'No description provided.'}
         </p>
@@ -54,11 +56,13 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
             ))}
           </div>
         )}
-        <p className="text-xs text-slate-500">{formatGoLiveDate(item.go_live_date)}</p>
+        <p className="text-xs text-slate-500">
+          {formatGoLiveDate(item.go_live_date)}
+        </p>
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="mt-1 self-start text-sm font-semibold text-brand hover:underline"
+          className="mt-1 self-start text-sm font-semibold text-accent hover:underline"
         >
           View details
         </button>
@@ -73,11 +77,13 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-pop"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
-              <h3 className="text-lg font-semibold text-ink">{item.title}</h3>
+              <h3 className="text-lg font-bold tracking-tight text-ink">
+                {item.title}
+              </h3>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
@@ -100,17 +106,23 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
                 </span>
               </div>
 
-              <p className="text-slate-600">{item.description || 'No description provided.'}</p>
+              <p className="text-slate-600">
+                {item.description || 'No description provided.'}
+              </p>
 
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                 <dt className="text-slate-500">Company</dt>
-                <dd className="text-right font-medium text-ink">{item.company ?? 'Not specified'}</dd>
+                <dd className="text-right font-medium text-ink">
+                  {item.company ?? 'Not specified'}
+                </dd>
                 <dt className="text-slate-500">Go-live date</dt>
                 <dd className="text-right font-medium text-ink">
                   {formatGoLiveDate(item.go_live_date)}
                 </dd>
                 <dt className="text-slate-500">Status</dt>
-                <dd className="text-right font-medium text-ink">{item.status ?? 'Not specified'}</dd>
+                <dd className="text-right font-medium text-ink">
+                  {item.status ?? 'Not specified'}
+                </dd>
               </dl>
 
               {item.applications.length > 0 && (

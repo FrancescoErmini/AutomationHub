@@ -13,6 +13,7 @@ import { Step6Systems } from '../components/wizard/Step6Systems'
 import { Step7AiAssessment } from '../components/wizard/Step7AiAssessment'
 import { Step8Review } from '../components/wizard/Step8Review'
 import { Stepper } from '../components/wizard/Stepper'
+import { PageHeader } from '../components/ui'
 import {
   INITIAL_WIZARD_STATE,
   STEP_LABELS,
@@ -55,22 +56,19 @@ export function IdeaWizardPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Submit New Idea</h1>
-        <p className="mt-2 text-slate-600">
-          Walk through the assessment wizard to score and route a new automation
-          candidate.
-        </p>
-      </div>
+      <PageHeader
+        title="Submit New Idea"
+        subtitle="Walk through the assessment wizard to score and route a new automation candidate."
+      />
 
       <Stepper currentStep={currentStep} labels={STEP_LABELS} />
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-card">
         <StepComponent value={state} onChange={patch} />
       </div>
 
       {submit.error && (
-        <p role="alert" className="text-sm text-brand">
+        <p role="alert" className="text-sm text-negative">
           {submit.error.message}
         </p>
       )}
@@ -89,7 +87,7 @@ export function IdeaWizardPage() {
             type="button"
             onClick={() => submit.mutate(toIdeaCreate(state))}
             disabled={!canAdvance || submit.isPending}
-            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submit.isPending ? 'Submitting…' : 'Submit idea'}
           </button>
@@ -100,7 +98,7 @@ export function IdeaWizardPage() {
               setCurrentStep((step) => Math.min(TOTAL_STEPS, step + 1))
             }
             disabled={!canAdvance}
-            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-brand px-4 py-2 font-semibold text-white transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>

@@ -113,7 +113,7 @@ export function TcoRoiChart({
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 shadow-card">
         <table className="w-full text-sm">
           <caption className="sr-only">
             TCO &amp; ROI by year: CAPEX, OPEX, savings, and net benefit

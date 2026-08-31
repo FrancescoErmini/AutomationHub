@@ -37,7 +37,7 @@ export function KpiStat({
 }: KpiStatProps) {
   return (
     <div
-      className={`flex flex-col gap-1.5 rounded-xl border border-slate-200 p-4 shadow-[var(--ah-shadow-card)] ${
+      className={`flex flex-col gap-1.5 rounded-xl border border-slate-200 p-4 shadow-card ${
         hero
           ? 'bg-[color-mix(in_srgb,theme(colors.brand)_5%,#fff)]'
           : 'bg-white'

@@ -24,7 +24,9 @@ const AI_OUTPUT_RISK_OPTIONS = [
 export function Step7AiAssessment({ value, onChange }: StepProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-ink">AI Assessment</h2>
+      <h2 className="text-xl font-bold tracking-tight text-ink">
+        AI Assessment
+      </h2>
       <SelectField
         label="Unstructured data"
         value={value.unstructuredData}
