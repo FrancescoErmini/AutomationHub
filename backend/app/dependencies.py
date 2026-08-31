@@ -24,6 +24,7 @@ from app.services.ideas import IdeaService
 from app.services.items import ItemService
 from app.services.operations import OperationsService
 from app.services.process_catalog import ProcessCatalogService
+from app.services.process_economics import ProcessEconomicsService
 from app.services.service_performance import ServicePerformanceService
 from app.services.simple_ops import SimpleOpsService
 
@@ -63,6 +64,15 @@ def get_operations_service(repo: AnalyticsRepositoryDependency) -> OperationsSer
 
 def get_process_catalog_service(repo: AnalyticsRepositoryDependency) -> ProcessCatalogService:
     return ProcessCatalogService(repo)
+
+
+def get_process_economics_service(session: DbSession) -> ProcessEconomicsService:
+    return ProcessEconomicsService(session)
+
+
+ProcessEconomicsServiceDependency = Annotated[
+    ProcessEconomicsService, Depends(get_process_economics_service)
+]
 
 
 def get_service_performance_service(

@@ -9,6 +9,7 @@ from app.api.v1 import (
     metadata,
     operations,
     process_catalog,
+    process_economics,
     service_performance,
     simple_ops,
 )
@@ -21,6 +22,7 @@ router.include_router(executive.router)
 router.include_router(operations.router)
 router.include_router(service_performance.router)
 router.include_router(process_catalog.router)
+router.include_router(process_economics.router)
 router.include_router(simple_ops.router)
 router.include_router(apqc.router)
 router.include_router(ideas.router)

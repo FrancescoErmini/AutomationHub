@@ -10,12 +10,29 @@ import {
   fetchRunningCostTrend,
   fetchSimpleOpsKpis,
 } from '../api/simpleOps'
+import type { ProcessCostRow } from '../api/simpleOps'
 import { AsyncSection } from '../components/AsyncSection'
 import { RunningCostTrendChart } from '../components/RunningCostTrendChart'
 import './SimpleOpsPage.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
 const PROCESS_PAGE_SIZE = 10
+
+const PROCESS_SEGMENTS = [
+  { key: 'license', label: 'Licence (share)', field: 'license_eur' },
+  { key: 'infra', label: 'Infrastructure (share)', field: 'infrastructure_eur' },
+  { key: 'ams', label: 'AMS 1L', field: 'ams_1l_eur' },
+  { key: '2l', label: '2L tickets', field: 'l2_eur' },
+] as const satisfies ReadonlyArray<{
+  key: string
+  label: string
+  field: keyof ProcessCostRow
+}>
+
+interface HoveredSegment {
+  process: string
+  key: string
+}
 
 function metricNumber(map: MetricMap | undefined, key: string): number | null {
   const metric = map?.[key]
@@ -55,6 +72,9 @@ function KpiCard({ label, value, unit, subtitle, spot, hero }: KpiCardProps) {
 
 export function SimpleOpsPage() {
   const [processPage, setProcessPage] = useState(0)
+  const [hoveredSegment, setHoveredSegment] = useState<HoveredSegment | null>(
+    null,
+  )
 
   const kpis = useQuery({
     queryKey: ['simple-ops', 'kpis'],
@@ -107,7 +127,7 @@ export function SimpleOpsPage() {
         <div className="sheet">
           <h1 className="dash-h1">Operations Dashboard</h1>
           <p className="dash-sub">
-            A comprehensive view of your RPA maintenance and execution costs.
+            A comprehensive view of your RPA maintenance and execution costs of ${CURRENT_YEAR}.
           </p>
 
           <AsyncSection
@@ -119,7 +139,7 @@ export function SimpleOpsPage() {
             <div className="kpi-row">
               <KpiCard
                 hero
-                label={`Total running cost ${CURRENT_YEAR}`}
+                label={`Total running cost`}
                 value={metricNumber(kpis.data, 'kpi_total_running_cost_eur')}
                 unit="eur"
                 subtitle={[
@@ -255,42 +275,69 @@ export function SimpleOpsPage() {
               error={costBreakdown.error}
               loadingLabel="Loading cost breakdown…"
             >
-              {pageRows.map((row) => (
-                <div className="stack-row" key={row.process}>
-                  <div className="lbl">
-                    <span>{row.process}</span>
-                    <span className="v">
-                      {formatValue(row.total_eur, 'eur')}
-                    </span>
+              {pageRows.map((row) => {
+                let accPct = 0
+                const segments = PROCESS_SEGMENTS.map((seg) => {
+                  const value = row[seg.field] as number
+                  const widthPct = (value / maxProcessTotal) * 100
+                  const centerPct = accPct + widthPct / 2
+                  accPct += widthPct
+                  return { ...seg, value, widthPct, centerPct }
+                })
+                const active =
+                  hoveredSegment?.process === row.process
+                    ? segments.find((s) => s.key === hoveredSegment.key)
+                    : undefined
+                return (
+                  <div className="stack-row" key={row.process}>
+                    <div className="lbl">
+                      <span>{row.process}</span>
+                      <span className="v">
+                        {formatValue(row.total_eur, 'eur')}
+                      </span>
+                    </div>
+                    <div className="stack-bar">
+                      {segments.map((seg) => (
+                        <div
+                          key={seg.key}
+                          className={`seg-${seg.key}`}
+                          style={{ width: `${seg.widthPct}%` }}
+                          onMouseEnter={
+                            seg.value > 0
+                              ? () =>
+                                  setHoveredSegment({
+                                    process: row.process,
+                                    key: seg.key,
+                                  })
+                              : undefined
+                          }
+                          onMouseLeave={
+                            seg.value > 0
+                              ? () => setHoveredSegment(null)
+                              : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                    {active && active.value > 0 && (
+                      <div
+                        className="stack-tip"
+                        style={{ left: `${active.centerPct}%` }}
+                      >
+                        <strong>{active.label}</strong>
+                        <span>{formatValue(active.value, 'eur')}</span>
+                        <span className="stack-tip-pct">
+                          {row.total_eur > 0
+                            ? `${Math.round(
+                                (active.value / row.total_eur) * 100,
+                              )}% of process total`
+                            : '—'}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="stack-bar">
-                    <div
-                      className="seg-license"
-                      style={{
-                        width: `${(row.license_eur / maxProcessTotal) * 100}%`,
-                      }}
-                    />
-                    <div
-                      className="seg-infra"
-                      style={{
-                        width: `${(row.infrastructure_eur / maxProcessTotal) * 100}%`,
-                      }}
-                    />
-                    <div
-                      className="seg-ams"
-                      style={{
-                        width: `${(row.ams_1l_eur / maxProcessTotal) * 100}%`,
-                      }}
-                    />
-                    <div
-                      className="seg-2l"
-                      style={{
-                        width: `${(row.l2_eur / maxProcessTotal) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+                )
+              })}
               {processRows.length > PROCESS_PAGE_SIZE && (
                 <div className="pager">
                   <button

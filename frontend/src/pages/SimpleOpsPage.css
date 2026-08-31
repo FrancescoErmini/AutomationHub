@@ -125,22 +125,20 @@
 .simple-ops-page .kpi-row {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1fr;
-  gap: 0;
+  gap: var(--space-3);
   padding: 22px 0 8px;
 }
 .simple-ops-page .kpi {
-  padding: 12px 22px;
-  border-right: 1px solid var(--color-neutral-300);
-}
-.simple-ops-page .kpi:first-child {
-  padding-left: 12px;
-}
-.simple-ops-page .kpi:last-child {
-  border-right: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
 }
 .simple-ops-page .kpi-hero {
-  background: color-mix(in srgb, var(--color-accent) 7%, var(--color-bg));
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-accent) 7%, var(--color-surface));
 }
 .simple-ops-page .kpi-hero .kpi-num {
   font-size: 36px;
@@ -159,6 +157,16 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-text) 65%, transparent);
   margin: 0 0 6px;
+}
+/* KPI-card kickers match the .card-kicker style used on the Performances page. */
+.simple-ops-page .kpi .kpi-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--color-accent-800);
+  margin: 0;
+}
+.simple-ops-page .kpi .kpi-delta {
+  margin: 0;
 }
 .simple-ops-page .kpi-num {
   font-family: var(--font-heading);
@@ -345,6 +353,51 @@
 }
 .simple-ops-page .stack-row {
   padding: 6px 0;
+  position: relative;
+}
+.simple-ops-page .stack-bar > div {
+  transition: filter 0.12s ease;
+}
+.simple-ops-page .stack-bar:hover > div:not(:hover) {
+  filter: saturate(0.55) opacity(0.65);
+}
+.simple-ops-page .stack-tip {
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
+  margin-top: 7px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+  background: var(--color-surface);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+  padding: 8px 11px;
+  font-size: 12px;
+  pointer-events: none;
+}
+.simple-ops-page .stack-tip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--color-neutral-200);
+}
+.simple-ops-page .stack-tip strong {
+  font-weight: 600;
+}
+.simple-ops-page .stack-tip span {
+  font-family: var(--font-heading);
+  font-feature-settings: 'pnum' 1;
+}
+.simple-ops-page .stack-tip .stack-tip-pct {
+  font-family: var(--font-body);
+  color: color-mix(in srgb, var(--color-text) 58%, transparent);
 }
 .simple-ops-page .stack-row .lbl {
   display: flex;
@@ -559,7 +612,7 @@
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-accent-800);
 }
 .simple-ops-page .card-title {
   font-family: var(--font-heading);
@@ -599,7 +652,7 @@
   border-left: 1px solid var(--color-divider);
 }
 .simple-ops-page .seg-opt:has(input:checked) {
-  background: var(--color-accent);
+  background: var(--color-accent-800);
   color: #fff;
 }
 .simple-ops-page .seg-opt:not(:has(input:checked)):hover {
@@ -645,10 +698,6 @@
 @media (max-width: 960px) {
   .simple-ops-page .kpi-row {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .simple-ops-page .kpi {
-    border-right: none;
-    border-bottom: 1px solid var(--color-neutral-300);
   }
   .simple-ops-page .dual-col,
   .simple-ops-page .two-col {

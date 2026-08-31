@@ -43,6 +43,9 @@ export function Layout() {
             <NavLink to="/sla-kpi" className={navClass}>
                Performances
             </NavLink>
+            <NavLink to="/process-economics" className={navClass}>
+              Business Cases
+            </NavLink>
           </nav>
           {auth.isAuthenticated ? (
             <div className="flex items-center gap-3 text-sm">
