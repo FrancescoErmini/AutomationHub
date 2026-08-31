@@ -1,7 +1,7 @@
 # Portal UI Redesign — Design
 
 **Date:** 2026-08-31
-**Branch:** `worktree-portal-ui-redesign`
+**Branch:** `master` (working inline)
 **Status:** Approved design, pending implementation plan
 
 ## Problem
