@@ -13,6 +13,7 @@ import {
 import type { ProcessCostRow } from '../api/simpleOps'
 import { AsyncSection } from '../components/AsyncSection'
 import { RunningCostTrendChart } from '../components/RunningCostTrendChart'
+import { KpiStat, PageHeader, SectionHeading } from '../components/ui'
 import './SimpleOpsPage.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -58,15 +59,13 @@ interface KpiCardProps {
 
 function KpiCard({ label, value, unit, subtitle, spot, hero }: KpiCardProps) {
   return (
-    <div className={`kpi${hero ? ' kpi-hero' : ''}`}>
-      <p className="kpi-label">{label}</p>
-      <p className="kpi-num">
-        {value === null ? 'N/A' : formatValue(value, unit)}
-      </p>
-      {subtitle && (
-        <p className={`kpi-delta${spot ? ' spot' : ''}`}>{subtitle}</p>
-      )}
-    </div>
+    <KpiStat
+      label={label}
+      value={value === null ? 'N/A' : formatValue(value, unit)}
+      delta={subtitle ?? undefined}
+      deltaTone={spot ? 'muted' : 'auto'}
+      hero={hero}
+    />
   )
 }
 
@@ -125,10 +124,10 @@ export function SimpleOpsPage() {
     <div className="simple-ops-page">
       <div className="opt-wrap">
         <div className="sheet">
-          <h1 className="dash-h1">Operations Dashboard</h1>
-          <p className="dash-sub">
-            A comprehensive view of your RPA maintenance and execution costs of ${CURRENT_YEAR}.
-          </p>
+          <PageHeader
+            title="Operations Dashboard"
+            subtitle={`A comprehensive view of your RPA maintenance and execution costs for ${CURRENT_YEAR}.`}
+          />
 
           <AsyncSection
             isPending={kpis.isPending}
@@ -211,13 +210,9 @@ export function SimpleOpsPage() {
           </AsyncSection>
 
           <section className="blk">
-            <h2>
-              <span
-                className="h2-dot"
-                style={{ background: 'var(--color-neutral-700)' }}
-              />
+            <SectionHeading dotColor="var(--ah-ink-3)">
               Total running cost trend
-            </h2>
+            </SectionHeading>
             <p className="note">
               Sum of licences + infrastructure + AMS 1L + 2L tickets (flat
               rate) + change requests per year, by component.
@@ -237,15 +232,20 @@ export function SimpleOpsPage() {
           </section>
 
           <section className="blk">
-            <div className="blk-head">
-              <h2>Cost breakdown by process</h2>
-              {avgCostPerProcess !== null && (
-                <p className="blk-head-stat">
-                  Avg. cost per process:{' '}
-                  <span>{formatValue(avgCostPerProcess, 'eur')}</span>
-                </p>
-              )}
-            </div>
+            <SectionHeading
+              stat={
+                avgCostPerProcess !== null ? (
+                  <>
+                    Avg. cost per process:{' '}
+                    <span className="font-bold text-ink [font-feature-settings:'pnum'_1]">
+                      {formatValue(avgCostPerProcess, 'eur')}
+                    </span>
+                  </>
+                ) : undefined
+              }
+            >
+              Cost breakdown by process
+            </SectionHeading>
             <p className="note">
               Licence (per-VM share) + infrastructure (per-VM share) + AMS 1L
               (even share / process) + 2L (actual cost), {CURRENT_YEAR}.
@@ -367,13 +367,9 @@ export function SimpleOpsPage() {
           </section>
 
           <section className="blk">
-            <h2>
-              <span
-                className="h2-dot"
-                style={{ background: 'var(--color-accent-2-500)' }}
-              />
+            <SectionHeading dotColor="var(--ah-chart-opex-infra)">
               Infrastructure &amp; machine utilisation
-            </h2>
+            </SectionHeading>
             <p className="note">
               Current VM and database fleet, and how process executions spread
               across machines and time slots. Annual infrastructure spend is in
@@ -409,13 +405,13 @@ export function SimpleOpsPage() {
                               style={{
                                 background:
                                   cell.count > 0
-                                    ? `color-mix(in srgb, var(--color-accent) ${Math.max(
+                                    ? `color-mix(in srgb, var(--ah-chart-capex) ${Math.max(
                                         5,
                                         Math.round(
                                           (cell.count / maxHeatCount) * 95,
                                         ),
                                       )}%, #fff)`
-                                    : 'var(--color-neutral-200)',
+                                    : 'var(--ah-border)',
                               }}
                             />
                           ))}
@@ -438,7 +434,7 @@ export function SimpleOpsPage() {
                     <span>VM count</span>
                     <span
                       className="v"
-                      style={{ color: 'var(--color-accent-2-700)' }}
+                      style={{ color: 'var(--ah-ink-2)' }}
                     >
                       {infrastructure.data?.vm_count ?? '—'}
                     </span>
@@ -447,7 +443,7 @@ export function SimpleOpsPage() {
                     <span>Database count</span>
                     <span
                       className="v"
-                      style={{ color: 'var(--color-accent-2-700)' }}
+                      style={{ color: 'var(--ah-ink-2)' }}
                     >
                       {infrastructure.data?.db_count ?? '—'}
                     </span>
@@ -455,7 +451,7 @@ export function SimpleOpsPage() {
                   {infrastructure.data?.tbd && (
                     <div
                       className="tbd"
-                      style={{ borderColor: 'var(--color-accent-2-300)' }}
+                      style={{ borderColor: 'var(--ah-border-strong)' }}
                     >
                       Indicative opex data (€0) — awaiting confirmation from
                       the infrastructure team.

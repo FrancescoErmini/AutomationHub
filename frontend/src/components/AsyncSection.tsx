@@ -24,7 +24,7 @@ export function AsyncSection({
     return (
       <div
         role="alert"
-        className="rounded-xl border border-brand/30 bg-brand/5 p-6 text-brand"
+        className="rounded-xl border border-negative/30 bg-negative/5 p-6 text-negative"
       >
         {error?.message ?? 'Something went wrong.'}
       </div>
