@@ -18,18 +18,22 @@ const SEGMENTS: {
   name: string
   color: string
 }[] = [
-  { key: 'license_eur', name: 'Licences', color: 'var(--color-accent-500)' },
+  {
+    key: 'license_eur',
+    name: 'Licences',
+    color: 'var(--ah-chart-opex-licensing)',
+  },
   {
     key: 'infrastructure_eur',
     name: 'Infrastructure',
-    color: 'var(--color-accent-2-500)',
+    color: 'var(--ah-chart-opex-infra)',
   },
-  { key: 'ams_1l_eur', name: 'AMS 1L', color: 'var(--color-accent-800)' },
-  { key: 'ticket_2l_eur', name: '2L tickets', color: 'var(--color-accent-300)' },
+  { key: 'ams_1l_eur', name: 'AMS 1L', color: 'var(--ah-chart-opex-personnel)' },
+  { key: 'ticket_2l_eur', name: '2L tickets', color: 'var(--ah-chart-capex)' },
   {
     key: 'change_request_eur',
     name: 'Change requests',
-    color: 'var(--color-neutral-500)',
+    color: 'var(--ah-ink-3)',
   },
 ]
 
@@ -47,15 +51,15 @@ export function RunningCostTrendChart({
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-            <CartesianGrid stroke="var(--color-neutral-200)" vertical={false} />
+            <CartesianGrid stroke="var(--ah-chart-grid)" vertical={false} />
             <XAxis
               dataKey="year"
-              tick={{ fill: 'var(--color-text)', fontSize: 12 }}
-              stroke="var(--color-neutral-300)"
+              tick={{ fill: 'var(--ah-ink-2)', fontSize: 12 }}
+              stroke="var(--ah-chart-axis)"
             />
             <YAxis
-              tick={{ fill: 'var(--color-text)', fontSize: 12 }}
-              stroke="var(--color-neutral-300)"
+              tick={{ fill: 'var(--ah-ink-2)', fontSize: 12 }}
+              stroke="var(--ah-chart-axis)"
               width={72}
               tickFormatter={(value) => formatValue(value, 'eur')}
             />
@@ -63,7 +67,7 @@ export function RunningCostTrendChart({
               formatter={(value) => formatValue(Number(value), 'eur')}
               contentStyle={{
                 borderRadius: 8,
-                borderColor: 'var(--color-neutral-200)',
+                borderColor: 'var(--ah-border-strong)',
                 fontSize: 13,
               }}
             />
@@ -81,7 +85,7 @@ export function RunningCostTrendChart({
               type="monotone"
               dataKey="total_eur"
               name="Total"
-              stroke="var(--color-neutral-700)"
+              stroke="var(--ah-ink)"
               strokeWidth={2}
               dot={{ r: 3 }}
               activeDot={{ r: 5 }}

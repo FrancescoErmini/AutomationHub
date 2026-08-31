@@ -1,27 +1,31 @@
 /**
- * One chart language across the app. recharts needs literal color values
- * (not CSS variables), so the "moonlit slate" palette is mirrored here.
- * The palette carries no good/bad hue pair, so money charts lean on weight:
- * savings = mint, cost = greys, totals/losses = slate.
+ * One chart language across the app. recharts needs literal colour values
+ * (not CSS variables), so the enterprise palette from src/styles/theme.css is
+ * mirrored here. Money charts map to expense categories:
+ * CAPEX = deep blue, OPEX = green / grey / aqua.
  */
 export const chart = {
-  positive: '#4ECCA3', // savings / net gain
-  spend: '#8D99AE', // run-cost / money out
-  spendDark: '#8D99AE', // capex band
-  spendLight: '#BFA6D8', // opex band — wisteria keeps the two bands apart
-  negative: '#2B2D42', // losses / SLA breach
-  neutral: '#2B2D42', // net-benefit line / totals
+  positive: '#2E8B57', // savings / net gain
+  negative: '#CC0000', // losses / SLA breach
+  spend: '#666666', // generic run-cost / money out
+
+  capex: '#1E3A8A', // CAPEX band
+  opexPersonnel: '#2F855A', // OPEX — personnel
+  opexInfra: '#9CA3AF', // OPEX — infrastructure
+  opexLicensing: '#4FD1C5', // OPEX — licensing / software
+
+  neutral: '#1A1A1A', // net-benefit line / totals
 
   // shared axis / grid treatment
-  grid: '#E3E9ED',
+  grid: '#E0E0E0',
   axis: '#C7CED7',
-  tick: '#8D99AE',
-  tooltipBorder: '#D4DBE2',
+  tick: '#666666',
+  tooltipBorder: '#D9D9D9',
 } as const
 
 /**
  * Categorical slots for generic trend/rank charts with no good/bad meaning
- * (Operations / SLA pages) — the whole palette, darkest to lightest, so
+ * (Operations / SLA pages) — CAPEX blue → OPEX green → grey → aqua, so
  * adjacent series always separate.
  */
-export const chartSeries = ['#BFA6D8', '#2B2D42', '#8D99AE', '#4ECCA3'] as const
+export const chartSeries = ['#1E3A8A', '#2F855A', '#9CA3AF', '#4FD1C5'] as const

@@ -13,8 +13,8 @@ import {
 import type { TcoRoiPoint } from '../api/executive'
 import { chart } from '../lib/chartColors'
 
-const CAPEX_COLOR = chart.spendDark
-const OPEX_COLOR = chart.spendLight
+const CAPEX_COLOR = chart.capex
+const OPEX_COLOR = chart.opexPersonnel
 const SAVINGS_COLOR = chart.positive
 const NET_BENEFIT_COLOR = chart.neutral
 
