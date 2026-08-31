@@ -8,7 +8,10 @@ FastAPI validates the transport contract, injects a SQLAlchemy session-backed se
 
 ## Data path
 
-Ingestion is validation-first: read a source, apply composable quality rules, write a machine-readable report, and only then persist valid rows through the same service used by HTTP. New Excel support can implement a reader returning the same `(columns, rows)` shape without changing validation.
+`core` tables are the single source of truth. They were originally bootstrapped
+from source workbooks by a one-time Excel/CSV ingestion pipeline; that pipeline
+was removed in the 2026-08-31 cleanup. Reference data is now maintained through
+the sqladmin panel, and application data flows in through the ideas API.
 
 ## Runtime path
 

@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends
@@ -13,15 +12,11 @@ from app.core.exceptions import AuthError, ForbiddenError
 from app.core.security import TokenClaims, decode_token
 from app.db.session import get_db
 from app.models.auth import AppUser
-from app.repositories.admin import AdminRepository
 from app.repositories.analytics import AnalyticsRepository
 from app.repositories.ideas import IdeaRepository
-from app.repositories.items import ItemRepository
-from app.services.admin import AdminService
 from app.services.apqc import ApqcService
 from app.services.executive import ExecutiveService
 from app.services.ideas import IdeaService
-from app.services.items import ItemService
 from app.services.operations import OperationsService
 from app.services.process_catalog import ProcessCatalogService
 from app.services.process_economics import ProcessEconomicsService
@@ -29,13 +24,6 @@ from app.services.service_performance import ServicePerformanceService
 from app.services.simple_ops import SimpleOpsService
 
 DbSession = Annotated[Session, Depends(get_db)]
-
-
-def get_item_service(session: DbSession) -> ItemService:
-    return ItemService(ItemRepository(session))
-
-
-ItemServiceDependency = Annotated[ItemService, Depends(get_item_service)]
 
 
 def get_analytics_repository(session: DbSession) -> AnalyticsRepository:
@@ -108,26 +96,6 @@ def get_idea_service(repo: IdeaRepositoryDependency) -> IdeaService:
 
 ApqcServiceDependency = Annotated[ApqcService, Depends(get_apqc_service)]
 IdeaServiceDependency = Annotated[IdeaService, Depends(get_idea_service)]
-
-
-def get_admin_repository(session: DbSession) -> AdminRepository:
-    return AdminRepository(session)
-
-
-def get_admin_service(
-    session: DbSession, repo: Annotated[AdminRepository, Depends(get_admin_repository)]
-) -> AdminService:
-    return AdminService(session, repo)
-
-
-AdminServiceDependency = Annotated[AdminService, Depends(get_admin_service)]
-
-
-def get_rpa_workbook_path() -> Path:
-    return get_settings().rpa_workbook_path
-
-
-RpaWorkbookPathDependency = Annotated[Path, Depends(get_rpa_workbook_path)]
 
 
 bearer_scheme = HTTPBearer(auto_error=False)

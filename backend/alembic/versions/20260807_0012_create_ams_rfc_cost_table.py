@@ -1,15 +1,19 @@
-"""create ams_rfc_cost table, seeded from data/raw/RPA_AMS_RFC_Amendment.csv
+"""create ams_rfc_cost table
 
 Revision ID: 20260807_0012
 Revises: 20260807_0011
 Create Date: 2026-08-07 00:00:02.000000
+
+Originally this migration also seeded core.ams_rfc_cost from
+data/raw/RPA_AMS_RFC_Amendment.csv via the Excel/CSV ingestion package. That
+package and its source files were removed in the 2026-08-31 repository cleanup;
+the table is now created empty and populated through sqladmin like every other
+core table.
 """
 
 from collections.abc import Sequence
-from pathlib import Path
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Session
 
 from alembic import op
 
@@ -17,8 +21,6 @@ revision: str = "20260807_0012"
 down_revision: str | None = "20260807_0011"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
-
-_CSV_PATH = Path(__file__).resolve().parents[3] / "data" / "raw" / "RPA_AMS_RFC_Amendment.csv"
 
 
 def upgrade() -> None:
@@ -50,16 +52,6 @@ def upgrade() -> None:
         unique=False,
         schema="core",
     )
-
-    # Imported lazily: importing app.ingestion at module load time would make
-    # every alembic invocation (including offline/--sql mode) depend on the
-    # full app package being importable.
-    from app.ingestion.ams_rfc_csv_loader import load_ams_rfc_costs_from_csv
-
-    if _CSV_PATH.exists():
-        with Session(bind=op.get_bind()) as session:
-            load_ams_rfc_costs_from_csv(session, _CSV_PATH)
-            session.commit()
 
 
 def downgrade() -> None:

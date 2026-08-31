@@ -119,8 +119,8 @@ class AnalyticsRepository:
         return {int(yr): Decimal(total) for yr, total in rows}
 
     def tco_cost_by_year(self) -> dict[int, dict[str, Decimal]]:
-        """Portfolio CAPEX/OPEX totals by year, from the data/raw/TCO.csv
-        ledger (core.tco_cost) -- source for the TCO & ROI chart."""
+        """Portfolio CAPEX/OPEX totals by year, from the core.tco_cost
+        ledger -- source for the TCO & ROI chart."""
         year = func.extract("year", TcoCost.cost_date)
         stmt = (
             select(year, TcoCost.cost_type, func.sum(TcoCost.cost_eur))

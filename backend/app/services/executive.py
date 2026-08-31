@@ -289,7 +289,7 @@ class ExecutiveService:
 
     def tco_roi_chart(self) -> list[dict[str, Any]]:
         """TCO & ROI combined chart: portfolio CAPEX/OPEX by year (from the
-        data/raw/TCO.csv ledger, core.tco_cost) against cumulative FTE-based
+        core.tco_cost ledger) against cumulative FTE-based
         savings-to-date, and the resulting net benefit -- cumulative saving
         minus that year's own spend, not cumulative spend -- one point per
         year present in the cost ledger. OPEX also carries a subtype

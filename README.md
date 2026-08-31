@@ -1,6 +1,6 @@
 # Automation Hub
 
-Automation Hub is a production-oriented monorepo foundation for a React application, a FastAPI service, PostgreSQL persistence, and reusable CSV ingestion. Local infrastructure is containerized; only Python, Node.js, npm, Make, and Docker are required on the host.
+Automation Hub is a production-oriented monorepo foundation for a React application, a FastAPI service, and PostgreSQL persistence. Local infrastructure is containerized; only Python, Node.js, npm, Make, and Docker are required on the host.
 
 ## Quick start
 
@@ -13,7 +13,7 @@ make health
 
 Open <http://localhost:5173>. The API documentation is at <http://localhost:8000/docs>.
 
-`make setup` installs pinned host-side development dependencies, starts PostgreSQL, applies Alembic migrations, and loads an idempotent seed record. `make up` builds and starts the API and UI containers.
+`make setup` installs pinned host-side development dependencies, starts PostgreSQL, and applies Alembic migrations. `make up` builds and starts the API and UI containers.
 
 ## Architecture
 
@@ -21,32 +21,21 @@ The browser sends `/api` requests through the Vite development proxy. FastAPI ro
 
 ```text
 React + TanStack Query -> FastAPI router -> service -> repository -> SQLAlchemy -> PostgreSQL
-CSV CLI -> validation + quality report -> service -> repository -> PostgreSQL
 ```
-
-The ingestion path is deliberately generic. `DatasetValidator` composes required-column, uniqueness, null, allowed-value, type, and row-count rules. JSON reports are generated under `artifacts/data-quality/` before any row is persisted.
 
 ## Repository layout
 
 ```text
 .
-├── backend/                  FastAPI app, Alembic, ingestion
+├── backend/                  FastAPI app and Alembic
 │   ├── alembic/versions/     Immutable schema migrations
 │   └── app/                  API, core, db, models, schemas, services, repositories
 ├── frontend/                 React/Vite app
-├── data/
-│   ├── raw/                  Original source inputs (never mutate in place)
-│   ├── processed/            Generated normalized datasets
-│   └── fixtures/             Small committed test/demo inputs
-├── artifacts/data-quality/   Generated validation reports
 ├── docker/                   Container initialization assets
 ├── docs/                     Architecture notes
-├── scripts/                  Project automation helpers
 ├── docker-compose.yml
 └── Makefile
 ```
-
-Existing business files in `data/` are intentionally untouched. Future source files should move into `data/raw/` when their consumers are defined.
 
 ## Development workflow
 
@@ -74,37 +63,24 @@ make migration NAME="add item category"
 make migrate
 ```
 
-Review every generated migration before committing it. Never call `Base.metadata.create_all`, issue ad hoc DDL, or edit an already-shared migration. `make db-reset` destroys the local Docker volume, recreates both databases, migrates, and seeds; use it only when local data can be discarded.
+Review every generated migration before committing it. Never call `Base.metadata.create_all`, issue ad hoc DDL, or edit an already-shared migration. `make db-reset` destroys the local Docker volume, recreates both databases, and migrates; use it only when local data can be discarded.
+
+Reference and business data in the `core` schema is maintained through the sqladmin panel at <http://localhost:8000/admin> and the ideas API — there is no bulk import step.
 
 ## API
 
 ```bash
 curl http://localhost:8000/health
 curl http://localhost:8000/api/v1/status
-curl http://localhost:8000/api/v1/items
-curl -X POST http://localhost:8000/api/v1/items \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"My item","description":"Created through the API"}'
 ```
 
-Duplicate names return HTTP 409 with a stable structured error. Validation failures use FastAPI's HTTP 422 response.
-
-## Data ingestion and quality
-
-The included CSV demonstrates the expected extension point:
-
-```bash
-make ingest
-cat artifacts/data-quality/items-report.json
-```
-
-Validation completes and writes a summary before persistence. Duplicate database records are skipped to make repeated ingestion safe. Add business-specific schemas as separate ingestion modules; keep the shared rule engine generic and verify new rules manually with a representative input file.
+Structured errors use a stable JSON shape. Validation failures use FastAPI's HTTP 422 response.
 
 ## Testing
 
 This project has no automated test suite. Testing is performed manually.
 
-After a change, run `make lint` and `make typecheck`, bring up the stack with `make dev`, and exercise the affected flows by hand (API endpoints, ingestion runs, and the relevant frontend pages).
+After a change, run `make lint` and `make typecheck`, bring up the stack with `make dev`, and exercise the affected flows by hand (API endpoints and the relevant frontend pages).
 
 ## Docker operations
 

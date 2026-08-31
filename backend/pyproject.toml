@@ -5,13 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "automation-hub-backend"
 version = "0.1.0"
-description = "Automation Hub API and ingestion services"
+description = "Automation Hub API service"
 requires-python = ">=3.12"
 dependencies = [
   "alembic==1.14.0",
   "fastapi==0.115.6",
   "itsdangerous==2.2.0",
-  "openpyxl==3.1.5",
   "psycopg[binary]==3.2.3",
   "pyjwt[crypto]==2.10.1",
   "pydantic-settings==2.7.0",
@@ -25,7 +24,6 @@ dev = [
   "mypy==1.14.0",
   "pre-commit==4.0.1",
   "ruff==0.8.6",
-  "types-openpyxl==3.1.5.20241225",
   "types-setuptools==75.6.0.20241223",
 ]
 

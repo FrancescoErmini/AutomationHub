@@ -1,5 +1,4 @@
 from functools import lru_cache
-from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,10 +9,6 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     database_url: str = (
         "postgresql+psycopg://automation_hub:automation_hub_dev@localhost:5432/automation_hub"
-    )
-    rpa_workbook_path: Path = Path("../data/raw/RPA - o365.xlsx")
-    apqc_workbook_path: Path = Path(
-        "../data/raw/K07122_Life_Sciences_v722_vsLife_Sciences_v721_2025.xlsx"
     )
 
     admin_username: str = "admin"

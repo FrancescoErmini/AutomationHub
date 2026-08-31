@@ -11,10 +11,6 @@ node_modules/
 frontend/dist/
 frontend/test-results/
 frontend/playwright-report/
-artifacts/data-quality/*.json
-!artifacts/data-quality/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
 .DS_Store
 *.log
 

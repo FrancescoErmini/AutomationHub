@@ -1,24 +1,22 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-PYTHON := .venv/bin/python
 PIP := .venv/bin/pip
 RUFF := .venv/bin/ruff
 MYPY := .venv/bin/mypy
 ALEMBIC := .venv/bin/alembic
 DEV_DATABASE_URL := postgresql+psycopg://automation_hub:automation_hub_dev@localhost:$${POSTGRES_PORT:-5432}/automation_hub
 
-.PHONY: help setup install up down dev logs db-up db-down db-reset migrate migration seed ingest ingest-rpa ingest-apqc load-tco-costs lint format typecheck clean health
+.PHONY: help setup install up down dev logs db-up db-down db-reset migrate migration lint format typecheck clean health
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-setup: ## Install dependencies, start PostgreSQL, migrate, and seed
+setup: ## Install dependencies, start PostgreSQL, and migrate
 	@test -f .env || cp .env.example .env
 	@$(MAKE) install
 	@$(MAKE) db-up
 	@$(MAKE) migrate
-	@$(MAKE) seed
 
 install: ## Install pinned backend and frontend dependencies
 	@test -x .venv/bin/pip || virtualenv -p python3 .venv
@@ -45,11 +43,10 @@ db-up: ## Start PostgreSQL and wait until healthy
 db-down: ## Stop PostgreSQL
 	docker compose stop postgres
 
-db-reset: ## Recreate PostgreSQL volumes, migrate, and seed (destructive)
+db-reset: ## Recreate PostgreSQL volumes and migrate (destructive)
 	docker compose down -v
 	@$(MAKE) db-up
 	@$(MAKE) migrate
-	@$(MAKE) seed
 
 migrate: ## Apply development database migrations
 	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(ALEMBIC) upgrade head
@@ -57,21 +54,6 @@ migrate: ## Apply development database migrations
 migration: ## Create migration; use NAME='description'
 	@test -n "$(NAME)" || (echo "NAME is required, e.g. make migration NAME='add field'" && exit 2)
 	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(ALEMBIC) revision --autogenerate -m "$(NAME)"
-
-seed: ## Seed deterministic development data
-	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli seed
-
-ingest: ## Validate and ingest sample CSV, writing a quality report
-	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli ingest ../data/fixtures/items.csv --report-dir ../artifacts/data-quality
-
-ingest-rpa: ## Validate and ingest the RPA analytics workbook
-	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli ingest-rpa
-
-ingest-apqc: ## Validate and ingest the APQC taxonomy workbook
-	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m app.cli ingest-apqc
-
-load-tco-costs: ## Load data/raw/TCO.csv into core.tco_cost
-	cd backend && DATABASE_URL=$(DEV_DATABASE_URL) ../$(PYTHON) -m scripts.load_tco_costs
 
 lint: ## Check backend and frontend code quality
 	$(RUFF) check backend

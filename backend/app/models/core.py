@@ -331,8 +331,8 @@ class AmsRfcCost(Base):
 
 
 class TcoCost(Base):
-    """Typed promotion of the curated data/raw/TCO.csv portfolio cost ledger
-    -- one row per line item, CAPEX or OPEX, dated. Distinct from the
+    """The curated portfolio cost ledger -- one row per line item, CAPEX or
+    OPEX, dated. Distinct from the
     per-process ProcessEconomics.capex_eur and license/infra/AMS running
     costs used elsewhere: this is the standalone TCO & ROI chart's source."""
 
