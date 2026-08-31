@@ -3,49 +3,51 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Palette mirrors src/styles/theme.css — that file is the source of truth.
       colors: {
-        // "Moonlit slate" palette — wisteria on cool greys. Elegant, calm,
-        // technological. Five source hexes only: #BFA6D8 #2B2D42 #8D99AE
-        // #EDF2F4 #4ECCA3 (tints/shades of these are allowed, new hues are not).
-        ink: '#2B2D42', // all text — slate
+        ink: '#1A1A1A', // --ah-ink
 
-        // Wisteria carries every interactive + accent role (nav, links,
-        // buttons, focus, primary chart series). Darkened from the source
-        // #BFA6D8 so text/controls clear WCAG AA on white; the light source
-        // tone lives in `slate`-tinted fills and the chart palette.
-        brand: '#7A5CA8',
-        // Menarini identity red — reserved for the logo/wordmark only.
-        brandRed: '#E2001A',
+        brand: '#001C3E', // --ah-navy — nav bar, primary action buttons
+        brandHover: '#0A2C55', // --ah-navy-hover
+        accent: '#4A1A7D', // --ah-indigo — links, active underline, hover, selected
+        accentHover: '#5B2C90', // --ah-indigo-hover
+        brandRed: '#E2001A', // logo/wordmark only
 
-        // Status is a mint → grey → slate ramp (the palette has one signal
-        // colour, so severity reads as weight, not hue).
-        positive: '#1F7D5F', // savings / net gain / "on target" — mint, darkened for text
-        spend: '#5B6478', // run-cost / money leaving — cool grey, no ochre in palette
-        negative: '#2B2D42', // real losses / SLA breach — heaviest slate
+        positive: '#2E8B57', // --ah-positive
+        negative: '#CC0000', // --ah-negative
+        pending: '#A0A0A0', // --ah-pending
+        spend: '#666666', // run-cost / money out — aligns to --ah-ink-3
 
-        // Tailwind's built-in `slate` is rebuilt as the palette's cool-grey
-        // ramp (#EDF2F4 surface → #8D99AE mid → #2B2D42 ink), so the ~200
-        // existing slate-* utilities pick the new palette up automatically.
+        // Neutral grey ramp — replaces the old bluish slate. Existing slate-*
+        // utilities across every page pick this up automatically.
         slate: {
-          50: '#EDF2F4',
-          100: '#E3E9ED',
-          200: '#D4DBE2',
-          300: '#B7C0CC',
-          400: '#8D99AE',
-          500: '#6C7789',
-          600: '#515A6B',
-          700: '#3D4453',
-          800: '#2F3341',
-          900: '#2B2D42',
-          950: '#212330',
+          50: '#F7F7F7',
+          100: '#F0F0F0',
+          200: '#E0E0E0',
+          300: '#D9D9D9',
+          400: '#A0A0A0',
+          500: '#808080',
+          600: '#666666',
+          700: '#444444',
+          800: '#2A2A2A',
+          900: '#1A1A1A',
+          950: '#111111',
         },
       },
       fontFamily: {
-        sans: ['"IBM Plex Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: [
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          '"Segoe UI"',
+          'Roboto',
+          'sans-serif',
+        ],
         mono: [
-          '"IBM Plex Mono"',
           'ui-monospace',
           'SFMono-Regular',
+          'Menlo',
+          'Consolas',
           'monospace',
         ],
       },
