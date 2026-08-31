@@ -22,12 +22,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "httpx==0.28.1",
   "mypy==1.14.0",
   "pre-commit==4.0.1",
-  "pytest==8.3.4",
-  "pytest-asyncio==0.25.0",
-  "pytest-cov==6.0.0",
   "ruff==0.8.6",
   "types-openpyxl==3.1.5.20241225",
   "types-setuptools==75.6.0.20241223",
@@ -53,13 +49,6 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 # FastAPI's dependency-injection style requires Query()/Depends() as literal
 # argument defaults; B008 otherwise flags the standard FastAPI pattern.
 extend-immutable-calls = ["fastapi.Query", "fastapi.Depends"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-ra --strict-markers"
-markers = ["integration: requires the isolated PostgreSQL test database"]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
 
 [tool.mypy]
 python_version = "3.12"

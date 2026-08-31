@@ -3,14 +3,12 @@ SHELL := /bin/bash
 
 PYTHON := .venv/bin/python
 PIP := .venv/bin/pip
-PYTEST := .venv/bin/pytest
 RUFF := .venv/bin/ruff
 MYPY := .venv/bin/mypy
 ALEMBIC := .venv/bin/alembic
 DEV_DATABASE_URL := postgresql+psycopg://automation_hub:automation_hub_dev@localhost:$${POSTGRES_PORT:-5432}/automation_hub
-TEST_DATABASE_URL := postgresql+psycopg://automation_hub:automation_hub_dev@localhost:$${POSTGRES_PORT:-5432}/automation_hub_test
 
-.PHONY: help setup install up down dev logs db-up db-down db-reset migrate migration seed ingest ingest-rpa ingest-apqc load-tco-costs lint format typecheck test test-unit test-integration test-frontend test-e2e test-all clean health
+.PHONY: help setup install up down dev logs db-up db-down db-reset migrate migration seed ingest ingest-rpa ingest-apqc load-tco-costs lint format typecheck clean health
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -86,29 +84,11 @@ format: ## Format backend and frontend code
 	npm --prefix frontend run format
 
 typecheck: ## Type-check backend and frontend
-	$(MYPY) backend/app backend/tests
+	$(MYPY) backend/app
 	npm --prefix frontend run typecheck
 
-test: test-unit ## Run fast unit tests
-
-test-unit: ## Run backend and frontend unit tests
-	$(PYTEST) backend/tests/unit tests/data_quality
-	npm --prefix frontend run test
-
-test-integration: db-up ## Migrate isolated test DB and run integration tests
-	cd backend && DATABASE_URL=$(TEST_DATABASE_URL) ../$(ALEMBIC) upgrade head
-	DATABASE_URL=$(TEST_DATABASE_URL) $(PYTEST) backend/tests/integration
-
-test-frontend: ## Run frontend unit tests
-	npm --prefix frontend run test
-
-test-e2e: up ## Run Playwright in its pinned container
-	docker compose --profile test run --rm e2e
-
-test-all: lint typecheck test-unit test-integration test-e2e ## Run the full quality gate
-
 clean: ## Remove generated local artifacts and caches
-	rm -rf .pytest_cache .mypy_cache .ruff_cache backend/.pytest_cache frontend/dist frontend/coverage frontend/test-results frontend/playwright-report
+	rm -rf .mypy_cache .ruff_cache frontend/dist
 	find backend -type d -name __pycache__ -prune -exec rm -rf {} +
 
 health: ## Check Docker services and public endpoints

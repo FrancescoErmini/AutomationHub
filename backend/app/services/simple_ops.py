@@ -111,9 +111,7 @@ class SimpleOpsService:
             "kpi_total_running_cost_eur": available_metric(
                 "kpi_total_running_cost_eur", _round_money(current["total_eur"]), "eur"
             ),
-            "kpi_process_count": available_metric(
-                "kpi_process_count", process_count, "count"
-            ),
+            "kpi_process_count": available_metric("kpi_process_count", process_count, "count"),
             "kpi_license_cost_eur": available_metric(
                 "kpi_license_cost_eur", _round_money(current["license_eur"]), "eur"
             ),
@@ -170,9 +168,10 @@ class SimpleOpsService:
 
     def running_cost_trend(self) -> list[dict[str, Any]]:
         """Per-year breakdown (license + infrastructure + AMS 1L + 2L tickets
-        flat rate + change requests) for every year with a full AMS-1L record
-        (2024-2026 today). Only real data -- no forward-looking estimate."""
-        years = sorted(y for y, _, _ in self._repo.ams_1l_by_year())
+        flat rate + change requests) for every year that has data for *any*
+        component (see AnalyticsRepository.cost_years). Only real data -- no
+        forward-looking estimate."""
+        years = self._repo.cost_years()
         if not years:
             return []
 
@@ -193,7 +192,7 @@ class SimpleOpsService:
         return points
 
     def license_cost_trend(self) -> list[dict[str, Any]]:
-        years = sorted(y for y, _, _ in self._repo.ams_1l_by_year())
+        years = self._repo.cost_years()
         by_year = self._repo.license_cost_by_year(years)
         return [
             {"year": year, "cost_eur": _round_money(by_year.get(year, Decimal("0")))}
@@ -201,7 +200,7 @@ class SimpleOpsService:
         ]
 
     def infrastructure(self) -> dict[str, Any]:
-        years = sorted(y for y, _, _ in self._repo.ams_1l_by_year())
+        years = self._repo.cost_years()
         by_year = self._repo.vm_cost_by_year(years)
         trend = [
             {"year": year, "cost_eur": _round_money(by_year.get(year, Decimal("0")))}
@@ -237,7 +236,7 @@ class SimpleOpsService:
         return rows
 
     def ams_trend(self) -> dict[str, Any]:
-        years = sorted(y for y, _, _ in self._repo.ams_1l_by_year())
+        years = self._repo.cost_years()
         ams_1l = {y: (fee, n) for y, fee, n in self._repo.ams_1l_by_year()}
         ams_2l = self._repo.ams_2l_actual_cost_by_year(years)
         return {

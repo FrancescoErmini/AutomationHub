@@ -3,7 +3,12 @@
     "allow": [
       "Bash(docker compose *)",
       "Bash(../.venv/bin/alembic current *)",
-      "Bash(../.venv/bin/alembic upgrade *)"
+      "Bash(../.venv/bin/alembic upgrade *)",
+      "Bash(.venv/bin/ruff check *)",
+      "Bash(git add *)",
+      "mcp__claude-design__list_projects",
+      "mcp__claude-design__list_files",
+      "mcp__claude-design__read_file"
     ]
   }
 }

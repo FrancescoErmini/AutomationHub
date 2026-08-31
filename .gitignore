@@ -18,3 +18,6 @@ data/processed/*
 .DS_Store
 *.log
 
+
+# Local design scratch (Gemini exports)
+design/specs/Gemini_Generated_Image_*.jpg

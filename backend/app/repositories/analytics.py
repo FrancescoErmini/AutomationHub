@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import Date, Integer, cast, func, literal, select
+from sqlalchemy import Date, Integer, cast, func, literal, select, union
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.core import (
@@ -431,6 +431,27 @@ class AnalyticsRepository:
     def process_count(self) -> int:
         return self._session.scalar(select(func.count(Process.id))) or 0
 
+    def cost_years(self) -> list[int]:
+        """Every calendar year for which *any* running-cost component has data:
+        licences, infrastructure (VM cost), AMS 1L, AMS 2L tickets, or change
+        requests. Drives the Simple Ops trends so a year present in the DB is
+        never hidden just because one component (typically AMS 1L) has no row
+        for it. Sorted ascending."""
+        ticket_year = cast(func.extract("year", Ticket.start_date), Integer)
+        parts = union(
+            select(LicenseCost.year.label("year")),
+            select(VmCost.year.label("year")),
+            select(AmsRfcCost.year.label("year")),
+            select(AmsYear.year.label("year"))
+            .join(Ams1LCost, Ams1LCost.ams_year_id == AmsYear.id)
+            .where(AmsYear.year.is_not(None)),
+            select(ticket_year.label("year")).where(
+                Ticket.is_1l.is_(False), Ticket.start_date.is_not(None)
+            ),
+        ).subquery()
+        stmt = select(parts.c.year).where(parts.c.year.is_not(None)).order_by(parts.c.year)
+        return [int(year) for year in self._session.scalars(stmt).all()]
+
     def license_cost_by_year(self, years: list[int]) -> dict[int, Decimal]:
         stmt = (
             select(LicenseCost.year, func.coalesce(func.sum(LicenseCost.cost_year_eur), 0))
@@ -464,9 +485,7 @@ class AnalyticsRepository:
         )
         rows = self._session.execute(stmt).tuples().all()
         return [
-            (year, Decimal(fee), n_processes)
-            for year, fee, n_processes in rows
-            if year is not None
+            (year, Decimal(fee), n_processes) for year, fee, n_processes in rows if year is not None
         ]
 
     def ams_2l_ticket_count_by_year(self, years: list[int]) -> dict[int, int]:
@@ -609,9 +628,7 @@ class AnalyticsRepository:
         median_days = self._session.scalar(stmt)
         return Decimal(str(median_days)) if median_days is not None else None
 
-    def cost_breakdown_by_process(
-        self, year: int
-    ) -> list[tuple[str, Decimal, Decimal, Decimal]]:
+    def cost_breakdown_by_process(self, year: int) -> list[tuple[str, Decimal, Decimal, Decimal]]:
         """(process_name, license_share_eur, infra_share_eur, actual_2l_cost_eur) per
         process, for `year`.
 
@@ -666,9 +683,9 @@ class AnalyticsRepository:
                 func.coalesce(
                     LicenseCost.cost_year_eur / vm_process_counts.c.cnt, Decimal("0")
                 ).label("license_eur"),
-                func.coalesce(
-                    VmCost.cost_eur / vm_process_counts.c.cnt, Decimal("0")
-                ).label("infra_eur"),
+                func.coalesce(VmCost.cost_eur / vm_process_counts.c.cnt, Decimal("0")).label(
+                    "infra_eur"
+                ),
                 func.coalesce(l2_by_process.c.l2_eur, 0).label("l2_eur"),
             )
             .select_from(Process)
@@ -692,7 +709,5 @@ class AnalyticsRepository:
         )
         return [
             (name, Decimal(license_eur), Decimal(infra_eur), Decimal(l2_eur))
-            for name, license_eur, infra_eur, l2_eur in self._session.execute(stmt)
-            .tuples()
-            .all()
+            for name, license_eur, infra_eur, l2_eur in self._session.execute(stmt).tuples().all()
         ]

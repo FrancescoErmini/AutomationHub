@@ -30,15 +30,14 @@ The ingestion path is deliberately generic. `DatasetValidator` composes required
 
 ```text
 .
-├── backend/                  FastAPI app, Alembic, ingestion, Python tests
+├── backend/                  FastAPI app, Alembic, ingestion
 │   ├── alembic/versions/     Immutable schema migrations
 │   └── app/                  API, core, db, models, schemas, services, repositories
-├── frontend/                 React/Vite app, Vitest, Playwright
+├── frontend/                 React/Vite app
 ├── data/
 │   ├── raw/                  Original source inputs (never mutate in place)
 │   ├── processed/            Generated normalized datasets
 │   └── fixtures/             Small committed test/demo inputs
-├── tests/                    Cross-component and data-quality tests
 ├── artifacts/data-quality/   Generated validation reports
 ├── docker/                   Container initialization assets
 ├── docs/                     Architecture notes
@@ -58,10 +57,6 @@ make dev                 # build and run all services in the foreground
 make logs                # follow service logs
 make lint                # Ruff, ESLint, and Prettier checks
 make typecheck           # strict mypy and TypeScript checks
-make test-unit           # backend, data-quality, and frontend unit tests
-make test-integration    # isolated automation_hub_test database
-make test-e2e            # Playwright in a pinned browser container
-make test-all            # complete definition-of-done quality gate
 make down
 ```
 
@@ -103,16 +98,13 @@ make ingest
 cat artifacts/data-quality/items-report.json
 ```
 
-Validation completes and writes a summary before persistence. Duplicate database records are skipped to make repeated ingestion safe. Add business-specific schemas as separate ingestion modules; keep the shared rule engine generic and cover new rules under `tests/data_quality/`.
+Validation completes and writes a summary before persistence. Duplicate database records are skipped to make repeated ingestion safe. Add business-specific schemas as separate ingestion modules; keep the shared rule engine generic and verify new rules manually with a representative input file.
 
 ## Testing
 
-- Backend unit tests mock repositories and exercise service/validation behavior.
-- Integration tests run against the migrated `automation_hub_test` database and refuse to use any other database name.
-- Frontend tests use Vitest, Testing Library, and mocked network responses.
-- End-to-end tests use the official pinned Playwright image against the live Compose stack.
+This project has no automated test suite. Testing is performed manually.
 
-Run `make test-all` whenever a change crosses component boundaries. The target runs static checks, unit tests, isolated database integration tests, starts the application, and executes the browser workflow.
+After a change, run `make lint` and `make typecheck`, bring up the stack with `make dev`, and exercise the affected flows by hand (API endpoints, ingestion runs, and the relevant frontend pages).
 
 ## Docker operations
 

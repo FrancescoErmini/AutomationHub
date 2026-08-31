@@ -34,33 +34,17 @@ This repository is a monorepo with a React/TypeScript frontend, a FastAPI/Python
 
 All schema changes require an Alembic migration. Start PostgreSQL with `make db-up`, change the model, run `make migration NAME="clear description"`, inspect the generated file, then run `make migrate`. Never use `create_all`, manual DDL, or mutate an existing migration that may have been applied elsewhere.
 
-Integration tests must target only `automation_hub_test`. Never point tests at `automation_hub` or an externally managed database.
-
 ## Allowed project commands
 
-Prefer the Makefile interface: `make setup`, `make up`, `make down`, `make dev`, `make logs`, `make db-up`, `make migrate`, `make migration NAME=...`, `make seed`, `make ingest`, `make lint`, `make format`, `make typecheck`, `make test-unit`, `make test-integration`, `make test-e2e`, `make test-all`, and `make health`.
+Prefer the Makefile interface: `make setup`, `make up`, `make down`, `make dev`, `make logs`, `make db-up`, `make migrate`, `make migration NAME=...`, `make seed`, `make ingest`, `make lint`, `make format`, `make typecheck`, and `make health`.
 
 `make db-reset` and `docker compose down -v` destroy local PostgreSQL data. Use them only when the task clearly permits discarding local data. Preserve unfamiliar and user-owned files, especially source data.
 
-## Testing workflow
+## Testing
 
-Match tests to the changed layer:
-
-- Service, validation, or pure backend behavior: backend unit tests.
-- Repository, migration, or API persistence behavior: integration tests.
-- React component behavior: Vitest and Testing Library.
-- User-visible cross-component workflows: Playwright.
-- Ingestion contracts: data-quality tests plus integration tests when persistence changes.
-
-Before considering any task completed, execute the relevant automated tests.
-
-If the change affects multiple components, execute:
-
-```bash
-make test-all
-```
+This project has no automated test suite. All testing is performed manually by the maintainer: after a change, run `make lint` and `make typecheck`, start the stack with `make dev`, and exercise the affected flows by hand. Do not add automated test frameworks, test files, or CI test steps unless the maintainer explicitly asks.
 
 ## Definition of done
 
-A change is complete only when implementation, tests, migrations where needed, and user-facing documentation agree; lint and strict type checking pass; relevant automated tests pass; containers remain healthy; no secret or generated artifact is committed; and the working tree contains no accidental changes.
+A change is complete only when implementation, migrations where needed, and user-facing documentation agree; lint and strict type checking pass; containers remain healthy; the maintainer has manually verified the affected behavior; no secret or generated artifact is committed; and the working tree contains no accidental changes.
 

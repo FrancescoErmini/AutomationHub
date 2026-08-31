@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", 
+               "postgresql://localhost/automation_hub?user=automation_hub&password=automation_hub_dev&sslmode=disable"]
+    }
+  }
+}
