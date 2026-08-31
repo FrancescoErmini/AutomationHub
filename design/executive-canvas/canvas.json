@@ -1,7 +1,0 @@
-{
-  "artboards": [
-    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1440, "title": "Executive — Automation Hub" },
-    { "file": "Foundations.dc.html", "x": 1600, "y": 0, "w": 1080, "h": 1880, "title": "Design Foundations" }
-  ],
-  "launch": { "view": "focused", "file": "Main.dc.html" }
-}
