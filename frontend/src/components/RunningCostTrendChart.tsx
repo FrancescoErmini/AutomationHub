@@ -28,7 +28,11 @@ const SEGMENTS: {
     name: 'Infrastructure',
     color: 'var(--ah-chart-opex-infra)',
   },
-  { key: 'ams_1l_eur', name: 'AMS 1L', color: 'var(--ah-chart-opex-personnel)' },
+  {
+    key: 'ams_1l_eur',
+    name: 'AMS 1L',
+    color: 'var(--ah-chart-opex-personnel)',
+  },
   { key: 'ticket_2l_eur', name: '2L tickets', color: 'var(--ah-chart-capex)' },
   {
     key: 'change_request_eur',
@@ -50,7 +54,10 @@ export function RunningCostTrendChart({
     <div>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+          <ComposedChart
+            data={data}
+            margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
+          >
             <CartesianGrid stroke="var(--ah-chart-grid)" vertical={false} />
             <XAxis
               dataKey="year"
@@ -137,11 +144,11 @@ export function RunningCostTrendChart({
         </table>
       </div>
       <p className="rct-footnote">
-        * Costs here are allocated per calendar year (licences, VMs,
-        tickets), so they better reflect that year's actual usage — but are
-        less accurate for financial reporting than the net-cash-flow view on
-        the Executive page, since some purchases (multi-year licences,
-        ticket bundles) don't land in the year they're used.
+        * Costs here are allocated per calendar year (licences, VMs, tickets),
+        so they better reflect that year's actual usage — but are less accurate
+        for financial reporting than the net-cash-flow view on the Executive
+        page, since some purchases (multi-year licences, ticket bundles) don't
+        land in the year they're used.
       </p>
     </div>
   )

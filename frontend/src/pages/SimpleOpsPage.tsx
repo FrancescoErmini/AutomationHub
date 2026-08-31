@@ -21,7 +21,11 @@ const PROCESS_PAGE_SIZE = 10
 
 const PROCESS_SEGMENTS = [
   { key: 'license', label: 'Licence (share)', field: 'license_eur' },
-  { key: 'infra', label: 'Infrastructure (share)', field: 'infrastructure_eur' },
+  {
+    key: 'infra',
+    label: 'Infrastructure (share)',
+    field: 'infrastructure_eur',
+  },
   { key: 'ams', label: 'AMS 1L', field: 'ams_1l_eur' },
   { key: '2l', label: '2L tickets', field: 'l2_eur' },
 ] as const satisfies ReadonlyArray<{
@@ -214,8 +218,8 @@ export function SimpleOpsPage() {
               Total running cost trend
             </SectionHeading>
             <p className="note">
-              Sum of licences + infrastructure + AMS 1L + 2L tickets (flat
-              rate) + change requests per year, by component.
+              Sum of licences + infrastructure + AMS 1L + 2L tickets (flat rate)
+              + change requests per year, by component.
             </p>
             <AsyncSection
               isPending={runningCostTrend.isPending}
@@ -248,8 +252,8 @@ export function SimpleOpsPage() {
             </SectionHeading>
             <p className="note">
               Licence (per-VM share) + infrastructure (per-VM share) + AMS 1L
-              (even share / process) + 2L (actual cost), {CURRENT_YEAR}.
-              Annual totals per component are in the running-cost table above.
+              (even share / process) + 2L (actual cost), {CURRENT_YEAR}. Annual
+              totals per component are in the running-cost table above.
             </p>
             <div className="legend">
               <span>
@@ -432,19 +436,13 @@ export function SimpleOpsPage() {
                 >
                   <p className="stat-line">
                     <span>VM count</span>
-                    <span
-                      className="v"
-                      style={{ color: 'var(--ah-ink-2)' }}
-                    >
+                    <span className="v" style={{ color: 'var(--ah-ink-2)' }}>
                       {infrastructure.data?.vm_count ?? '—'}
                     </span>
                   </p>
                   <p className="stat-line" style={{ borderBottom: 'none' }}>
                     <span>Database count</span>
-                    <span
-                      className="v"
-                      style={{ color: 'var(--ah-ink-2)' }}
-                    >
+                    <span className="v" style={{ color: 'var(--ah-ink-2)' }}>
                       {infrastructure.data?.db_count ?? '—'}
                     </span>
                   </p>
@@ -453,8 +451,8 @@ export function SimpleOpsPage() {
                       className="tbd"
                       style={{ borderColor: 'var(--ah-border-strong)' }}
                     >
-                      Indicative opex data (€0) — awaiting confirmation from
-                      the infrastructure team.
+                      Indicative opex data (€0) — awaiting confirmation from the
+                      infrastructure team.
                     </div>
                   )}
                 </AsyncSection>
@@ -462,9 +460,7 @@ export function SimpleOpsPage() {
             </div>
           </section>
 
-          <footer className="dnote">
-
-          </footer>
+          <footer className="dnote"></footer>
         </div>
       </div>
     </div>

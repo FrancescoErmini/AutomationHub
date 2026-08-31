@@ -2,7 +2,8 @@
 
 **Date:** 2026-08-31
 **Branch:** `master` (working inline)
-**Status:** Approved design, pending implementation plan
+**Status:** Implemented (shell + simple-ops); other pages pending their polish passes
+**Plan:** `docs/superpowers/plans/2026-08-31-portal-ui-redesign.md`
 
 ## Problem
 
@@ -234,3 +235,30 @@ Per project convention there are no automated tests. Verification is:
   passes).
 - Any backend, API, or data change.
 - New charts or new metrics.
+
+## Implementation notes
+
+Landed 2026-08-31 in 8 commits on `master` (from `feat(frontend): add global
+design-token layer` through `chore(frontend): format redesign files`).
+Verified: `npm run typecheck`, `npm run build`, `npx eslint . --max-warnings 0`
+all clean. `prettier --check .` still lists the 13 pre-existing unformatted
+files — unchanged baseline.
+
+Deviations from the design:
+
+- **`SimpleOpsPage.css` token block kept, not deleted.** The scoped
+  `.simple-ops-page` block still declares every `--color-*` name, now as thin
+  aliases to `--ah-*` (accent ramp → enterprise blue `#1E3A8A`, accent-2 →
+  neutral grey). `SlaKpiPage.tsx` and inline styles reference those names
+  directly, so deleting them would have broken sla-kpi. Same single-source-of-
+  truth outcome, smaller blast radius.
+- **KPI deltas render muted grey, not sign-coloured.** On a cost dashboard a
+  rising figure is not "good", so green/red by raw sign would mislead.
+  `KpiStat` still supports `deltaTone="auto"` (green/red by `+`/`-` prefix) for
+  pages where polarity is unambiguous; simple-ops opts out.
+- **`brandHover` / `accentHover` Tailwind tokens** were added but are currently
+  only used via `var(--ah-*)` in `Layout.tsx`; kept for later pages.
+
+Follow-up polish passes still owed: `/sla-kpi`, `/executive`, `/ideas`,
+`/catalog`, `/` (home), the idea wizard, and idea detail. `MetricCard` should
+be re-expressed over `KpiStat` during the executive pass.

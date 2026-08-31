@@ -32,9 +32,20 @@ const OPEX_SUBTYPE_LABELS: Record<string, string> = {
   DEVELOPMENT: 'Development',
   OTHER: 'Other',
 }
-const OPEX_SUBTYPE_ORDER = ['AMS', 'CR', 'LICENSES', 'INFRA', 'DEVELOPMENT', 'OTHER']
+const OPEX_SUBTYPE_ORDER = [
+  'AMS',
+  'CR',
+  'LICENSES',
+  'INFRA',
+  'DEVELOPMENT',
+  'OTHER',
+]
 
-export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartProps) {
+export function TcoRoiChart({
+  data,
+  valueFormatter,
+  height = 360,
+}: TcoRoiChartProps) {
   const opexSubtypes = OPEX_SUBTYPE_ORDER.filter((subtype) =>
     data.some((point) => (point.opex_breakdown[subtype] ?? 0) !== 0),
   )
@@ -43,9 +54,16 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
     <div>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+          <ComposedChart
+            data={data}
+            margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
+          >
             <CartesianGrid stroke={chart.grid} vertical={false} />
-            <XAxis dataKey="year" tick={{ fill: chart.tick, fontSize: 12 }} stroke={chart.axis} />
+            <XAxis
+              dataKey="year"
+              tick={{ fill: chart.tick, fontSize: 12 }}
+              stroke={chart.axis}
+            />
             <YAxis
               tick={{ fill: chart.tick, fontSize: 12 }}
               stroke={chart.axis}
@@ -54,11 +72,25 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
             />
             <Tooltip
               formatter={(value) => valueFormatter(Number(value))}
-              contentStyle={{ borderRadius: 8, borderColor: chart.tooltipBorder, fontSize: 13 }}
+              contentStyle={{
+                borderRadius: 8,
+                borderColor: chart.tooltipBorder,
+                fontSize: 13,
+              }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="capex_eur" name="CAPEX" stackId="cost" fill={CAPEX_COLOR} />
-            <Bar dataKey="opex_eur" name="OPEX" stackId="cost" fill={OPEX_COLOR} />
+            <Bar
+              dataKey="capex_eur"
+              name="CAPEX"
+              stackId="cost"
+              fill={CAPEX_COLOR}
+            />
+            <Bar
+              dataKey="opex_eur"
+              name="OPEX"
+              stackId="cost"
+              fill={OPEX_COLOR}
+            />
             <Line
               type="monotone"
               dataKey="savings_eur"
@@ -83,14 +115,20 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
         <table className="w-full text-sm">
-          <caption className="sr-only">TCO &amp; ROI by year: CAPEX, OPEX, savings, and net benefit</caption>
+          <caption className="sr-only">
+            TCO &amp; ROI by year: CAPEX, OPEX, savings, and net benefit
+          </caption>
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
               <th scope="col" className="px-4 py-3 text-left">
                 Metric
               </th>
               {data.map((point) => (
-                <th key={point.year} scope="col" className="px-4 py-3 text-right">
+                <th
+                  key={point.year}
+                  scope="col"
+                  className="px-4 py-3 text-right"
+                >
                   {point.year}
                 </th>
               ))}
@@ -110,7 +148,10 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
                 CAPEX
               </th>
               {data.map((point) => (
-                <td key={point.year} className="px-4 py-3 text-right tabular-nums">
+                <td
+                  key={point.year}
+                  className="px-4 py-3 text-right tabular-nums"
+                >
                   {valueFormatter(point.capex_eur)}
                 </td>
               ))}
@@ -129,19 +170,31 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
                 OPEX
               </th>
               {data.map((point) => (
-                <td key={point.year} className="px-4 py-3 text-right tabular-nums">
+                <td
+                  key={point.year}
+                  className="px-4 py-3 text-right tabular-nums"
+                >
                   {valueFormatter(point.opex_eur)}
                 </td>
               ))}
             </tr>
 
             {opexSubtypes.map((subtype) => (
-              <tr key={subtype} className="border-b border-slate-100 bg-slate-50/50">
-                <th scope="row" className="px-4 py-2 pl-9 text-left text-xs font-normal text-slate-500">
+              <tr
+                key={subtype}
+                className="border-b border-slate-100 bg-slate-50/50"
+              >
+                <th
+                  scope="row"
+                  className="px-4 py-2 pl-9 text-left text-xs font-normal text-slate-500"
+                >
                   {OPEX_SUBTYPE_LABELS[subtype] ?? subtype}
                 </th>
                 {data.map((point) => (
-                  <td key={point.year} className="px-4 py-2 text-right text-xs tabular-nums text-slate-500">
+                  <td
+                    key={point.year}
+                    className="px-4 py-2 text-right text-xs tabular-nums text-slate-500"
+                  >
                     {valueFormatter(point.opex_breakdown[subtype] ?? 0)}
                   </td>
                 ))}
@@ -161,7 +214,10 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
                 Savings (FTE)
               </th>
               {data.map((point) => (
-                <td key={point.year} className="px-4 py-3 text-right tabular-nums">
+                <td
+                  key={point.year}
+                  className="px-4 py-3 text-right tabular-nums"
+                >
                   {valueFormatter(point.savings_eur)}
                 </td>
               ))}
@@ -183,7 +239,9 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
                 <td
                   key={point.year}
                   className={`px-4 py-3 text-right tabular-nums ${
-                    point.net_benefit_eur >= 0 ? 'bg-positive/10' : 'bg-negative/10'
+                    point.net_benefit_eur >= 0
+                      ? 'bg-positive/10'
+                      : 'bg-negative/10'
                   }`}
                 >
                   {valueFormatter(point.net_benefit_eur)}
@@ -195,12 +253,11 @@ export function TcoRoiChart({ data, valueFormatter, height = 360 }: TcoRoiChartP
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-slate-500">
-        * Figures here follow net cash flow — the year money is actually
-        spent — which is the more accurate view for financial reporting.
-        But licences are bought in 3-year batches and ticket bundles are
-        purchased upfront, so a given year's cost may not reflect that
-        year's actual usage; see the Operations page for a per-year,
-        usage-based view.
+        * Figures here follow net cash flow — the year money is actually spent —
+        which is the more accurate view for financial reporting. But licences
+        are bought in 3-year batches and ticket bundles are purchased upfront,
+        so a given year's cost may not reflect that year's actual usage; see the
+        Operations page for a per-year, usage-based view.
       </p>
     </div>
   )
