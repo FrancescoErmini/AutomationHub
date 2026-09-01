@@ -47,8 +47,13 @@
   --color-accent-2-900: #1f2937;
 
   --status-green: var(--ah-positive);
-  --status-amber: var(--ah-pending);
+  --status-amber: var(--ah-warning);
   --status-red: var(--ah-negative);
+  --status-neutral: var(--ah-pending);
+  --status-green-bg: var(--ah-positive-bg);
+  --status-amber-bg: var(--ah-warning-bg);
+  --status-red-bg: var(--ah-negative-bg);
+  --status-neutral-bg: var(--ah-pending-bg);
 
   --font-heading: var(--ah-font-sans);
   --font-heading-weight: 700;
@@ -699,4 +704,220 @@
   .simple-ops-page .kpi-card-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .simple-ops-page .hero-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---- SLA / KPI dashboard (CIO briefing layout) ------------------------------ */
+
+.simple-ops-page .sla-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.simple-ops-page .sla-toolbar .field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--color-text) 65%, transparent);
+}
+.simple-ops-page .year-select {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+}
+.simple-ops-page .scope-note {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+
+.simple-ops-page .hero-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+.simple-ops-page .hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--ah-border);
+  box-shadow: var(--ah-shadow-card);
+}
+.simple-ops-page .hero-stat.is-hero {
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+}
+.simple-ops-page .hero-stat .hl {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent-800);
+}
+.simple-ops-page .hero-stat .hv {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-feature-settings: 'pnum' 1;
+  font-size: 30px;
+  line-height: 1.1;
+}
+.simple-ops-page .hero-stat.is-hero .hv {
+  font-size: 40px;
+}
+.simple-ops-page .hero-stat .hsub {
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+.simple-ops-page .spark {
+  height: 40px;
+  margin-top: 2px;
+}
+
+.simple-ops-page .status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
+}
+.simple-ops-page .status-pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.simple-ops-page .status-pill.sp-green {
+  background: var(--status-green-bg);
+  color: var(--status-green);
+}
+.simple-ops-page .status-pill.sp-green .dot {
+  background: var(--status-green);
+}
+.simple-ops-page .status-pill.sp-amber {
+  background: var(--status-amber-bg);
+  color: var(--status-amber);
+}
+.simple-ops-page .status-pill.sp-amber .dot {
+  background: var(--status-amber);
+}
+.simple-ops-page .status-pill.sp-red {
+  background: var(--status-red-bg);
+  color: var(--status-red);
+}
+.simple-ops-page .status-pill.sp-red .dot {
+  background: var(--status-red);
+}
+.simple-ops-page .status-pill.sp-neutral {
+  background: var(--status-neutral-bg);
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+}
+.simple-ops-page .status-pill.sp-neutral .dot {
+  background: var(--status-neutral);
+}
+
+.simple-ops-page .thr-dot.tn {
+  background: var(--status-neutral);
+}
+
+/* KPI tiles v2 -- value + textual status, "no data" is neutral not amber */
+.simple-ops-page .kpi-tile .card-title {
+  font-size: 26px;
+  margin: 2px 0 4px;
+}
+.simple-ops-page .kpi-tile.is-unavailable .card-title {
+  color: color-mix(in srgb, var(--color-text) 40%, transparent);
+  font-size: 20px;
+}
+
+.simple-ops-page .caveat {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  border: 1px solid var(--color-divider);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-text) 72%, transparent);
+  margin: 4px 0 16px;
+}
+.simple-ops-page .caveat b {
+  color: var(--color-text);
+}
+
+.simple-ops-page .exc-empty {
+  font-size: 13px;
+  color: var(--status-green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.simple-ops-page .stat-pair {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.simple-ops-page .stat-pair .sp-box {
+  flex: 1 1 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+}
+.simple-ops-page .stat-pair .sp-box .n {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-feature-settings: 'pnum' 1;
+  font-size: 18px;
+}
+.simple-ops-page .stat-pair .sp-box .l {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+}
+
+.simple-ops-page .sla-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.simple-ops-page .sla-matrix th,
+.simple-ops-page .sla-matrix td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-neutral-200);
+  text-align: right;
+  white-space: nowrap;
+}
+.simple-ops-page .sla-matrix th:first-child,
+.simple-ops-page .sla-matrix td:first-child,
+.simple-ops-page .sla-matrix th:nth-child(2),
+.simple-ops-page .sla-matrix td:nth-child(2) {
+  text-align: left;
+}
+.simple-ops-page .sla-matrix thead th {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+  background: var(--color-neutral-100);
+}
+.simple-ops-page .sla-matrix tbody tr:last-child td {
+  border-bottom: none;
+}
+.simple-ops-page .sla-matrix .grp {
+  font-family: var(--font-heading);
+  font-weight: 600;
 }

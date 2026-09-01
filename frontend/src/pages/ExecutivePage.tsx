@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import {
@@ -13,7 +14,7 @@ import { CompanyFilter } from '../components/CompanyFilter'
 import { MetricCard } from '../components/MetricCard'
 import { ProcessRoiTable } from '../components/ProcessRoiTable'
 import { TcoRoiChart } from '../components/TcoRoiChart'
-import { PageHeader, SectionHeading } from '../components/ui'
+import { DeltaChip, PageHeader, SectionHeading, Tag } from '../components/ui'
 
 const KPI_CARDS: { key: string; label: string; signColor?: boolean }[] = [
   { key: 'kpi_total_saved_to_date_eur', label: 'Total saved to date' },
@@ -67,6 +68,115 @@ export function ExecutivePage() {
     return { medianPaybackMonths, avgCapexEur }
   })()
 
+  // Historical build-vs-run split of total spend to date: CAPEX is the
+  // one-time build investment, OPEX the ongoing run/maintenance cost. Summed
+  // across every year in the cost ledger, this matches the Total spent to date
+  // KPI exactly.
+  const spendMix = (() => {
+    const rows = tcoRoi.data
+    if (!rows || rows.length === 0) return null
+    const build = rows.reduce((sum, row) => sum + row.capex_eur, 0)
+    const run = rows.reduce((sum, row) => sum + row.opex_eur, 0)
+    const total = build + run
+    if (total <= 0) return null
+    const buildPct = Math.round((build / total) * 100)
+    return { buildPct, runPct: 100 - buildPct }
+  })()
+
+  // Year-over-year change across the two most recent *complete* years. The
+  // latest year in the ledger is year-to-date, so it is excluded from the
+  // comparison (see footnote). Needs >=3 ledger years: one dropped, two compared.
+  const yoy = (() => {
+    const rows = tcoRoi.data
+    if (!rows || rows.length < 3) return null
+    const sorted = [...rows].sort((a, b) => a.year - b.year)
+    const complete = sorted.slice(0, -1)
+    const lastIdx = complete.length - 1
+    const last = complete[lastIdx]
+    const prev = complete[lastIdx - 1]
+
+    let running = 0
+    const cumulativeSpend = complete.map(
+      (row) => (running += row.capex_eur + row.opex_eur),
+    )
+    const netLast = last.savings_eur - cumulativeSpend[lastIdx]
+    const netPrev = prev.savings_eur - cumulativeSpend[lastIdx - 1]
+
+    const annualLast = last.savings_eur - prev.savings_eur
+    const annualPrev =
+      complete.length >= 3
+        ? prev.savings_eur - complete[lastIdx - 2].savings_eur
+        : prev.savings_eur
+
+    const pctChange = (current: number, base: number): number | null =>
+      Number.isFinite(base) && base !== 0
+        ? ((current - base) / Math.abs(base)) * 100
+        : null
+
+    return {
+      netPosition: pctChange(netLast, netPrev),
+      annualSaving: pctChange(annualLast, annualPrev),
+    }
+  })()
+
+  const showYoyFootnote =
+    yoy != null && (yoy.netPosition != null || yoy.annualSaving != null)
+
+  // Forward-looking break-even when the historical payback year is not yet
+  // reached: how long the current net deficit takes to clear on run-only cash
+  // flow -- gross annual saving minus the latest full-year recurring OpEx, with
+  // no further build investment.
+  const paybackProjection = (() => {
+    if (kpis.data?.['kpi_payback_year']?.available) return null
+
+    const netPos = kpis.data?.['kpi_net_position_eur']
+    const annualSaving = kpis.data?.['kpi_annual_saving_eur']
+    const rows = tcoRoi.data
+    if (typeof netPos?.value !== 'number' || typeof annualSaving?.value !== 'number')
+      return null
+    if (!rows || rows.length === 0) return null
+
+    const deficit = -netPos.value
+    if (deficit <= 0) return null
+
+    const sorted = [...rows].sort((a, b) => a.year - b.year)
+    // latest *complete* year's OpEx as the recurring run cost
+    const recurringOpex = (sorted[sorted.length - 2] ?? sorted[sorted.length - 1])
+      .opex_eur
+    const netAnnualCashFlow = annualSaving.value - recurringOpex
+    if (netAnnualCashFlow <= 0) return null
+
+    return { years: deficit / netAnnualCashFlow }
+  })()
+
+  const cardChips = (key: string): ReactNode => {
+    if (key === 'kpi_total_spend_to_date_eur' && spendMix) {
+      return (
+        <>
+          <Tag>Build {spendMix.buildPct}%</Tag>
+          <Tag>Run {spendMix.runPct}%</Tag>
+        </>
+      )
+    }
+    if (key === 'kpi_net_position_eur' && yoy?.netPosition != null) {
+      return <DeltaChip pct={yoy.netPosition} footnote />
+    }
+    if (key === 'kpi_annual_saving_eur' && yoy?.annualSaving != null) {
+      return <DeltaChip pct={yoy.annualSaving} footnote />
+    }
+    if (key === 'kpi_payback_year' && paybackProjection) {
+      return <Tag>Run-only mode</Tag>
+    }
+    return null
+  }
+
+  const cardFallback = (key: string): ReactNode => {
+    if (key === 'kpi_payback_year' && paybackProjection) {
+      return <>~{paybackProjection.years.toFixed(1)} yrs †</>
+    }
+    return null
+  }
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -90,9 +200,28 @@ export function ExecutivePage() {
               label={card.label}
               metric={kpis.data?.[card.key]}
               signColor={card.signColor}
+              chips={cardChips(card.key)}
+              fallback={cardFallback(card.key)}
             />
           ))}
         </section>
+        {(showYoyFootnote || paybackProjection) && (
+          <div className="mt-3 space-y-1 text-xs text-slate-500">
+            {showYoyFootnote && (
+              <p>
+                * Year-over-year compares the two most recent complete years; the
+                current year-to-date is excluded.
+              </p>
+            )}
+            {paybackProjection && (
+              <p>
+                † Run-only projection: current net deficit ÷ (gross annual saving
+                − latest full-year recurring OpEx). Assumes no further build
+                investment.
+              </p>
+            )}
+          </div>
+        )}
       </AsyncSection>
 
       <section

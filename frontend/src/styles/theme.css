@@ -31,6 +31,8 @@
   /* Semantic status */
   --ah-positive: #2e8b57;
   --ah-positive-bg: #e8f3ec;
+  --ah-warning: #b45309; /* amber — "at risk", distinct from pending/no-data */
+  --ah-warning-bg: #fdf1e3;
   --ah-negative: #cc0000;
   --ah-negative-bg: #fbeaea;
   --ah-pending: #a0a0a0;

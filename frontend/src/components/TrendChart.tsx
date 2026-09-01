@@ -3,6 +3,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -24,6 +25,9 @@ interface TrendChartProps {
   series: Series[]
   height?: number
   valueFormatter?: (value: number) => string
+  /** Optional horizontal target line (e.g. an SLA threshold). */
+  referenceValue?: number
+  referenceLabel?: string
 }
 
 export function TrendChart({
@@ -32,6 +36,8 @@ export function TrendChart({
   series,
   height = 260,
   valueFormatter,
+  referenceValue,
+  referenceLabel,
 }: TrendChartProps) {
   return (
     <div style={{ height }}>
@@ -62,6 +68,23 @@ export function TrendChart({
               fontSize: 13,
             }}
           />
+          {referenceValue !== undefined && (
+            <ReferenceLine
+              y={referenceValue}
+              stroke={chart.negative}
+              strokeDasharray="4 4"
+              label={
+                referenceLabel
+                  ? {
+                      value: referenceLabel,
+                      position: 'insideTopRight',
+                      fill: chart.negative,
+                      fontSize: 11,
+                    }
+                  : undefined
+              }
+            />
+          )}
           {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
           {series.map((item, index) => (
             <Line

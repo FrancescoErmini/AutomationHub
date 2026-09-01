@@ -12,7 +12,9 @@ from app.schemas.simple_ops import (
     ProcessCostRow,
     QualityBreakdown,
     RunningCostTrendPoint,
+    SlaAttainment,
     SlaCard,
+    SlaCommitmentRow,
 )
 
 router = APIRouter(prefix="/simple-ops", tags=["simple-ops"])
@@ -61,6 +63,20 @@ def get_sla_kpis(
     as_of: date | None = Query(default=None),
 ) -> list[SlaCard]:
     return [SlaCard(**card) for card in service.sla_kpis(_resolve_year(year), as_of=as_of)]
+
+
+@router.get("/sla-commitments", response_model=list[SlaCommitmentRow])
+def get_sla_commitments(service: SimpleOpsServiceDependency) -> list[SlaCommitmentRow]:
+    return [SlaCommitmentRow(**row) for row in service.sla_commitments()]
+
+
+@router.get("/sla-attainment", response_model=SlaAttainment)
+def get_sla_attainment(
+    service: SimpleOpsServiceDependency,
+    year: int | None = Query(default=None),
+    as_of: date | None = Query(default=None),
+) -> SlaAttainment:
+    return SlaAttainment(**service.sla_attainment(_resolve_year(year), as_of=as_of))
 
 
 @router.get("/quality-breakdown", response_model=QualityBreakdown)

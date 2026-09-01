@@ -14,6 +14,7 @@ export default {
         brandRed: '#E2001A', // logo/wordmark only
 
         positive: '#2E8B57', // --ah-positive
+        warning: '#B45309', // --ah-warning — "at risk", distinct from pending
         negative: '#CC0000', // --ah-negative
         pending: '#A0A0A0', // --ah-pending
         spend: '#666666', // run-cost / money out — aligns to --ah-ink-3

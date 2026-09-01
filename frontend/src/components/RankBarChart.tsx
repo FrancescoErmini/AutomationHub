@@ -2,6 +2,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -15,6 +16,9 @@ interface RankBarChartProps {
   height?: number
   valueFormatter?: (value: number) => string
   color?: string
+  /** Optional vertical target line on the value axis (e.g. an SLA threshold). */
+  referenceValue?: number
+  referenceLabel?: string
 }
 
 export function RankBarChart({
@@ -22,6 +26,8 @@ export function RankBarChart({
   height,
   valueFormatter,
   color = chartSeries[0],
+  referenceValue,
+  referenceLabel,
 }: RankBarChartProps) {
   const computedHeight = height ?? Math.max(160, data.length * 36)
 
@@ -57,6 +63,23 @@ export function RankBarChart({
               fontSize: 13,
             }}
           />
+          {referenceValue !== undefined && (
+            <ReferenceLine
+              x={referenceValue}
+              stroke={chart.negative}
+              strokeDasharray="4 4"
+              label={
+                referenceLabel
+                  ? {
+                      value: referenceLabel,
+                      position: 'top',
+                      fill: chart.negative,
+                      fontSize: 11,
+                    }
+                  : undefined
+              }
+            />
+          )}
           <Bar
             dataKey="value"
             fill={color}

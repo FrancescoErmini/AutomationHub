@@ -20,6 +20,7 @@ from app.models.core import (
     Company,
     Department,
     LicenseCost,
+    Priority,
     Process,
     ProcessEconomics,
     ProcessSchedule,
@@ -627,6 +628,54 @@ class AnalyticsRepository:
         )
         median_days = self._session.scalar(stmt)
         return Decimal(str(median_days)) if median_days is not None else None
+
+    def closed_tickets_for_sla(self, year: int) -> list[tuple[str, str | None, str, int]]:
+        """(ticket_type, priority_value, open_month 'YYYY-MM', resolution_days) for
+        every ticket opened in `year` and since closed with a valid end_date.
+        SLA target derivation from priority/type lives in app.services.sla_config."""
+        yr = cast(func.extract("year", Ticket.start_date), Integer)
+        month = func.to_char(cast(Ticket.start_date, Date), "YYYY-MM")
+        days = cast(Ticket.end_date - Ticket.start_date, Integer)
+        stmt = (
+            select(Ticket.ticket_type, Priority.value, month.label("month"), days.label("days"))
+            .outerjoin(Priority, Priority.id == Ticket.priority_id)
+            .where(
+                Ticket.start_date.is_not(None),
+                Ticket.end_date.is_not(None),
+                yr == year,
+            )
+        )
+        return [
+            (str(ticket_type), priority_value, str(open_month), int(resolution_days))
+            for ticket_type, priority_value, open_month, resolution_days in (
+                self._session.execute(stmt).tuples().all()
+            )
+        ]
+
+    def open_tickets_for_sla(
+        self, as_of: date
+    ) -> list[tuple[str, str, str | None, str | None, int]]:
+        """(ticket_id, ticket_type, priority_value, process_name, age_days) for every
+        currently-open ticket, newest-oldest by age handled by the caller."""
+        age_days = cast(literal(as_of) - Ticket.start_date, Integer)
+        stmt = (
+            select(
+                Ticket.ticket_id,
+                Ticket.ticket_type,
+                Priority.value,
+                Process.canonical_name,
+                age_days.label("age_days"),
+            )
+            .outerjoin(Priority, Priority.id == Ticket.priority_id)
+            .outerjoin(Process, Process.id == Ticket.process_id)
+            .where(Ticket.end_date.is_(None), Ticket.start_date.is_not(None))
+        )
+        return [
+            (str(ticket_id), str(ticket_type), priority_value, process_name, int(age))
+            for ticket_id, ticket_type, priority_value, process_name, age in (
+                self._session.execute(stmt).tuples().all()
+            )
+        ]
 
     def cost_breakdown_by_process(self, year: int) -> list[tuple[str, Decimal, Decimal, Decimal]]:
         """(process_name, license_share_eur, infra_share_eur, actual_2l_cost_eur) per

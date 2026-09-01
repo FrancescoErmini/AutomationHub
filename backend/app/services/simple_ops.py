@@ -18,6 +18,18 @@ from typing import Any
 
 from app.repositories.analytics import AnalyticsRepository
 from app.schemas.metrics import MetricValue, available_metric, unavailable_metric
+from app.services.sla_config import (
+    KPI_THRESHOLDS,
+    SLA_ATTAINMENT_CAVEAT,
+    SLA_COMMITMENTS,
+    attainment_status,
+    band_for_priority,
+    normalise_ticket_type,
+    parse_einstein_priority,
+    repair_target_days,
+    resolved_targets,
+    status_for,
+)
 
 _MONEY = Decimal("0.01")
 _PCT = Decimal("0.001")
@@ -42,17 +54,6 @@ def _round_money(value: Decimal) -> float:
 
 def _round_pct(fraction: Decimal) -> float:
     return float((fraction * 100).quantize(_PCT, rounding=ROUND_HALF_UP))
-
-
-def _status_for(value: float, op: str, threshold: float) -> str:
-    """Green/Amber/Red against a target. Presentational only -- these
-    thresholds aren't sourced from data, they mirror the mockup's own
-    Target labels (e.g. "< 25%", ">= 80%")."""
-    ok = value < threshold if op == "<" else value >= threshold
-    if ok:
-        return "green"
-    distance = abs(value - threshold) / threshold if threshold else 1.0
-    return "amber" if distance <= 0.2 else "red"
 
 
 def _sla_card(
@@ -261,104 +262,155 @@ class SimpleOpsService:
 
     def sla_kpis(self, year: int, *, as_of: date | None = None) -> list[dict[str, Any]]:
         as_of = as_of or date.today()
-        cards: list[dict[str, Any]] = []
+
+        def card(key: str, label: str, value: float | None, unit: str) -> dict[str, Any]:
+            thr = KPI_THRESHOLDS[key]
+            status = (
+                status_for(value, thr.op, thr.value, thr.amber_band)
+                if value is not None
+                else "unavailable"
+            )
+            return _sla_card(key, label, value, unit, thr.label, status)
 
         rpa_num, rpa_den = self._repo.rpa_internal_root_cause_pct_inputs(year)
-        if rpa_den > 0:
-            value = _round_pct(Decimal(rpa_num) / rpa_den)
-            cards.append(
-                _sla_card(
-                    "rpa_internal_root_cause_pct",
-                    "RPA Internal Root Causes",
-                    value,
-                    "pct",
-                    "Target < 25%",
-                    _status_for(value, "<", 25.0),
-                )
-            )
-        else:
-            cards.append(
-                _sla_card(
-                    "rpa_internal_root_cause_pct",
-                    "RPA Internal Root Causes",
-                    None,
-                    "pct",
-                    "Target < 25%",
-                    "unavailable",
-                )
-            )
-
         backlog_num, backlog_den = self._repo.backlog_aging_14d_inputs(year, as_of)
-        if backlog_den > 0:
-            value = _round_pct(Decimal(backlog_num) / backlog_den)
-            cards.append(
-                _sla_card(
-                    "backlog_aging_pct",
-                    "Open Backlog Aging",
-                    value,
-                    "pct",
-                    "Target < 5%",
-                    _status_for(value, "<", 5.0),
-                )
-            )
-        else:
-            cards.append(
-                _sla_card(
-                    "backlog_aging_pct",
-                    "Open Backlog Aging",
-                    None,
-                    "pct",
-                    "Target < 5%",
-                    "unavailable",
-                )
-            )
-
         l1, total = self._repo.l1_ratio_inputs_by_year(year)
-        if total > 0:
-            value = _round_pct(Decimal(l1) / total)
-            cards.append(
-                _sla_card(
-                    "l1_ratio_pct",
-                    "L1 / L2 Ratio",
-                    value,
-                    "pct",
-                    "Target ≥ 80% L1",
-                    _status_for(value, ">=", 80.0),
-                )
-            )
-        else:
-            cards.append(
-                _sla_card(
-                    "l1_ratio_pct", "L1 / L2 Ratio", None, "pct", "Target ≥ 80% L1", "unavailable"
-                )
-            )
-
         median_days = self._repo.median_resolution_days_by_year(year)
-        if median_days is not None:
-            value = round(float(median_days), 2)
-            cards.append(
-                _sla_card(
-                    "median_resolution_days",
-                    "Median Resolution Time (MTTR)",
-                    value,
-                    "days",
-                    "Target < 1 day",
-                    _status_for(value, "<", 1.0),
-                )
-            )
-        else:
-            cards.append(
-                _sla_card(
-                    "median_resolution_days",
-                    "Median Resolution Time (MTTR)",
-                    None,
-                    "days",
-                    "Target < 1 day",
-                    "unavailable",
-                )
-            )
 
-        return cards
+        return [
+            card(
+                "rpa_internal_root_cause_pct",
+                "RPA Internal Root Causes",
+                _round_pct(Decimal(rpa_num) / rpa_den) if rpa_den > 0 else None,
+                "pct",
+            ),
+            card(
+                "backlog_aging_pct",
+                "Open Backlog Aging",
+                _round_pct(Decimal(backlog_num) / backlog_den) if backlog_den > 0 else None,
+                "pct",
+            ),
+            card(
+                "l1_ratio_pct",
+                "L1 / L2 Ratio",
+                _round_pct(Decimal(l1) / total) if total > 0 else None,
+                "pct",
+            ),
+            card(
+                "median_resolution_days",
+                "Median Resolution Time (MTTR)",
+                round(float(median_days), 2) if median_days is not None else None,
+                "days",
+            ),
+        ]
+
+    def sla_commitments(self) -> list[dict[str, Any]]:
+        """The AMS 1L service contract as reference data for the dashboard."""
+        return [dict(commitment) for commitment in SLA_COMMITMENTS]
+
+    def sla_attainment(self, year: int, *, as_of: date | None = None) -> dict[str, Any]:
+        """Repair-time SLA attainment for `year`: share of closed tickets resolved
+        within their Einstein-priority repair target, at calendar-day granularity.
+        Target derivation lives in app.services.sla_config; see its caveat."""
+        as_of = as_of or date.today()
+
+        # group key -> [closed, within_target]
+        by_type: dict[str, list[int]] = {}
+        by_band: dict[str, list[int]] = {}
+        by_month: dict[str, list[int]] = {}
+        observed_priorities: set[str] = set()
+        observed_bands: set[str] = set()
+        total_closed = 0
+        total_within = 0
+
+        for ticket_type, priority_value, month, resolution_days in (
+            self._repo.closed_tickets_for_sla(year)
+        ):
+            priority = parse_einstein_priority(priority_value)
+            if priority_value is not None:
+                observed_priorities.add(str(priority_value).strip())
+            band = band_for_priority(priority)
+            observed_bands.add(band)
+            within = 1 if resolution_days <= repair_target_days(ticket_type, priority) else 0
+            total_closed += 1
+            total_within += within
+            for bucket, key in (
+                (by_type, normalise_ticket_type(ticket_type)),
+                (by_band, band),
+                (by_month, month),
+            ):
+                row = bucket.setdefault(key, [0, 0])
+                row[0] += 1
+                row[1] += within
+
+        headline_pct = _round_pct(Decimal(total_within) / total_closed) if total_closed else None
+
+        open_over_target: list[dict[str, Any]] = []
+        for ticket_id, ticket_type, priority_value, process, age_days in (
+            self._repo.open_tickets_for_sla(as_of)
+        ):
+            priority = parse_einstein_priority(priority_value)
+            target = repair_target_days(ticket_type, priority)
+            if age_days > target:
+                open_over_target.append(
+                    {
+                        "ticket_id": ticket_id,
+                        "ticket_type": normalise_ticket_type(ticket_type),
+                        "band": band_for_priority(priority),
+                        "process": process,
+                        "age_days": age_days,
+                        "target_days": target,
+                    }
+                )
+        open_over_target.sort(key=lambda row: row["age_days"], reverse=True)
+
+        def _group(
+            bucket: dict[str, list[int]], order: list[str] | None = None
+        ) -> list[dict[str, Any]]:
+            keys = order if order is not None else sorted(bucket)
+            return [
+                {
+                    "key": key,
+                    "closed": bucket[key][0],
+                    "within_target": bucket[key][1],
+                    "breached": bucket[key][0] - bucket[key][1],
+                    "attainment_pct": (
+                        _round_pct(Decimal(bucket[key][1]) / bucket[key][0])
+                        if bucket[key][0]
+                        else None
+                    ),
+                }
+                for key in keys
+                if key in bucket
+            ]
+
+        status = attainment_status(headline_pct) if headline_pct is not None else "unavailable"
+        return {
+            "headline_pct": headline_pct,
+            "status": status,
+            "closed": total_closed,
+            "within_target": total_within,
+            "breached": total_closed - total_within,
+            "open_over_target_count": len(open_over_target),
+            "observed_priorities": sorted(observed_priorities, key=lambda s: (len(s), s)),
+            "observed_bands": [b for b in ("High", "Medium", "Low") if b in observed_bands],
+            "targets": resolved_targets(),
+            "by_type": _group(by_type),
+            "by_band": _group(by_band, ["High", "Medium", "Low"]),
+            "by_month": [
+                {
+                    "period": period,
+                    "closed": counts[0],
+                    "within_target": counts[1],
+                    "attainment_pct": (
+                        _round_pct(Decimal(counts[1]) / counts[0]) if counts[0] else None
+                    ),
+                }
+                for period, counts in sorted(by_month.items())
+            ],
+            "open_over_target": open_over_target[:100],
+            "caveat": SLA_ATTAINMENT_CAVEAT,
+        }
 
     def quality_breakdown(self, year: int) -> dict[str, Any]:
         def donut(is_1l: bool) -> dict[str, Any]:
@@ -371,7 +423,7 @@ class SimpleOpsService:
             rest_total = sum(count for _, count in rest)
             buckets = list(top)
             if rest_total:
-                buckets.append(("Altro", rest_total))
+                buckets.append(("Other", rest_total))
 
             root_cause_pct = [
                 {

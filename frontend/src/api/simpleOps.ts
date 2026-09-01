@@ -85,6 +85,63 @@ export interface QualityBreakdown {
   l2: QualityDonut
 }
 
+export interface SlaCommitmentRow {
+  ticket_type: string
+  provider_priority: string
+  einstein_label: string
+  reaction_hours: number
+  repair_hours: number
+}
+
+export interface SlaResolvedTarget {
+  ticket_type: string
+  band: string
+  reaction_hours: number
+  repair_hours: number
+  target_days: number
+}
+
+export interface SlaAttainmentGroup {
+  key: string
+  closed: number
+  within_target: number
+  breached: number
+  attainment_pct: number | null
+}
+
+export interface SlaAttainmentMonth {
+  period: string
+  closed: number
+  within_target: number
+  attainment_pct: number | null
+}
+
+export interface SlaAttainmentOpenTicket {
+  ticket_id: string
+  ticket_type: string
+  band: string
+  process: string | null
+  age_days: number
+  target_days: number
+}
+
+export interface SlaAttainment {
+  headline_pct: number | null
+  status: 'green' | 'amber' | 'red' | 'unavailable'
+  closed: number
+  within_target: number
+  breached: number
+  open_over_target_count: number
+  observed_priorities: string[]
+  observed_bands: string[]
+  targets: SlaResolvedTarget[]
+  by_type: SlaAttainmentGroup[]
+  by_band: SlaAttainmentGroup[]
+  by_month: SlaAttainmentMonth[]
+  open_over_target: SlaAttainmentOpenTicket[]
+  caveat: string
+}
+
 export interface ProcessCostRow {
   process: string
   license_eur: number
@@ -136,6 +193,16 @@ export async function fetchQualityBreakdown(
   return getJson<QualityBreakdown>('/api/v1/simple-ops/quality-breakdown', {
     year,
   })
+}
+
+export async function fetchSlaCommitments(): Promise<SlaCommitmentRow[]> {
+  return getJson<SlaCommitmentRow[]>('/api/v1/simple-ops/sla-commitments')
+}
+
+export async function fetchSlaAttainment(
+  year?: number,
+): Promise<SlaAttainment> {
+  return getJson<SlaAttainment>('/api/v1/simple-ops/sla-attainment', { year })
 }
 
 export async function fetchCostBreakdownByProcess(

@@ -1,4 +1,6 @@
+export { AppIcon } from './AppIcon'
 export { Card } from './Card'
+export { DeltaChip } from './DeltaChip'
 export { KpiStat } from './KpiStat'
 export { PageHeader } from './PageHeader'
 export { SectionHeading } from './SectionHeading'

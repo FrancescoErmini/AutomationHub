@@ -1,11 +1,15 @@
 import type { ReactNode } from 'react'
 
-type Tone = 'positive' | 'negative' | 'pending'
+type Tone = 'positive' | 'warning' | 'negative' | 'pending'
 
 const TONE: Record<Tone, { wrap: string; dot: string }> = {
   positive: {
     wrap: 'bg-[var(--ah-positive-bg)] text-positive',
     dot: 'bg-positive',
+  },
+  warning: {
+    wrap: 'bg-[var(--ah-warning-bg)] text-warning',
+    dot: 'bg-warning',
   },
   negative: {
     wrap: 'bg-[var(--ah-negative-bg)] text-negative',

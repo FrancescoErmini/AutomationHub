@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { formatMetric } from '../api/metrics'
 import type { MetricValue } from '../api/metrics'
 
@@ -6,18 +8,29 @@ interface MetricCardProps {
   metric: MetricValue | undefined
   /** Color the value green/red by its sign (e.g. a net-position metric). */
   signColor?: boolean
+  /** Optional info/directional chips rendered under the value. */
+  chips?: ReactNode
+  /** Rendered in place of "Not available" when the metric is unavailable. */
+  fallback?: ReactNode
 }
 
-export function MetricCard({ label, metric, signColor }: MetricCardProps) {
+export function MetricCard({
+  label,
+  metric,
+  signColor,
+  chips,
+  fallback,
+}: MetricCardProps) {
   const available = Boolean(metric?.available) && metric?.value !== null
   const numericValue = typeof metric?.value === 'number' ? metric.value : null
+  const showFallback = !available && fallback != null
 
   const valueClass =
     available && signColor && numericValue !== null
       ? numericValue >= 0
         ? 'text-positive'
         : 'text-negative'
-      : available
+      : available || showFallback
         ? 'text-ink'
         : 'text-slate-400'
 
@@ -29,8 +42,9 @@ export function MetricCard({ label, metric, signColor }: MetricCardProps) {
       <p
         className={`mt-2 text-2xl font-bold tracking-tight [font-feature-settings:'pnum'_1] ${valueClass}`}
       >
-        {formatMetric(metric)}
+        {showFallback ? fallback : formatMetric(metric)}
       </p>
+      {chips && <div className="mt-3 flex flex-wrap gap-1.5">{chips}</div>}
       {metric && metric.warnings.length > 0 && (
         <p className="mt-2 text-xs text-slate-500">{metric.warnings[0]}</p>
       )}

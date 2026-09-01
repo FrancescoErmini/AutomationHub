@@ -85,6 +85,63 @@ class QualityBreakdown(BaseModel):
     l2: QualityDonut
 
 
+class SlaCommitmentRow(BaseModel):
+    ticket_type: str
+    provider_priority: str
+    einstein_label: str
+    reaction_hours: int
+    repair_hours: int
+
+
+class SlaResolvedTarget(BaseModel):
+    ticket_type: str
+    band: str
+    reaction_hours: int
+    repair_hours: int
+    target_days: int
+
+
+class SlaAttainmentGroup(BaseModel):
+    key: str
+    closed: int
+    within_target: int
+    breached: int
+    attainment_pct: float | None
+
+
+class SlaAttainmentMonth(BaseModel):
+    period: str
+    closed: int
+    within_target: int
+    attainment_pct: float | None
+
+
+class SlaAttainmentOpenTicket(BaseModel):
+    ticket_id: str
+    ticket_type: str
+    band: str
+    process: str | None
+    age_days: int
+    target_days: int
+
+
+class SlaAttainment(BaseModel):
+    headline_pct: float | None
+    status: str
+    closed: int
+    within_target: int
+    breached: int
+    open_over_target_count: int
+    observed_priorities: list[str]
+    observed_bands: list[str]
+    targets: list[SlaResolvedTarget]
+    by_type: list[SlaAttainmentGroup]
+    by_band: list[SlaAttainmentGroup]
+    by_month: list[SlaAttainmentMonth]
+    open_over_target: list[SlaAttainmentOpenTicket]
+    caveat: str
+
+
 class ProcessCostRow(BaseModel):
     process: str
     license_eur: float

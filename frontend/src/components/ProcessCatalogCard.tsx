@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
 import type { ProcessCatalogItem } from '../api/processCatalog'
+import { AppIcon } from './ui'
+
+const CARD_APP_LIMIT = 6
 
 interface ProcessCatalogCardProps {
   item: ProcessCatalogItem
@@ -45,15 +48,21 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
           {item.description || 'No description provided.'}
         </p>
         {item.applications.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {item.applications.map((application) => (
-              <span
-                key={application}
-                className="inline-flex w-fit rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
-              >
-                {application}
-              </span>
+          <div
+            className="flex flex-wrap items-center gap-1"
+            aria-label="Applications used"
+          >
+            {item.applications.slice(0, CARD_APP_LIMIT).map((application) => (
+              <AppIcon key={application} name={application} />
             ))}
+            {item.applications.length > CARD_APP_LIMIT && (
+              <span
+                className="inline-flex h-[18px] items-center justify-center rounded-md bg-slate-100 px-1 text-[9px] font-semibold text-slate-500"
+                title={item.applications.slice(CARD_APP_LIMIT).join(', ')}
+              >
+                +{item.applications.length - CARD_APP_LIMIT}
+              </span>
+            )}
           </div>
         )}
         <p className="text-xs text-slate-500">
@@ -132,8 +141,9 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
                     {item.applications.map((application) => (
                       <span
                         key={application}
-                        className="inline-flex w-fit rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
+                        className="inline-flex w-fit items-center gap-1.5 rounded-md bg-slate-100 py-0.5 pl-0.5 pr-2 text-xs font-medium text-slate-600"
                       >
+                        <AppIcon name={application} size="md" />
                         {application}
                       </span>
                     ))}

@@ -44,7 +44,7 @@ export function Layout() {
               Operations
             </NavLink>
             <NavLink to="/sla-kpi" className={navClass}>
-              Performances
+              SLA / KPI
             </NavLink>
             <NavLink to="/process-economics" className={navClass}>
               Business Cases
