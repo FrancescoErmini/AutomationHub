@@ -98,10 +98,41 @@ class SimpleOpsService:
             "total_eur": total_eur,
         }
 
-    def header_kpis(self, year: int) -> dict[str, MetricValue]:
+    @staticmethod
+    def _shift_year_back(d: date) -> date:
+        """``d`` moved to the previous calendar year, clamping 29 Feb -> 28 Feb."""
+        try:
+            return d.replace(year=d.year - 1)
+        except ValueError:
+            return d.replace(year=d.year - 1, day=28)
+
+    def _ticket_2l_ytd_delta(self, year: int, as_of: date) -> MetricValue:
+        """2L flat-rate cost delta comparing 1 Jan..``as_of`` against the same
+        window one year earlier, so a still-partial current year isn't judged
+        against a full prior year. 2L cost scales linearly with ticket count, so
+        the flat rate cancels and the delta is just the count ratio."""
+        key = "kpi_ticket_2l_cost_delta_pct"
+        period = f"YTD through {as_of.day} {as_of:%b}"
+        curr = self._repo.ams_2l_ticket_count_between(date(year, 1, 1), as_of)
+        prior = self._repo.ams_2l_ticket_count_between(
+            date(year - 1, 1, 1), self._shift_year_back(as_of)
+        )
+        if prior == 0:
+            return unavailable_metric(key, "pct", reason=f"no {year - 1} data", period=period)
+        return available_metric(
+            key, _round_pct(Decimal(curr - prior) / prior), "pct", period=period
+        )
+
+    def header_kpis(self, year: int, *, as_of: date | None = None) -> dict[str, MetricValue]:
+        as_of = as_of or date.today()
         current = self._year_components(year)
         prior = self._year_components(year - 1)
         process_count = self._repo.process_count()
+
+        # While the requested year is still in progress, a full prior-year total is
+        # an unfair yardstick for volume-driven components -- 2L tickets accrue per
+        # ticket through the year -- so that delta compares the same elapsed period.
+        partial_year = year == as_of.year and as_of < date(year, 12, 31)
 
         def delta_pct(curr: Decimal, prev: Decimal) -> float | None:
             if prev == 0:
@@ -158,6 +189,9 @@ class SimpleOpsService:
             ("kpi_ticket_2l_cost_delta_pct", "ticket_2l_eur"),
             ("kpi_change_request_cost_delta_pct", "rfc_eur"),
         ):
+            if metric_key == "kpi_ticket_2l_cost_delta_pct" and partial_year:
+                metrics[metric_key] = self._ticket_2l_ytd_delta(year, as_of)
+                continue
             delta = delta_pct(current[component_key], prior[component_key])
             metrics[metric_key] = (
                 available_metric(metric_key, delta, "pct")

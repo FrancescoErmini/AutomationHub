@@ -10,8 +10,10 @@ FastAPI validates the transport contract, injects a SQLAlchemy session-backed se
 
 `core` tables are the single source of truth. They were originally bootstrapped
 from source workbooks by a one-time Excel/CSV ingestion pipeline; that pipeline
-was removed in the 2026-08-31 cleanup. Reference data is now maintained through
-the sqladmin panel, and application data flows in through the ideas API.
+was removed in the 2026-08-31 cleanup, and its leftover `staging` / `audit`
+schemas (plus `core.value_normalization` and the unused `analytics.ticket_enriched`
+view) were dropped by migration `20260901_0018`. Reference data is now maintained
+through the sqladmin panel, and application data flows in through the ideas API.
 
 ## Runtime path
 

@@ -9,6 +9,7 @@ export interface ProcessCatalogItem {
   company: string | null
   go_live_date: string | null
   applications: string[]
+  documentation_url: string | null
 }
 
 export async function fetchProcessCatalog(): Promise<ProcessCatalogItem[]> {

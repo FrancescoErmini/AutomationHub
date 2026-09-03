@@ -26,9 +26,11 @@ def _resolve_year(year: int | None) -> int:
 
 @router.get("/kpis", response_model=dict[str, MetricValue])
 def get_kpis(
-    service: SimpleOpsServiceDependency, year: int | None = Query(default=None)
+    service: SimpleOpsServiceDependency,
+    year: int | None = Query(default=None),
+    as_of: date | None = Query(default=None),
 ) -> dict[str, MetricValue]:
-    return service.header_kpis(_resolve_year(year))
+    return service.header_kpis(_resolve_year(year), as_of=as_of)
 
 
 @router.get("/running-cost-trend", response_model=list[RunningCostTrendPoint])

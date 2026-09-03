@@ -13,9 +13,6 @@ configured by introspecting the mapper so that:
   at large tables (see ``_SEARCH_NOT_FILTER_TARGETS``) get a search box instead of
   an unusable dropdown;
 * views are grouped in the sidebar by database schema.
-
-The ``staging.*`` schema is deliberately not exposed: those tables are raw,
-unvalidated workbook dumps produced by ingestion, not editable reference data.
 """
 
 from __future__ import annotations
@@ -48,9 +45,6 @@ from app.models import core
 
 SESSION_KEY = "admin_authenticated"
 
-# Models never exposed in the admin, by module.
-_HIDDEN_MODULES = ("app.models.staging",)
-
 # Tables whose columns are mostly computed or system-managed: restrict the edit
 # form to the handful of fields a human actually sets.
 _FORM_COLUMNS_OVERRIDE: dict[str, tuple[str, ...]] = {
@@ -60,8 +54,6 @@ _FORM_COLUMNS_OVERRIDE: dict[str, tuple[str, ...]] = {
 
 _SCHEMA_CATEGORY = {
     "core": "Core",
-    "audit": "Audit",
-    "analytics": "Analytics",
 }
 
 # Short, closed-vocabulary string columns worth a "pick a value" dropdown filter.
@@ -72,12 +64,7 @@ _LOW_CARDINALITY_STRING_COLUMNS = frozenset(
         "ticket_type",
         "cost_type",
         "subtype",
-        "severity",
-        "issue_type",
-        "method",
-        "entity",
         "time_slot",
-        "validation_status",
         "final_classification",
         "technology_category",
         "feasibility_band",
@@ -479,7 +466,6 @@ def _model_views() -> list[type[ModelView]]:
     return [
         _build_view(model, overrides_by_model.get(model.__name__, {}))
         for model in Base.__subclasses__()
-        if model.__module__ not in _HIDDEN_MODULES
     ]
 
 

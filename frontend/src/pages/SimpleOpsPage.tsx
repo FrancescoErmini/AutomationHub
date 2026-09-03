@@ -46,10 +46,13 @@ function metricNumber(map: MetricMap | undefined, key: string): number | null {
   return metric.value
 }
 
-function formatDelta(value: number | null): string | null {
+function formatDelta(
+  value: number | null,
+  label = 'vs last year',
+): string | null {
   if (value === null) return null
   const sign = value >= 0 ? '+' : ''
-  return `${sign}${value.toFixed(0)}% vs last year`
+  return `${sign}${value.toFixed(0)}% ${label}`
 }
 
 interface KpiCardProps {
@@ -192,6 +195,9 @@ export function SimpleOpsPage() {
                 subtitle={[
                   formatDelta(
                     metricNumber(kpis.data, 'kpi_ticket_2l_cost_delta_pct'),
+                    kpis.data?.['kpi_ticket_2l_cost_delta_pct']?.period
+                      ? 'vs same period last year'
+                      : 'vs last year',
                   ),
                   metricNumber(kpis.data, 'kpi_ticket_2l_count') !== null
                     ? `${metricNumber(kpis.data, 'kpi_ticket_2l_count')} tickets handled`

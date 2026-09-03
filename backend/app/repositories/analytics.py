@@ -395,9 +395,14 @@ class AnalyticsRepository:
 
     def pipeline_processes(
         self,
-    ) -> list[tuple[str, str | None, str | None, str | None, str | None, date | None, list[str]]]:
+    ) -> list[
+        tuple[
+            str, str | None, str | None, str | None, str | None, date | None, list[str], str | None
+        ]
+    ]:
         """(canonical_name, department_name, description, status, company_name,
-        go_live_date, application_names) for every pipeline process."""
+        go_live_date, application_names, documentation_url) for every pipeline
+        process."""
         stmt = (
             select(Process)
             .outerjoin(Department, Department.id == Process.department_id)
@@ -419,6 +424,7 @@ class AnalyticsRepository:
                 process.company.name if process.company else None,
                 process.go_live_date,
                 [application.name for application in process.applications],
+                process.documentation_url,
             )
             for process in processes
         ]
@@ -498,6 +504,18 @@ class AnalyticsRepository:
             .group_by(yr)
         )
         return dict(self._session.execute(stmt).tuples().all())
+
+    def ams_2l_ticket_count_between(self, start: date, end: date) -> int:
+        """2L tickets *opened* in the inclusive date window ``[start, end]`` -- the
+        same-period (YTD) counterpart of :meth:`ams_2l_ticket_count_by_year`, used
+        for a fair prior-year comparison while the current year is still partial."""
+        stmt = select(func.count(Ticket.id)).where(
+            Ticket.is_1l.is_(False),
+            Ticket.start_date.is_not(None),
+            Ticket.start_date >= start,
+            Ticket.start_date <= end,
+        )
+        return self._session.scalar(stmt) or 0
 
     def ams_2l_actual_cost_by_year(self, years: list[int]) -> dict[int, tuple[Decimal, int]]:
         """Actual AMS 2L cost (sum + distinct ticket count), keyed by the *ticket's*

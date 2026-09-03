@@ -15,7 +15,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.audit import IngestionBatch
 
 SCHEMA = "core"
 
@@ -118,6 +117,7 @@ class Process(Base):
     canonical_name: Mapped[str] = mapped_column(String(300), unique=True)
     normalized_key: Mapped[str] = mapped_column(String(300), unique=True, index=True)
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    documentation_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     department_id: Mapped[int | None] = mapped_column(
         ForeignKey(f"{SCHEMA}.department.id"), nullable=True
     )
@@ -455,25 +455,3 @@ class Idea(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     apqc_process: Mapped["ApqcProcess"] = relationship()
-
-
-class ValueNormalization(Base):
-    """Audit trail for every inferred/normalized value: original, normalized,
-    method, and confidence, per the ingestion normalization contract."""
-
-    __tablename__ = "value_normalization"
-    __table_args__ = {"schema": SCHEMA}
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    ingestion_batch_id: Mapped[int | None] = mapped_column(
-        ForeignKey("audit.ingestion_batch.id"), nullable=True, index=True
-    )
-    ingestion_batch: Mapped["IngestionBatch | None"] = relationship()
-    entity: Mapped[str] = mapped_column(String(60))
-    source_sheet: Mapped[str] = mapped_column(String(60))
-    source_row_number: Mapped[int | None] = mapped_column(nullable=True)
-    original_value: Mapped[str] = mapped_column(Text())
-    normalized_value: Mapped[str] = mapped_column(Text())
-    method: Mapped[str] = mapped_column(String(60))
-    confidence: Mapped[Decimal] = mapped_column(Numeric(4, 3))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

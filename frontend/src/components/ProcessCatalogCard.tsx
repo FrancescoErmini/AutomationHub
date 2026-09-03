@@ -68,6 +68,16 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
         <p className="text-xs text-slate-500">
           {formatGoLiveDate(item.go_live_date)}
         </p>
+        {item.documentation_url && (
+          <a
+            href={item.documentation_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-fit text-sm font-semibold text-accent hover:underline"
+          >
+            📄 Documentation ↗
+          </a>
+        )}
         <button
           type="button"
           onClick={() => setIsOpen(true)}
@@ -131,6 +141,21 @@ export function ProcessCatalogCard({ item }: ProcessCatalogCardProps) {
                 <dt className="text-slate-500">Status</dt>
                 <dd className="text-right font-medium text-ink">
                   {item.status ?? 'Not specified'}
+                </dd>
+                <dt className="text-slate-500">Documentation</dt>
+                <dd className="text-right font-medium text-ink">
+                  {item.documentation_url ? (
+                    <a
+                      href={item.documentation_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-accent hover:underline"
+                    >
+                      Open ↗
+                    </a>
+                  ) : (
+                    'Not available'
+                  )}
                 </dd>
               </dl>
 

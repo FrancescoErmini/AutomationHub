@@ -24,8 +24,16 @@ class ProcessCatalogService:
                 "company": company,
                 "go_live_date": go_live_date,
                 "applications": applications,
+                "documentation_url": documentation_url,
             }
-            for name, department, description, status, company, go_live_date, applications in (
-                self._repo.pipeline_processes()
-            )
+            for (
+                name,
+                department,
+                description,
+                status,
+                company,
+                go_live_date,
+                applications,
+                documentation_url,
+            ) in self._repo.pipeline_processes()
         ]

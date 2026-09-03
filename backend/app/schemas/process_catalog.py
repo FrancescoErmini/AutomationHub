@@ -12,3 +12,4 @@ class ProcessCatalogItem(BaseModel):
     company: str | None
     go_live_date: date | None
     applications: list[str]
+    documentation_url: str | None
