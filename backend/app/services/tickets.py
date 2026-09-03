@@ -16,7 +16,7 @@ from app.models.core import (
     SupportLevel,
     Ticket,
 )
-from app.schemas.ticket import TicketUpdate
+from app.schemas.ticket import TicketCreate, TicketUpdate
 
 _DEFAULT_WINDOW_DAYS = 14
 _MAX_LIMIT = 5000
@@ -90,16 +90,28 @@ class TicketService:
             ),
         }
 
+    def create(self, payload: TicketCreate) -> dict[str, Any]:
+        data = payload.model_dump()
+        self._check_fk_targets(data)
+
+        ticket = Ticket(**data)
+        self._session.add(ticket)
+        try:
+            self._session.commit()
+        except IntegrityError:
+            self._session.rollback()
+            raise DuplicateItemError(f"Ticket id '{payload.ticket_id}' already exists") from None
+
+        self._session.refresh(ticket)
+        return self._serialize(ticket)
+
     def update(self, ticket_pk: int, payload: TicketUpdate) -> dict[str, Any]:
         ticket = self._session.get(Ticket, ticket_pk)
         if ticket is None:
             raise NotFoundError(f"Ticket {ticket_pk} not found")
 
         data = payload.model_dump()
-        for field, model in _FK_MODELS.items():
-            fk = data[field]
-            if fk is not None and self._session.get(model, fk) is None:
-                raise NotFoundError(f"{model.__name__} {fk} not found")
+        self._check_fk_targets(data)
 
         for field, value in data.items():
             setattr(ticket, field, value)
@@ -112,6 +124,12 @@ class TicketService:
 
         self._session.refresh(ticket)
         return self._serialize(ticket)
+
+    def _check_fk_targets(self, data: dict[str, Any]) -> None:
+        for field, model in _FK_MODELS.items():
+            fk = data[field]
+            if fk is not None and self._session.get(model, fk) is None:
+                raise NotFoundError(f"{model.__name__} {fk} not found")
 
     def delete(self, ticket_pk: int) -> None:
         ticket = self._session.get(Ticket, ticket_pk)

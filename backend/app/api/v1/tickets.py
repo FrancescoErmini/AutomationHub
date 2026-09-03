@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Query, status
 
 from app.dependencies import TicketServiceDependency
-from app.schemas.ticket import TicketOptions, TicketRead, TicketUpdate
+from app.schemas.ticket import TicketCreate, TicketOptions, TicketRead, TicketUpdate
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
@@ -21,6 +21,11 @@ def list_tickets(
 @router.get("/options", response_model=TicketOptions)
 def ticket_options(service: TicketServiceDependency) -> TicketOptions:
     return TicketOptions(**service.get_options())
+
+
+@router.post("", response_model=TicketRead, status_code=status.HTTP_201_CREATED)
+def create_ticket(payload: TicketCreate, service: TicketServiceDependency) -> TicketRead:
+    return TicketRead(**service.create(payload))
 
 
 # TODO: temporary — restore the RequireEditor dependency on this write endpoint

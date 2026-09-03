@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { fetchTicketOptions, fetchTickets } from '../api/tickets'
 import { AsyncSection } from '../components/AsyncSection'
+import { NewTicketForm } from '../components/tickets/NewTicketForm'
 import { TicketEditableRow } from '../components/tickets/TicketRow'
 import { PageHeader } from '../components/ui'
 
@@ -26,6 +27,7 @@ export function TicketsPage() {
   const searching = debouncedSearch !== ''
 
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [creating, setCreating] = useState(false)
   const dirtyRef = useRef(false)
 
   const requestEdit = (id: number) => {
@@ -75,7 +77,23 @@ export function TicketsPage() {
       <PageHeader
         title="Tickets"
         subtitle="Review and edit raw ticket records inline. The default view shows every ticket still open plus anything opened or closed in the last 14 days; search spans all tickets."
+        action={
+          <button
+            type="button"
+            onClick={() => setCreating((open) => !open)}
+            className="rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-brandHover"
+          >
+            {creating ? 'Close' : '+ New ticket'}
+          </button>
+        }
       />
+
+      {creating && options.data && (
+        <NewTicketForm
+          options={options.data}
+          onClose={() => setCreating(false)}
+        />
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <input

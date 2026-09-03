@@ -54,6 +54,10 @@ class TicketUpdate(BaseModel):
         return value
 
 
+class TicketCreate(TicketUpdate):
+    """New-ticket payload -- same editable fields as an update."""
+
+
 class TicketRefOption(BaseModel):
     id: int
     label: str

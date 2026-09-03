@@ -9,106 +9,28 @@ import {
   type TicketUpdate,
 } from '../../api/tickets'
 import { StatusBadge } from '../ui'
+import { RefSelect } from './RefSelect'
+import {
+  PROCESS_DATALIST_ID,
+  deriveSupportLevelId,
+  formToPayload,
+  inputClass,
+  resolveProcessId,
+  rowToForm,
+  type TicketFormState,
+} from './ticketForm'
 
-const PROCESS_DATALIST_ID = 'ticket-process-options'
 const bodyCell = 'whitespace-nowrap px-3 py-2 align-top text-slate-700'
 // Pinned first column so the row action stays visible while the wide table
 // scrolls horizontally. bg-inherit picks up the <tr> background.
 const stickyCol =
   'sticky left-0 z-10 w-[112px] border-r border-slate-200 bg-inherit'
-const inputClass =
-  'w-full min-w-[7rem] rounded-lg border border-slate-300 px-2 py-1 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30'
 const ghostButton =
   'rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50'
 const primaryButton =
   'rounded-lg bg-brand px-3 py-1 text-sm font-semibold text-white transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50'
 const dangerButton =
   'rounded-lg border border-negative/40 px-3 py-1 text-sm font-semibold text-negative hover:bg-negative/5 disabled:cursor-not-allowed disabled:opacity-50'
-
-interface RowForm {
-  ticket_id: string
-  ticket_type: string
-  priority_id: string
-  process_label: string
-  requestor: string
-  start_date: string
-  end_date: string
-  root_cause_id: string
-  is_1l: 'true' | 'false'
-  company_id: string
-  ams_year_id: string
-  note: string
-}
-
-function rowToForm(row: TicketRow): RowForm {
-  return {
-    ticket_id: row.ticket_id,
-    ticket_type: row.ticket_type,
-    priority_id: row.priority_id === null ? '' : String(row.priority_id),
-    process_label: row.process_name ?? '',
-    requestor: row.requestor ?? '',
-    start_date: row.start_date ?? '',
-    end_date: row.end_date ?? '',
-    root_cause_id: row.root_cause_id === null ? '' : String(row.root_cause_id),
-    is_1l: row.is_1l ? 'true' : 'false',
-    company_id: row.company_id === null ? '' : String(row.company_id),
-    ams_year_id: row.ams_year_id === null ? '' : String(row.ams_year_id),
-    note: row.note ?? '',
-  }
-}
-
-const numOrNull = (value: string): number | null =>
-  value === '' ? null : Number(value)
-
-function formToPayload(
-  form: RowForm,
-  processId: number | null,
-  supportLevelId: number | null,
-): TicketUpdate {
-  return {
-    ticket_id: form.ticket_id.trim(),
-    ticket_type: form.ticket_type.trim(),
-    priority_id: numOrNull(form.priority_id),
-    process_id: processId,
-    requestor: form.requestor.trim() || null,
-    start_date: form.start_date || null,
-    end_date: form.end_date || null,
-    root_cause_id: numOrNull(form.root_cause_id),
-    is_1l: form.is_1l === 'true',
-    support_level_id: supportLevelId,
-    company_id: numOrNull(form.company_id),
-    ams_year_id: numOrNull(form.ams_year_id),
-    note: form.note.trim() || null,
-  }
-}
-
-function RefSelect({
-  value,
-  onChange,
-  options,
-  label,
-}: {
-  value: string
-  onChange: (next: string) => void
-  options: { id: number; label: string }[]
-  label: string
-}) {
-  return (
-    <select
-      className={inputClass}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      aria-label={label}
-    >
-      <option value="">—</option>
-      {options.map((option) => (
-        <option key={option.id} value={String(option.id)}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  )
-}
 
 export function TicketEditableRow({
   row,
@@ -126,7 +48,7 @@ export function TicketEditableRow({
   onDirtyChange: (dirty: boolean) => void
 }) {
   const queryClient = useQueryClient()
-  const [form, setForm] = useState<RowForm>(() => rowToForm(row))
+  const [form, setForm] = useState<TicketFormState>(() => rowToForm(row))
 
   useEffect(() => {
     if (isEditing) setForm(rowToForm(row))
@@ -139,14 +61,8 @@ export function TicketEditableRow({
     if (isEditing) onDirtyChange(dirty)
   }, [isEditing, dirty, onDirtyChange])
 
-  const typedProcess = form.process_label.trim()
-  const resolvedProcessId =
-    typedProcess === ''
-      ? null
-      : (options.processes.find((option) => option.label === typedProcess)
-          ?.id ?? undefined)
-  const processUnmatched =
-    typedProcess !== '' && resolvedProcessId === undefined
+  const resolvedProcessId = resolveProcessId(options, form.process_label)
+  const processUnmatched = resolvedProcessId === undefined
 
   const save = useMutation({
     mutationFn: (payload: TicketUpdate) => updateTicket(row.id, payload),
@@ -162,7 +78,7 @@ export function TicketEditableRow({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   })
 
-  const patch = (part: Partial<RowForm>) =>
+  const patch = (part: Partial<TicketFormState>) =>
     setForm((current) => ({ ...current, ...part }))
 
   const canSave =
@@ -171,19 +87,18 @@ export function TicketEditableRow({
     !processUnmatched &&
     !save.isPending
 
-  // support_level_id is not edited directly -- it is kept in sync with the
-  // 1L / 2L toggle so the (still full-replace) PATCH never nulls it out.
-  const derivedSupportLevelId =
-    options.support_levels.find(
-      (option) => option.label === (form.is_1l === 'true' ? '1L' : '2L'),
-    )?.id ??
-    row.support_level_id ??
-    null
-
   const submit = () => {
     if (!canSave) return
     save.mutate(
-      formToPayload(form, resolvedProcessId ?? null, derivedSupportLevelId),
+      formToPayload(
+        form,
+        resolvedProcessId ?? null,
+        deriveSupportLevelId(
+          options,
+          form.is_1l === 'true',
+          row.support_level_id,
+        ),
+      ),
     )
   }
 
