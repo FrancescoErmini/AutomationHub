@@ -1,18 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import {
-  fetchTicketOptions,
-  fetchTickets,
-  type TicketRow,
-} from '../api/tickets'
+import { fetchTicketOptions, fetchTickets } from '../api/tickets'
 import { AsyncSection } from '../components/AsyncSection'
-import { PageHeader, StatusBadge } from '../components/ui'
+import { TicketEditableRow } from '../components/tickets/TicketRow'
+import { PageHeader } from '../components/ui'
 
 const PROCESS_DATALIST_ID = 'ticket-process-options'
 const headCell =
   'whitespace-nowrap px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500'
-const bodyCell = 'whitespace-nowrap px-3 py-2 align-top text-slate-700'
 
 function useDebounced<T>(value: T, ms: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -23,47 +19,27 @@ function useDebounced<T>(value: T, ms: number): T {
   return debounced
 }
 
-function DisplayRow({ row }: { row: TicketRow }) {
-  return (
-    <tr className="border-b border-slate-100 last:border-0">
-      <td className={`${bodyCell} font-medium text-ink`}>{row.ticket_id}</td>
-      <td className={bodyCell}>{row.ticket_type}</td>
-      <td className={bodyCell}>{row.priority_value ?? '—'}</td>
-      <td
-        className={`${bodyCell} max-w-[220px] truncate`}
-        title={row.process_name ?? ''}
-      >
-        {row.process_name ?? '—'}
-      </td>
-      <td className={bodyCell}>{row.requestor ?? '—'}</td>
-      <td className={bodyCell}>{row.start_date ?? '—'}</td>
-      <td className={bodyCell}>{row.end_date ?? '—'}</td>
-      <td className={bodyCell}>
-        <StatusBadge tone={row.is_open ? 'warning' : 'positive'}>
-          {row.is_open ? 'Open' : 'Closed'}
-        </StatusBadge>
-      </td>
-      <td className={bodyCell}>{row.root_cause_name ?? '—'}</td>
-      <td className={bodyCell}>{row.is_1l ? '1L' : '2L'}</td>
-      <td className={bodyCell}>{row.support_level_code ?? '—'}</td>
-      <td className={bodyCell}>{row.company_name ?? '—'}</td>
-      <td className={bodyCell}>{row.ams_year_code ?? '—'}</td>
-      <td
-        className={`${bodyCell} max-w-[260px] truncate`}
-        title={row.note ?? ''}
-      >
-        {row.note ?? '—'}
-      </td>
-      <td className={bodyCell} />
-    </tr>
-  )
-}
-
 export function TicketsPage() {
   const [scope, setScope] = useState<'default' | 'all'>('default')
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounced(search.trim(), 300)
   const searching = debouncedSearch !== ''
+
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const dirtyRef = useRef(false)
+
+  const requestEdit = (id: number) => {
+    if (
+      editingId !== null &&
+      editingId !== id &&
+      dirtyRef.current &&
+      !window.confirm('Discard unsaved changes to the ticket you are editing?')
+    ) {
+      return
+    }
+    dirtyRef.current = false
+    setEditingId(id)
+  }
 
   const options = useQuery({
     queryKey: ['tickets', 'options'],
@@ -158,9 +134,26 @@ export function TicketsPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <DisplayRow key={row.id} row={row} />
-              ))}
+              {(() => {
+                const opts = options.data
+                if (!opts) return null
+                return rows.map((row) => (
+                  <TicketEditableRow
+                    key={row.id}
+                    row={row}
+                    options={opts}
+                    isEditing={editingId === row.id}
+                    onRequestEdit={() => requestEdit(row.id)}
+                    onDone={() => {
+                      dirtyRef.current = false
+                      setEditingId(null)
+                    }}
+                    onDirtyChange={(value) => {
+                      dirtyRef.current = value
+                    }}
+                  />
+                ))
+              })()}
               {rows.length === 0 && (
                 <tr>
                   <td
