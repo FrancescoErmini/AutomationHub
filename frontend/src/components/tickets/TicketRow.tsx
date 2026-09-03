@@ -28,7 +28,6 @@ interface RowForm {
   end_date: string
   root_cause_id: string
   is_1l: 'true' | 'false'
-  support_level_id: string
   company_id: string
   ams_year_id: string
   note: string
@@ -45,8 +44,6 @@ function rowToForm(row: TicketRow): RowForm {
     end_date: row.end_date ?? '',
     root_cause_id: row.root_cause_id === null ? '' : String(row.root_cause_id),
     is_1l: row.is_1l ? 'true' : 'false',
-    support_level_id:
-      row.support_level_id === null ? '' : String(row.support_level_id),
     company_id: row.company_id === null ? '' : String(row.company_id),
     ams_year_id: row.ams_year_id === null ? '' : String(row.ams_year_id),
     note: row.note ?? '',
@@ -56,7 +53,11 @@ function rowToForm(row: TicketRow): RowForm {
 const numOrNull = (value: string): number | null =>
   value === '' ? null : Number(value)
 
-function formToPayload(form: RowForm, processId: number | null): TicketUpdate {
+function formToPayload(
+  form: RowForm,
+  processId: number | null,
+  supportLevelId: number | null,
+): TicketUpdate {
   return {
     ticket_id: form.ticket_id.trim(),
     ticket_type: form.ticket_type.trim(),
@@ -67,7 +68,7 @@ function formToPayload(form: RowForm, processId: number | null): TicketUpdate {
     end_date: form.end_date || null,
     root_cause_id: numOrNull(form.root_cause_id),
     is_1l: form.is_1l === 'true',
-    support_level_id: numOrNull(form.support_level_id),
+    support_level_id: supportLevelId,
     company_id: numOrNull(form.company_id),
     ams_year_id: numOrNull(form.ams_year_id),
     note: form.note.trim() || null,
@@ -158,9 +159,20 @@ export function TicketEditableRow({
     !processUnmatched &&
     !save.isPending
 
+  // support_level_id is not edited directly -- it is kept in sync with the
+  // 1L / 2L toggle so the (still full-replace) PATCH never nulls it out.
+  const derivedSupportLevelId =
+    options.support_levels.find(
+      (option) => option.label === (form.is_1l === 'true' ? '1L' : '2L'),
+    )?.id ??
+    row.support_level_id ??
+    null
+
   const submit = () => {
     if (!canSave) return
-    save.mutate(formToPayload(form, resolvedProcessId ?? null))
+    save.mutate(
+      formToPayload(form, resolvedProcessId ?? null, derivedSupportLevelId),
+    )
   }
 
   const cancel = () => {
@@ -197,7 +209,6 @@ export function TicketEditableRow({
         </td>
         <td className={bodyCell}>{row.root_cause_name ?? '—'}</td>
         <td className={bodyCell}>{row.is_1l ? '1L' : '2L'}</td>
-        <td className={bodyCell}>{row.support_level_code ?? '—'}</td>
         <td className={bodyCell}>{row.company_name ?? '—'}</td>
         <td className={bodyCell}>{row.ams_year_code ?? '—'}</td>
         <td
@@ -319,14 +330,6 @@ export function TicketEditableRow({
         </td>
         <td className={bodyCell}>
           <RefSelect
-            label="Support level"
-            value={form.support_level_id}
-            onChange={(next) => patch({ support_level_id: next })}
-            options={options.support_levels}
-          />
-        </td>
-        <td className={bodyCell}>
-          <RefSelect
             label="Company"
             value={form.company_id}
             onChange={(next) => patch({ company_id: next })}
@@ -349,7 +352,7 @@ export function TicketEditableRow({
         className="border-b border-slate-100 bg-slate-50/60"
         onKeyDown={onKeyDown}
       >
-        <td className={bodyCell} colSpan={15}>
+        <td className={bodyCell} colSpan={14}>
           <div className="flex flex-col gap-2">
             <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Note

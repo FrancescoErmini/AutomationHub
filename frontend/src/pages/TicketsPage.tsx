@@ -126,7 +126,6 @@ export function TicketsPage() {
                 <th className={headCell}>Status</th>
                 <th className={headCell}>Root cause</th>
                 <th className={headCell}>Level</th>
-                <th className={headCell}>Support</th>
                 <th className={headCell}>Company</th>
                 <th className={headCell}>AMS yr</th>
                 <th className={headCell}>Note</th>
@@ -157,7 +156,7 @@ export function TicketsPage() {
               {rows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={15}
+                    colSpan={14}
                     className="px-3 py-6 text-center text-slate-500"
                   >
                     {searching
