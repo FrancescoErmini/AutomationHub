@@ -22,6 +22,7 @@ from app.services.process_catalog import ProcessCatalogService
 from app.services.process_economics import ProcessEconomicsService
 from app.services.service_performance import ServicePerformanceService
 from app.services.simple_ops import SimpleOpsService
+from app.services.tickets import TicketService
 
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -61,6 +62,13 @@ def get_process_economics_service(session: DbSession) -> ProcessEconomicsService
 ProcessEconomicsServiceDependency = Annotated[
     ProcessEconomicsService, Depends(get_process_economics_service)
 ]
+
+
+def get_ticket_service(session: DbSession) -> TicketService:
+    return TicketService(session)
+
+
+TicketServiceDependency = Annotated[TicketService, Depends(get_ticket_service)]
 
 
 def get_service_performance_service(

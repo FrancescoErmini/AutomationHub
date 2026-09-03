@@ -11,6 +11,7 @@ from app.api.v1 import (
     process_economics,
     service_performance,
     simple_ops,
+    tickets,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -24,6 +25,7 @@ router.include_router(simple_ops.router)
 router.include_router(apqc.router)
 router.include_router(ideas.router)
 router.include_router(me.router)
+router.include_router(tickets.router)
 
 
 @router.get("/status")
