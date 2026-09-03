@@ -49,6 +49,9 @@ export function Layout() {
             <NavLink to="/process-economics" className={navClass}>
               Business Cases
             </NavLink>
+            <NavLink to="/documentation" className={navClass}>
+              Data Dictionary
+            </NavLink>
           </nav>
           {auth.isAuthenticated ? (
             <div className="flex items-center gap-3 text-sm">

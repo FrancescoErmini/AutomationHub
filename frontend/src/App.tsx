@@ -6,6 +6,7 @@ import { RequireAuth } from './components/auth/RequireAuth'
 import { Layout } from './components/Layout'
 import { AuthCallbackPage } from './pages/AuthCallbackPage'
 import { CatalogPage } from './pages/CatalogPage'
+import { DocumentationPage } from './pages/documentation/DocumentationPage'
 import { ExecutivePage } from './pages/ExecutivePage'
 import { HomePage } from './pages/HomePage'
 import { IdeaDetailPage } from './pages/IdeaDetailPage'
@@ -32,6 +33,7 @@ export function App() {
         {/* TODO: temporary — restore <RequireRole role="editor"> gate around this route */}
         <Route path="process-economics" element={<ProcessEconomicsPage />} />
         <Route path="ideas/:id" element={<IdeaDetailPage />} />
+        <Route path="documentation" element={<DocumentationPage />} />
       </Route>
     </Routes>
   )
