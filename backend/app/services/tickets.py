@@ -1,12 +1,13 @@
 from datetime import date, timedelta
 from typing import Any
 
-from sqlalchemy import distinct, or_, select
+from sqlalchemy import distinct, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import InstrumentedAttribute, Session, selectinload
 
-from app.core.exceptions import DuplicateItemError, NotFoundError
+from app.core.exceptions import AppError, DuplicateItemError, NotFoundError
 from app.models.core import (
+    Ams2LCost,
     AmsYear,
     Company,
     Priority,
@@ -111,6 +112,22 @@ class TicketService:
 
         self._session.refresh(ticket)
         return self._serialize(ticket)
+
+    def delete(self, ticket_pk: int) -> None:
+        ticket = self._session.get(Ticket, ticket_pk)
+        if ticket is None:
+            raise NotFoundError(f"Ticket {ticket_pk} not found")
+
+        cost_rows = self._session.scalar(
+            select(func.count(Ams2LCost.id)).where(Ams2LCost.ticket_id == ticket_pk)
+        )
+        if cost_rows:
+            raise AppError(
+                f"Cannot delete: {cost_rows} AMS 2L cost record(s) reference this ticket"
+            )
+
+        self._session.delete(ticket)
+        self._session.commit()
 
     def _ref(self, model: type[Any], label_col: InstrumentedAttribute[str]) -> list[dict[str, Any]]:
         rows = self._session.execute(select(model.id, label_col).order_by(label_col)).all()

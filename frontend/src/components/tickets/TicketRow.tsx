@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import {
+  deleteTicket,
   updateTicket,
   type TicketOptions,
   type TicketRow,
@@ -11,12 +12,18 @@ import { StatusBadge } from '../ui'
 
 const PROCESS_DATALIST_ID = 'ticket-process-options'
 const bodyCell = 'whitespace-nowrap px-3 py-2 align-top text-slate-700'
+// Pinned first column so the row action stays visible while the wide table
+// scrolls horizontally. bg-inherit picks up the <tr> background.
+const stickyCol =
+  'sticky left-0 z-10 w-[112px] border-r border-slate-200 bg-inherit'
 const inputClass =
   'w-full min-w-[7rem] rounded-lg border border-slate-300 px-2 py-1 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30'
 const ghostButton =
   'rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50'
 const primaryButton =
   'rounded-lg bg-brand px-3 py-1 text-sm font-semibold text-white transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50'
+const dangerButton =
+  'rounded-lg border border-negative/40 px-3 py-1 text-sm font-semibold text-negative hover:bg-negative/5 disabled:cursor-not-allowed disabled:opacity-50'
 
 interface RowForm {
   ticket_id: string
@@ -150,6 +157,11 @@ export function TicketEditableRow({
     },
   })
 
+  const remove = useMutation({
+    mutationFn: () => deleteTicket(row.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
+  })
+
   const patch = (part: Partial<RowForm>) =>
     setForm((current) => ({ ...current, ...part }))
 
@@ -189,7 +201,39 @@ export function TicketEditableRow({
 
   if (!isEditing) {
     return (
-      <tr className="border-b border-slate-100 last:border-0">
+      <tr className="border-b border-slate-100 bg-white last:border-0">
+        <td className={`${bodyCell} ${stickyCol}`}>
+          <div className="flex flex-col gap-1.5">
+            <button
+              type="button"
+              className={ghostButton}
+              onClick={onRequestEdit}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className={dangerButton}
+              disabled={remove.isPending}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Delete ticket ${row.ticket_id}? This cannot be undone.`,
+                  )
+                ) {
+                  remove.mutate()
+                }
+              }}
+            >
+              {remove.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+            {remove.error && (
+              <span className="text-xs text-negative" role="alert">
+                {remove.error.message}
+              </span>
+            )}
+          </div>
+        </td>
         <td className={`${bodyCell} font-medium text-ink`}>{row.ticket_id}</td>
         <td className={bodyCell}>{row.ticket_type}</td>
         <td className={bodyCell}>{row.priority_value ?? '—'}</td>
@@ -217,11 +261,6 @@ export function TicketEditableRow({
         >
           {row.note ?? '—'}
         </td>
-        <td className={bodyCell}>
-          <button type="button" className={ghostButton} onClick={onRequestEdit}>
-            Edit
-          </button>
-        </td>
       </tr>
     )
   }
@@ -229,9 +268,29 @@ export function TicketEditableRow({
   return (
     <>
       <tr
-        className="border-b border-slate-100 bg-slate-50/60"
+        className="border-b border-slate-100 bg-slate-50"
         onKeyDown={onKeyDown}
       >
+        <td className={`${bodyCell} ${stickyCol}`}>
+          <div className="flex flex-col gap-1.5">
+            <button
+              type="button"
+              className={primaryButton}
+              onClick={submit}
+              disabled={!canSave}
+            >
+              {save.isPending ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              className={ghostButton}
+              onClick={cancel}
+              disabled={save.isPending}
+            >
+              Cancel
+            </button>
+          </div>
+        </td>
         <td className={bodyCell}>
           <input
             className={inputClass}
@@ -344,16 +403,16 @@ export function TicketEditableRow({
             options={options.ams_years}
           />
         </td>
-        <td className={bodyCell} colSpan={2}>
-          <span className="text-xs text-slate-500">Note edited below ↓</span>
+        <td className={bodyCell} colSpan={1}>
+          <span className="text-xs text-slate-500">Note ↓</span>
         </td>
       </tr>
       <tr
-        className="border-b border-slate-100 bg-slate-50/60"
+        className="border-b border-slate-100 bg-slate-50"
         onKeyDown={onKeyDown}
       >
         <td className={bodyCell} colSpan={14}>
-          <div className="flex flex-col gap-2">
+          <div className="sticky left-0 flex max-w-3xl flex-col gap-2">
             <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Note
               <textarea
@@ -368,24 +427,6 @@ export function TicketEditableRow({
                 {save.error.message}
               </p>
             )}
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                className={ghostButton}
-                onClick={cancel}
-                disabled={save.isPending}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={primaryButton}
-                onClick={submit}
-                disabled={!canSave}
-              >
-                {save.isPending ? 'Saving…' : 'Save'}
-              </button>
-            </div>
           </div>
         </td>
       </tr>

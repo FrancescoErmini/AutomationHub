@@ -82,3 +82,8 @@ export async function updateTicket(
     }),
   )
 }
+
+export async function deleteTicket(id: number): Promise<void> {
+  const response = await apiFetch(`/api/v1/tickets/${id}`, { method: 'DELETE' })
+  if (!response.ok) await parseResponse(response)
+}

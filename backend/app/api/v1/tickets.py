@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, status
 
 from app.dependencies import TicketServiceDependency
 from app.schemas.ticket import TicketOptions, TicketRead, TicketUpdate
@@ -32,3 +32,8 @@ def update_ticket(
     service: TicketServiceDependency,
 ) -> TicketRead:
     return TicketRead(**service.update(ticket_pk, payload))
+
+
+@router.delete("/{ticket_pk}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_ticket(ticket_pk: int, service: TicketServiceDependency) -> None:
+    service.delete(ticket_pk)

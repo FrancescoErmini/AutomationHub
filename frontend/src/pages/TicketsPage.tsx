@@ -116,6 +116,9 @@ export function TicketsPage() {
           <table className="w-full min-w-[1400px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
+                <th
+                  className={`${headCell} sticky left-0 z-20 border-r border-slate-200 bg-slate-50`}
+                />
                 <th className={headCell}>Ticket ID</th>
                 <th className={headCell}>Type</th>
                 <th className={headCell}>Priority</th>
@@ -129,7 +132,6 @@ export function TicketsPage() {
                 <th className={headCell}>Company</th>
                 <th className={headCell}>AMS yr</th>
                 <th className={headCell}>Note</th>
-                <th className={headCell} />
               </tr>
             </thead>
             <tbody>
