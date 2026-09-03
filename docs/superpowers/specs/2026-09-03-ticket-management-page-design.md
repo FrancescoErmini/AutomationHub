@@ -1,5 +1,7 @@
 # Ticket Management Page
 
+> **Status:** Implemented 2026-09-03 on branch `feat/ticket-management` — plan `docs/superpowers/plans/2026-09-03-ticket-management-page.md`.
+
 ## Overview
 
 Ticket data entry today only happens through SQLAdmin, which is awkward for the
