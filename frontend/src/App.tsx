@@ -26,14 +26,17 @@ export function App() {
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="executive" element={<ExecutivePage />} />
         <Route path="simple-ops" element={<SimpleOpsPage />} />
-        <Route path="tickets" element={<TicketsPage />} />
         <Route path="sla-kpi" element={<SlaKpiPage />} />
         <Route path="ideas" element={<IdeasPage />} />
         <Route element={<RequireAuth />}>
           <Route path="ideas/new" element={<IdeaWizardPage />} />
         </Route>
-        {/* TODO: temporary — restore <RequireRole role="editor"> gate around this route */}
-        <Route path="process-economics" element={<ProcessEconomicsPage />} />
+        {/* Management area (reached via the gear menu). TODO: swap RequireAuth
+            for role gates — PM for business-cases, provider (EY) for tickets. */}
+        <Route element={<RequireAuth />}>
+          <Route path="process-economics" element={<ProcessEconomicsPage />} />
+          <Route path="tickets" element={<TicketsPage />} />
+        </Route>
         <Route path="ideas/:id" element={<IdeaDetailPage />} />
         <Route path="documentation" element={<DocumentationPage />} />
       </Route>
