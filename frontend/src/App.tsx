@@ -15,6 +15,7 @@ import { IdeasPage } from './pages/IdeasPage'
 import { ProcessEconomicsPage } from './pages/ProcessEconomicsPage'
 import { SimpleOpsPage } from './pages/SimpleOpsPage'
 import { SlaKpiPage } from './pages/SlaKpiPage'
+import { TicketsPage } from './pages/TicketsPage'
 
 export function App() {
   return (
@@ -25,6 +26,7 @@ export function App() {
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="executive" element={<ExecutivePage />} />
         <Route path="simple-ops" element={<SimpleOpsPage />} />
+        <Route path="tickets" element={<TicketsPage />} />
         <Route path="sla-kpi" element={<SlaKpiPage />} />
         <Route path="ideas" element={<IdeasPage />} />
         <Route element={<RequireAuth />}>

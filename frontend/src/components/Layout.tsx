@@ -43,6 +43,9 @@ export function Layout() {
             <NavLink to="/simple-ops" className={navClass}>
               Operations
             </NavLink>
+            <NavLink to="/tickets" className={navClass}>
+              Tickets
+            </NavLink>
             <NavLink to="/sla-kpi" className={navClass}>
               SLA / KPI
             </NavLink>
