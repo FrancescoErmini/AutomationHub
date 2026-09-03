@@ -10,8 +10,9 @@ view of "what still needs attention".
 
 This adds a dedicated **Tickets** page to the frontend with row-level inline
 editing of every raw ticket field, plus a default view that surfaces exactly the
-rows a manager cares about (recently touched + everything still open) and a
-search box for finding any other ticket by id, requestor, process, or note text.
+rows a manager cares about (touched in the last 14 days + everything still open)
+and a search box for finding any other ticket by id, requestor, process, or note
+text.
 
 It mirrors the existing **Process Economics** page/API pattern (row edit →
 inputs → Save/Cancel, React Query, FastAPI service with full-replace `PATCH`).
@@ -145,7 +146,7 @@ Empty strings from the client are normalised to `None` for nullable text
     When `q` is present the date filter is **not** applied (search spans the
     whole table); `scope` is ignored.
   - `q` empty + `scope="default"`: `WHERE end_date IS NULL OR start_date >=
-    :cutoff OR end_date >= :cutoff`, `cutoff = date.today() - timedelta(days=7)`.
+    :cutoff OR end_date >= :cutoff`, `cutoff = date.today() - timedelta(days=14)`.
   - `q` empty + `scope="all"`: no filter.
   - Order: `ORDER BY (end_date IS NOT NULL), start_date DESC NULLS LAST, id DESC`
     — open tickets first, newest first within each group.
@@ -301,7 +302,7 @@ Checklist for implementation completion:
 
 - `cd backend && ruff check . && ruff format --check .` clean; app imports / boots.
 - `cd frontend && npm run build && npm run lint` clean.
-- `GET /api/v1/tickets` — default scope returns open + last-7-day rows only;
+- `GET /api/v1/tickets` — default scope returns open + last-14-day rows only;
   `?scope=all` returns more; `?q=<substring>` matches across id/requestor/
   process/note and ignores the date filter.
 - `GET /api/v1/tickets/options` — every list populated, `ticket_types` distinct.
