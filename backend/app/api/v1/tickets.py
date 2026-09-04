@@ -1,9 +1,10 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, File, Form, Query, UploadFile, status
 
-from app.dependencies import TicketServiceDependency
+from app.dependencies import TicketImportServiceDependency, TicketServiceDependency
 from app.schemas.ticket import TicketCreate, TicketOptions, TicketRead, TicketUpdate
+from app.schemas.ticket_import import TicketImportReport
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
@@ -36,6 +37,18 @@ def list_tickets(
 @router.get("/options", response_model=TicketOptions)
 def ticket_options(service: TicketServiceDependency) -> TicketOptions:
     return TicketOptions(**service.get_options())
+
+
+# TODO: temporary — restore a RequireEditor dependency on this write endpoint,
+# consistent with update_ticket / create_ticket.
+@router.post("/import", response_model=TicketImportReport)
+async def import_tickets(
+    service: TicketImportServiceDependency,
+    file: Annotated[UploadFile, File()],
+    commit: Annotated[bool, Form()] = False,
+) -> TicketImportReport:
+    content = await file.read()
+    return service.run(content=content, commit=commit)
 
 
 @router.post("", response_model=TicketRead, status_code=status.HTTP_201_CREATED)
