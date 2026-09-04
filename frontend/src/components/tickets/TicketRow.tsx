@@ -10,6 +10,8 @@ import {
 } from '../../api/tickets'
 import { StatusBadge } from '../ui'
 import { RefSelect } from './RefSelect'
+import { TicketColorPicker } from './TicketColorPicker'
+import { contrastText } from './ticketColors'
 import {
   PROCESS_DATALIST_ID,
   deriveSupportLevelId,
@@ -31,6 +33,9 @@ const primaryButton =
   'rounded-lg bg-brand px-3 py-1 text-sm font-semibold text-white transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50'
 const dangerButton =
   'rounded-lg border border-negative/40 px-3 py-1 text-sm font-semibold text-negative hover:bg-negative/5 disabled:cursor-not-allowed disabled:opacity-50'
+
+// action column + 12 data columns; the Note row spans the full width below.
+export const TICKET_COLUMN_COUNT = 13
 
 export function TicketEditableRow({
   row,
@@ -115,68 +120,96 @@ export function TicketEditableRow({
   }
 
   if (!isEditing) {
+    const idStyle = row.ticket_color
+      ? {
+          backgroundColor: row.ticket_color,
+          color: contrastText(row.ticket_color),
+        }
+      : undefined
+
     return (
-      <tr className="border-b border-slate-100 bg-white last:border-0">
-        <td className={`${bodyCell} ${stickyCol}`}>
-          <div className="flex flex-col gap-1.5">
-            <button
-              type="button"
-              className={ghostButton}
-              onClick={onRequestEdit}
+      <>
+        <tr
+          className={`bg-white ${row.note ? '' : 'border-b border-slate-100 last:border-0'}`}
+        >
+          <td className={`${bodyCell} ${stickyCol}`}>
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                className={ghostButton}
+                onClick={onRequestEdit}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className={dangerButton}
+                disabled={remove.isPending}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `Delete ticket ${row.ticket_id}? This cannot be undone.`,
+                    )
+                  ) {
+                    remove.mutate()
+                  }
+                }}
+              >
+                {remove.isPending ? 'Deleting…' : 'Delete'}
+              </button>
+              {remove.error && (
+                <span className="text-xs text-negative" role="alert">
+                  {remove.error.message}
+                </span>
+              )}
+            </div>
+          </td>
+          <td className={`${bodyCell} font-medium text-ink`}>
+            <span
+              className={
+                row.ticket_color ? 'inline-block rounded px-1.5 py-0.5' : ''
+              }
+              style={idStyle}
             >
-              Edit
-            </button>
-            <button
-              type="button"
-              className={dangerButton}
-              disabled={remove.isPending}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Delete ticket ${row.ticket_id}? This cannot be undone.`,
-                  )
-                ) {
-                  remove.mutate()
-                }
-              }}
+              {row.ticket_id}
+            </span>
+          </td>
+          <td
+            className={`${bodyCell} max-w-[220px] truncate`}
+            title={row.process_name ?? ''}
+          >
+            {row.process_name ?? '—'}
+          </td>
+          <td className={bodyCell}>{row.requestor ?? '—'}</td>
+          <td className={bodyCell}>{row.start_date ?? '—'}</td>
+          <td className={bodyCell}>{row.end_date ?? '—'}</td>
+          <td className={bodyCell}>
+            <StatusBadge tone={row.is_open ? 'warning' : 'positive'}>
+              {row.is_open ? 'Open' : 'Closed'}
+            </StatusBadge>
+          </td>
+          <td className={bodyCell}>{row.root_cause_name ?? '—'}</td>
+          <td className={bodyCell}>{row.is_1l ? '1L' : '2L'}</td>
+          <td className={bodyCell}>{row.company_name ?? '—'}</td>
+          <td className={bodyCell}>{row.ams_year_code ?? '—'}</td>
+          <td className={bodyCell}>{row.priority_value ?? '—'}</td>
+          <td className={bodyCell}>{row.ticket_type}</td>
+        </tr>
+        {row.note && (
+          <tr className="border-b border-slate-100 bg-white last:border-0">
+            <td className={`${stickyCol} bg-white`} />
+            <td
+              className={`${bodyCell} whitespace-normal`}
+              colSpan={TICKET_COLUMN_COUNT - 1}
             >
-              {remove.isPending ? 'Deleting…' : 'Delete'}
-            </button>
-            {remove.error && (
-              <span className="text-xs text-negative" role="alert">
-                {remove.error.message}
+              <span className="mr-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Note
               </span>
-            )}
-          </div>
-        </td>
-        <td className={`${bodyCell} font-medium text-ink`}>{row.ticket_id}</td>
-        <td className={bodyCell}>{row.ticket_type}</td>
-        <td className={bodyCell}>{row.priority_value ?? '—'}</td>
-        <td
-          className={`${bodyCell} max-w-[220px] truncate`}
-          title={row.process_name ?? ''}
-        >
-          {row.process_name ?? '—'}
-        </td>
-        <td className={bodyCell}>{row.requestor ?? '—'}</td>
-        <td className={bodyCell}>{row.start_date ?? '—'}</td>
-        <td className={bodyCell}>{row.end_date ?? '—'}</td>
-        <td className={bodyCell}>
-          <StatusBadge tone={row.is_open ? 'warning' : 'positive'}>
-            {row.is_open ? 'Open' : 'Closed'}
-          </StatusBadge>
-        </td>
-        <td className={bodyCell}>{row.root_cause_name ?? '—'}</td>
-        <td className={bodyCell}>{row.is_1l ? '1L' : '2L'}</td>
-        <td className={bodyCell}>{row.company_name ?? '—'}</td>
-        <td className={bodyCell}>{row.ams_year_code ?? '—'}</td>
-        <td
-          className={`${bodyCell} max-w-[260px] truncate`}
-          title={row.note ?? ''}
-        >
-          {row.note ?? '—'}
-        </td>
-      </tr>
+              <span className="text-slate-700">{row.note}</span>
+            </td>
+          </tr>
+        )}
+      </>
     )
   }
 
@@ -212,28 +245,6 @@ export function TicketEditableRow({
             value={form.ticket_id}
             onChange={(event) => patch({ ticket_id: event.target.value })}
             aria-label="Ticket ID"
-          />
-        </td>
-        <td className={bodyCell}>
-          <input
-            className={inputClass}
-            list="ticket-type-options"
-            value={form.ticket_type}
-            onChange={(event) => patch({ ticket_type: event.target.value })}
-            aria-label="Ticket type"
-          />
-          <datalist id="ticket-type-options">
-            {options.ticket_types.map((type) => (
-              <option key={type} value={type} />
-            ))}
-          </datalist>
-        </td>
-        <td className={bodyCell}>
-          <RefSelect
-            label="Priority"
-            value={form.priority_id}
-            onChange={(next) => patch({ priority_id: next })}
-            options={options.priorities}
           />
         </td>
         <td className={bodyCell}>
@@ -318,16 +329,36 @@ export function TicketEditableRow({
             options={options.ams_years}
           />
         </td>
-        <td className={bodyCell} colSpan={1}>
-          <span className="text-xs text-slate-500">Note ↓</span>
+        <td className={bodyCell}>
+          <RefSelect
+            label="Priority"
+            value={form.priority_id}
+            onChange={(next) => patch({ priority_id: next })}
+            options={options.priorities}
+          />
+        </td>
+        <td className={bodyCell}>
+          <input
+            className={inputClass}
+            list="ticket-type-options"
+            value={form.ticket_type}
+            onChange={(event) => patch({ ticket_type: event.target.value })}
+            aria-label="Ticket type"
+          />
+          <datalist id="ticket-type-options">
+            {options.ticket_types.map((type) => (
+              <option key={type} value={type} />
+            ))}
+          </datalist>
         </td>
       </tr>
       <tr
         className="border-b border-slate-100 bg-slate-50"
         onKeyDown={onKeyDown}
       >
-        <td className={bodyCell} colSpan={14}>
-          <div className="sticky left-0 flex max-w-3xl flex-col gap-2">
+        <td className={`${stickyCol} bg-slate-50`} />
+        <td className={bodyCell} colSpan={TICKET_COLUMN_COUNT - 1}>
+          <div className="flex max-w-3xl flex-col gap-3">
             <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Note
               <textarea
@@ -337,6 +368,10 @@ export function TicketEditableRow({
                 onChange={(event) => patch({ note: event.target.value })}
               />
             </label>
+            <TicketColorPicker
+              value={form.ticket_color || null}
+              onChange={(next) => patch({ ticket_color: next ?? '' })}
+            />
             {save.error && (
               <p className="text-sm text-negative" role="alert">
                 {save.error.message}

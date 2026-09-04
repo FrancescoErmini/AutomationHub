@@ -18,6 +18,8 @@ export interface TicketFormState {
   company_id: string
   ams_year_id: string
   note: string
+  /** hex string, or '' for no colour */
+  ticket_color: string
 }
 
 export const EMPTY_TICKET_FORM: TicketFormState = {
@@ -33,6 +35,7 @@ export const EMPTY_TICKET_FORM: TicketFormState = {
   company_id: '',
   ams_year_id: '',
   note: '',
+  ticket_color: '',
 }
 
 export function rowToForm(row: TicketRow): TicketFormState {
@@ -49,6 +52,7 @@ export function rowToForm(row: TicketRow): TicketFormState {
     company_id: row.company_id === null ? '' : String(row.company_id),
     ams_year_id: row.ams_year_id === null ? '' : String(row.ams_year_id),
     note: row.note ?? '',
+    ticket_color: row.ticket_color ?? '',
   }
 }
 
@@ -99,5 +103,6 @@ export function formToPayload(
     company_id: numOrNull(form.company_id),
     ams_year_id: numOrNull(form.ams_year_id),
     note: form.note.trim() || null,
+    ticket_color: form.ticket_color || null,
   }
 }

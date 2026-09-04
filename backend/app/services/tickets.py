@@ -174,6 +174,7 @@ class TicketService:
             "ams_year_id": t.ams_year_id,
             "ams_year_code": t.ams_year.code if t.ams_year else None,
             "note": t.note,
+            "ticket_color": t.ticket_color,
             "created_at": t.created_at,
             "is_open": t.end_date is None,
         }

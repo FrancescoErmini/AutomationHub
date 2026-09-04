@@ -2,6 +2,22 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+# Fixed 8-colour rainbow palette for the Ticket ID label. NULL / None means
+# "no colour" (the cell keeps its normal background). Kept in sync with the
+# frontend list in src/components/tickets/ticketColors.ts.
+TICKET_COLORS: frozenset[str] = frozenset(
+    {
+        "#ef4444",
+        "#f97316",
+        "#eab308",
+        "#22c55e",
+        "#14b8a6",
+        "#3b82f6",
+        "#6366f1",
+        "#a855f7",
+    }
+)
+
 
 class TicketRead(BaseModel):
     id: int
@@ -24,6 +40,7 @@ class TicketRead(BaseModel):
     ams_year_id: int | None
     ams_year_code: str | None
     note: str | None
+    ticket_color: str | None
     created_at: datetime
     is_open: bool
 
@@ -45,12 +62,20 @@ class TicketUpdate(BaseModel):
     company_id: int | None = None
     ams_year_id: int | None = None
     note: str | None = None
+    ticket_color: str | None = None
 
-    @field_validator("requestor", "note", mode="before")
+    @field_validator("requestor", "note", "ticket_color", mode="before")
     @classmethod
     def _blank_to_none(cls, value: object) -> object:
         if isinstance(value, str) and value.strip() == "":
             return None
+        return value
+
+    @field_validator("ticket_color")
+    @classmethod
+    def _known_color(cls, value: str | None) -> str | None:
+        if value is not None and value not in TICKET_COLORS:
+            raise ValueError(f"unknown ticket colour: {value!r}")
         return value
 
 

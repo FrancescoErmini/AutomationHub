@@ -189,6 +189,7 @@ class Ticket(Base):
         ForeignKey(f"{SCHEMA}.company.id"), nullable=True, index=True
     )
     note: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    ticket_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     ams_year: Mapped["AmsYear | None"] = relationship()

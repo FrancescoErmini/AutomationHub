@@ -4,7 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchTicketOptions, fetchTickets } from '../api/tickets'
 import { AsyncSection } from '../components/AsyncSection'
 import { NewTicketForm } from '../components/tickets/NewTicketForm'
-import { TicketEditableRow } from '../components/tickets/TicketRow'
+import {
+  TICKET_COLUMN_COUNT,
+  TicketEditableRow,
+} from '../components/tickets/TicketRow'
 import { PageHeader } from '../components/ui'
 
 const PROCESS_DATALIST_ID = 'ticket-process-options'
@@ -138,8 +141,6 @@ export function TicketsPage() {
                   className={`${headCell} sticky left-0 z-20 border-r border-slate-200 bg-slate-50`}
                 />
                 <th className={headCell}>Ticket ID</th>
-                <th className={headCell}>Type</th>
-                <th className={headCell}>Priority</th>
                 <th className={headCell}>Process</th>
                 <th className={headCell}>Requestor</th>
                 <th className={headCell}>Start</th>
@@ -149,7 +150,8 @@ export function TicketsPage() {
                 <th className={headCell}>Level</th>
                 <th className={headCell}>Company</th>
                 <th className={headCell}>AMS yr</th>
-                <th className={headCell}>Note</th>
+                <th className={headCell}>Priority</th>
+                <th className={headCell}>Type</th>
               </tr>
             </thead>
             <tbody>
@@ -176,7 +178,7 @@ export function TicketsPage() {
               {rows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={14}
+                    colSpan={TICKET_COLUMN_COUNT}
                     className="px-3 py-6 text-center text-slate-500"
                   >
                     {searching

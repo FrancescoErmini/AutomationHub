@@ -21,6 +21,7 @@ export interface TicketRow {
   ams_year_id: number | null
   ams_year_code: string | null
   note: string | null
+  ticket_color: string | null
   created_at: string
   is_open: boolean
 }
@@ -54,6 +55,7 @@ export interface TicketUpdate {
   company_id: number | null
   ams_year_id: number | null
   note: string | null
+  ticket_color: string | null
 }
 
 export async function fetchTickets(params: {
