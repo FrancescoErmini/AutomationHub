@@ -16,7 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
-SCHEMA = "core"
+SCHEMA = "automation_hub"
 
 
 class ReferenceVariable(Base):

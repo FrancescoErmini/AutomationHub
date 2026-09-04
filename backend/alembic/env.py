@@ -37,7 +37,7 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
         include_object=include_object,
-        version_table_schema="public",
+        version_table_schema="automation_hub",
         include_schemas=True,
     )
     with context.begin_transaction():
@@ -56,7 +56,7 @@ def run_migrations_online() -> None:
             target_metadata=target_metadata,
             compare_type=True,
             include_object=include_object,
-            version_table_schema="public",
+            version_table_schema="automation_hub",
             include_schemas=True,
         )
         with context.begin_transaction():

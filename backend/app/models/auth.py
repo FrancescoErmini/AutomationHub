@@ -4,6 +4,7 @@ from sqlalchemy import CheckConstraint, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.models.core import SCHEMA
 
 
 class AppUser(Base):
@@ -15,6 +16,7 @@ class AppUser(Base):
     __tablename__ = "app_user"
     __table_args__ = (
         CheckConstraint("role IN ('user', 'editor', 'admin')", name="ck_app_user_role"),
+        {"schema": SCHEMA},
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

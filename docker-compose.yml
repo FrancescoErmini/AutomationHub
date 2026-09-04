@@ -2,7 +2,7 @@ name: automation-hub
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-automation_hub}
       POSTGRES_USER: ${POSTGRES_USER:-automation_hub}
@@ -10,7 +10,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_pg16:/var/lib/postgresql/data
       - ./docker/postgres/init-test-db.sql:/docker-entrypoint-initdb.d/10-init-test-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-automation_hub} -d ${POSTGRES_DB:-automation_hub}"]
@@ -72,5 +72,6 @@ services:
 
 volumes:
   postgres_data:
+  postgres_data_pg16:
   frontend_node_modules:
 
