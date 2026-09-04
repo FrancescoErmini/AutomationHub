@@ -158,11 +158,12 @@ export function TicketsPage() {
               {(() => {
                 const opts = options.data
                 if (!opts) return null
-                return rows.map((row) => (
+                return rows.map((row, index) => (
                   <TicketEditableRow
                     key={row.id}
                     row={row}
                     options={opts}
+                    index={index}
                     isEditing={editingId === row.id}
                     onRequestEdit={() => requestEdit(row.id)}
                     onDone={() => {

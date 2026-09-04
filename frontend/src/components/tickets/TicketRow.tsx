@@ -41,6 +41,7 @@ export function TicketEditableRow({
   row,
   options,
   isEditing,
+  index = 0,
   onRequestEdit,
   onDone,
   onDirtyChange,
@@ -48,6 +49,7 @@ export function TicketEditableRow({
   row: TicketRow
   options: TicketOptions
   isEditing: boolean
+  index?: number
   onRequestEdit: () => void
   onDone: () => void
   onDirtyChange: (dirty: boolean) => void
@@ -127,12 +129,24 @@ export function TicketEditableRow({
         }
       : undefined
 
+    // One zebra tint per ticket, shared by the data row and its note row so
+    // the pair reads as a single record.
+    const tint = index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+    const hasNote = Boolean(row.note)
+    // Data cells: tighten the bottom padding when a note row follows so the
+    // two lines sit close together.
+    const viewCell = `whitespace-nowrap px-3 pt-2.5 align-top text-slate-700 ${
+      hasNote ? 'pb-1' : 'pb-2.5'
+    }`
+
     return (
       <>
         <tr
-          className={`bg-white ${row.note ? '' : 'border-b border-slate-100 last:border-0'}`}
+          className={`${tint} ${
+            hasNote ? '' : 'border-b border-slate-200 last:border-0'
+          }`}
         >
-          <td className={`${bodyCell} ${stickyCol}`}>
+          <td className={`${viewCell} ${stickyCol}`}>
             <div className="flex flex-col gap-1.5">
               <button
                 type="button"
@@ -164,7 +178,7 @@ export function TicketEditableRow({
               )}
             </div>
           </td>
-          <td className={`${bodyCell} font-medium text-ink`}>
+          <td className={`${viewCell} font-medium text-ink`}>
             <span
               className={
                 row.ticket_color ? 'inline-block rounded px-1.5 py-0.5' : ''
@@ -175,35 +189,38 @@ export function TicketEditableRow({
             </span>
           </td>
           <td
-            className={`${bodyCell} max-w-[220px] truncate`}
+            className={`${viewCell} max-w-[220px] truncate`}
             title={row.process_name ?? ''}
           >
             {row.process_name ?? '—'}
           </td>
-          <td className={bodyCell}>{row.requestor ?? '—'}</td>
-          <td className={bodyCell}>{row.start_date ?? '—'}</td>
-          <td className={bodyCell}>{row.end_date ?? '—'}</td>
-          <td className={bodyCell}>
+          <td className={viewCell}>{row.requestor ?? '—'}</td>
+          <td className={viewCell}>{row.start_date ?? '—'}</td>
+          <td className={viewCell}>{row.end_date ?? '—'}</td>
+          <td className={viewCell}>
             <StatusBadge tone={row.is_open ? 'warning' : 'positive'}>
               {row.is_open ? 'Open' : 'Closed'}
             </StatusBadge>
           </td>
-          <td className={bodyCell}>{row.root_cause_name ?? '—'}</td>
-          <td className={bodyCell}>{row.is_1l ? '1L' : '2L'}</td>
-          <td className={bodyCell}>{row.company_name ?? '—'}</td>
-          <td className={bodyCell}>{row.ams_year_code ?? '—'}</td>
-          <td className={bodyCell}>{row.priority_value ?? '—'}</td>
-          <td className={bodyCell}>{row.ticket_type}</td>
+          <td className={viewCell}>{row.root_cause_name ?? '—'}</td>
+          <td className={viewCell}>{row.is_1l ? '1L' : '2L'}</td>
+          <td className={viewCell}>{row.company_name ?? '—'}</td>
+          <td className={viewCell}>{row.ams_year_code ?? '—'}</td>
+          <td className={viewCell}>{row.priority_value ?? '—'}</td>
+          <td className={viewCell}>{row.ticket_type}</td>
         </tr>
-        {row.note && (
-          <tr className="border-b border-slate-100 bg-white last:border-0">
-            <td className={`${stickyCol} bg-white`} />
-            <td className={bodyCell} colSpan={TICKET_COLUMN_COUNT - 1}>
-              <div className="max-w-[80ch] whitespace-normal break-words">
-                <span className="mr-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        {hasNote && (
+          <tr className={`${tint} border-b border-slate-200 last:border-0`}>
+            <td className={stickyCol} />
+            <td
+              className="px-3 pb-2.5 pt-0 align-top"
+              colSpan={TICKET_COLUMN_COUNT - 1}
+            >
+              <div className="w-0 min-w-full whitespace-normal break-words leading-snug">
+                <span className="mr-2 align-[1px] text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Note
                 </span>
-                <span className="text-slate-700">{row.note}</span>
+                <span className="text-slate-600">{row.note}</span>
               </div>
             </td>
           </tr>
