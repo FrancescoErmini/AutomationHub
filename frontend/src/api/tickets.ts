@@ -123,3 +123,32 @@ export async function deleteTicket(id: number): Promise<void> {
   const response = await apiFetch(`/api/v1/tickets/${id}`, { method: 'DELETE' })
   if (!response.ok) await parseResponse(response)
 }
+
+export interface TicketImportRowReport {
+  line: number
+  ticket_id: string | null
+  action: 'inserted' | 'updated' | 'skipped'
+  errors: string[]
+}
+
+export interface TicketImportReport {
+  committed: boolean
+  total_rows: number
+  inserted: number
+  updated: number
+  skipped: number
+  rows: TicketImportRowReport[]
+}
+
+export async function importTicketsCsv(
+  file: File,
+  commit: boolean,
+): Promise<TicketImportReport> {
+  const body = new FormData()
+  body.append('file', file)
+  body.append('commit', String(commit))
+  // No explicit Content-Type: the browser sets the multipart boundary.
+  return parseResponse<TicketImportReport>(
+    await apiFetch('/api/v1/tickets/import', { method: 'POST', body }),
+  )
+}
