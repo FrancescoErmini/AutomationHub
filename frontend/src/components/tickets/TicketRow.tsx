@@ -154,8 +154,9 @@ export function TicketEditableRow({
       : undefined
 
     // One zebra tint per ticket, shared by the data row and its note row so
-    // the pair reads as a single record.
-    const tint = index % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+    // the pair reads as a single record. The odd-row tint is a pale wash of
+    // the theme navy (--ah-navy #001C3E).
+    const tint = index % 2 === 0 ? 'bg-white' : 'bg-[#EDF1F8]'
     const hasNote = Boolean(row.note)
     // Data cells: tighten the bottom padding when a note row follows so the
     // two lines sit close together.
