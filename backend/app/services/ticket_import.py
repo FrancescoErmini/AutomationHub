@@ -27,7 +27,6 @@ _REQUIRED_COLUMNS: frozenset[str] = frozenset(
         "TICKET",
         "TICKET_TYPE",
         "PROCESS",
-        "Processo",
         "REQUESTOR",
         "START DATE",
         "END DATE",
@@ -197,15 +196,13 @@ class TicketImportService:
             errors.append("missing ticket type")
 
         process_id: int | None = None
-        p_raw, po_raw = raw["PROCESS"].strip(), raw["Processo"].strip()
-        if not p_raw and not po_raw:
+        p_raw = raw["PROCESS"].strip()
+        if not p_raw:
             errors.append("missing process")
         else:
-            process_id = refs["processes"].get(_normalize_process(p_raw)) or refs["processes"].get(
-                _normalize_process(po_raw)
-            )
+            process_id = refs["processes"].get(_normalize_process(p_raw))
             if process_id is None:
-                errors.append(f"unknown process: {(p_raw or po_raw)!r}")
+                errors.append(f"unknown process: {p_raw!r}")
 
         company_id: int | None = None
         c_raw = raw["COMPANY"].strip()

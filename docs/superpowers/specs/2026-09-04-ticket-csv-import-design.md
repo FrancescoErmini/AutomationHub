@@ -1,6 +1,11 @@
 # Ticket CSV Import
 
-> **Status:** Design — not yet implemented.
+> **Status:** Implemented 2026-09-04 on branch `feat/ticket-csv-import` (merged to `master`) —
+> plan `docs/superpowers/plans/2026-09-04-ticket-csv-import.md`.
+>
+> **Update 2026-09-04:** the source export's `Processo` column was a mistake in how the
+> file was produced — dropped. The importer reads `PROCESS` only; see "Process name
+> resolution" below.
 
 ## Overview
 
@@ -55,9 +60,13 @@ remaining rows still import.
 Header (exact, order-independent), from `data/Tickets.csv`:
 
 ```
-ID, AMS_YEAR, TICKET, TICKET_TYPE, PROCESS, Processo, REQUESTOR,
+ID, AMS_YEAR, TICKET, TICKET_TYPE, PROCESS, REQUESTOR,
 START DATE, END DATE, ROOT CAUSE, IS 1L, COMPANY, NOTE
 ```
+
+A stray `Processo` column (a duplicate of `PROCESS`, sometimes with a trailing
+` PRD`) is tolerated if present — the importer never reads it — but is not
+required.
 
 If the uploaded file's header is missing any of the columns the importer reads
 (everything except `ID`), the endpoint returns `422` with the missing-column
@@ -71,7 +80,7 @@ list and writes nothing.
 |---|---|---|
 | `TICKET` | `ticket_id` | `.strip()`; the upsert key |
 | `TICKET_TYPE` | `ticket_type` | `.strip()` |
-| `PROCESS`, then `Processo` | `process_id` | normalized lookup (see below) |
+| `PROCESS` | `process_id` | normalized lookup (see below) |
 | `REQUESTOR` | `requestor` | `.strip()` or `NULL` |
 | `START DATE` | `start_date` | `datetime.strptime(v, "%d/%m/%Y").date()`; blank → `NULL` |
 | `END DATE` | `end_date` | same |
@@ -90,8 +99,8 @@ list and writes nothing.
 
 Build a lookup from `process.canonical_name`, key = the name lowercased, trimmed,
 inner whitespace collapsed to single spaces, and a trailing ` prd` removed.
-For each row: normalize `PROCESS` and look it up; if that misses, normalize
-`Processo` and look it up. First hit wins. No match, or both cells blank → skip.
+For each row: normalize `PROCESS` and look it up. No match, or a blank cell →
+skip.
 
 Note `RPA - RABOT` (39 rows) resolves to nothing on purpose — the DB has four
 distinct RABOT processes and no bare one; those rows are reported as
@@ -107,8 +116,8 @@ first hard error below. Order does not matter — collect all that apply.
 | `TICKET` blank | `missing ticket id` |
 | `ticket_id` occurs more than once in the file | `duplicate ticket id in file (N occurrences)` |
 | `TICKET_TYPE` blank | `missing ticket type` |
-| process cells blank | `missing process` |
-| process given but unresolved | `unknown process: '<raw PROCESS or Processo>'` |
+| `PROCESS` blank | `missing process` |
+| `PROCESS` given but unresolved | `unknown process: '<raw PROCESS>'` |
 | `COMPANY` blank or unresolved | `unknown company: '<raw>'` / `missing company` |
 | `AMS_YEAR` unresolved | `unknown AMS year: '<raw>'` |
 | `ROOT CAUSE` non-blank and unresolved | `unknown root cause: '<raw>'` |
@@ -179,12 +188,12 @@ Edited: `app/api/v1/tickets.py` (route), `app/dependencies.py` (provider).
   1. `.csv` file input.
   2. On pick → call `importTicketsCsv(file, false)`. Pending spinner.
   3. Preview view: summary line
-     (`717 rows ready — 8 new, 709 updates · 53 skipped`) + a scrollable table
+     (`714 rows ready — 0 new, 714 updates · 56 skipped`) + a scrollable table
      of the skipped rows (`line`, `ticket_id`, joined `errors`).
   4. Actions: **Download report** (CSV built client-side from `rows`),
      **Cancel**, **Apply import** (disabled when `inserted + updated === 0`).
   5. On Apply → `importTicketsCsv(file, true)` → replace body with the final
-     report (`709 updated, 8 inserted, 53 skipped`) and a **Close** button;
+     report (`714 updated, 0 inserted, 56 skipped`) and a **Close** button;
      `queryClient.invalidateQueries({ queryKey: ['tickets'] })`.
   6. A `422`/network error renders inline as `role="alert"` (same pattern as
      `NewTicketForm`); the dialog stays open.
@@ -193,13 +202,13 @@ Edited: `app/api/v1/tickets.py` (route), `app/dependencies.py` (provider).
 
 ## Manual test plan
 
-1. **Preview** `data/Tickets.csv`: report shows ~717 ready (~8 insert, ~709
-   update), ~53 skipped. Spot-check reasons: 39 × `unknown process: 'RPA - RABOT'`,
-   2 × `unknown process: 'RPA - Editing Codes - Mazinga'`, ~6 blank/typo process,
+1. **Preview** `data/Tickets.csv`: report shows ~714 ready, ~56 skipped. Spot-check
+   reasons: 39 × `unknown process: 'RPA - RABOT'`,
+   2 × `unknown process: 'RPA - Editing Codes - Mazinga'`, ~7 `missing process`,
    7 × `missing ticket id`, 4 rows across the 2 duplicated ids, ~5 invalid dates.
 2. **Apply**: Tickets page refreshes; open a previously-missing ticket and a
    previously-existing one and confirm values match the CSV.
-3. **Idempotent re-run**: preview again → 0 insert, ~709 update, same skips.
+3. **Idempotent re-run**: preview again → 0 insert, ~714 update, same skips.
 4. **CSV wins**: edit one ticket's `note` and `priority` in SQLAdmin, re-import,
    confirm the note reverts to the CSV text and priority is back to `3`.
 5. **Bad header**: upload a CSV with `TICKET` renamed → dialog shows the
