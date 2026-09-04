@@ -18,8 +18,27 @@ from app.models.core import (
 )
 from app.schemas.ticket import TicketCreate, TicketUpdate
 
-_DEFAULT_WINDOW_DAYS = 14
 _MAX_LIMIT = 5000
+
+# Rolling-day windows for the ``period`` filter; the calendar-based options
+# (month / year / last_year) are handled separately in ``_period_bounds``.
+_PERIOD_DAYS: dict[str, int] = {"7d": 7, "14d": 14, "30d": 30, "90d": 90}
+
+
+def _period_bounds(period: str) -> tuple[date | None, date | None]:
+    """(from, to) inclusive bounds on ``start_date`` for a ``period`` value.
+    ``None`` on either side means unbounded; ``all`` -> (None, None)."""
+    today = date.today()
+    if period in _PERIOD_DAYS:
+        return today - timedelta(days=_PERIOD_DAYS[period]), None
+    if period == "month":
+        return today.replace(day=1), None
+    if period == "year":
+        return date(today.year, 1, 1), None
+    if period == "last_year":
+        return date(today.year - 1, 1, 1), date(today.year - 1, 12, 31)
+    return None, None
+
 
 # Editable FK fields -> the model each points at, for existence checks on update.
 _FK_MODELS: dict[str, type[Any]] = {
@@ -36,7 +55,17 @@ class TicketService:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def list_tickets(self, *, scope: str, q: str | None, limit: int) -> list[dict[str, Any]]:
+    def list_tickets(
+        self,
+        *,
+        status: str = "all",
+        period: str = "14d",
+        level: str = "all",
+        root_cause_id: int | None = None,
+        ticket_type: str | None = None,
+        q: str | None = None,
+        limit: int,
+    ) -> list[dict[str, Any]]:
         stmt = select(Ticket).options(
             selectinload(Ticket.priority),
             selectinload(Ticket.process),
@@ -45,6 +74,28 @@ class TicketService:
             selectinload(Ticket.company),
             selectinload(Ticket.ams_year),
         )
+
+        if status == "open":
+            stmt = stmt.where(Ticket.end_date.is_(None))
+        elif status == "closed":
+            stmt = stmt.where(Ticket.end_date.is_not(None))
+
+        start_from, start_to = _period_bounds(period)
+        if start_from is not None:
+            stmt = stmt.where(Ticket.start_date.is_not(None), Ticket.start_date >= start_from)
+        if start_to is not None:
+            stmt = stmt.where(Ticket.start_date <= start_to)
+
+        if level == "1l":
+            stmt = stmt.where(Ticket.is_1l.is_(True))
+        elif level == "2l":
+            stmt = stmt.where(Ticket.is_1l.is_(False))
+
+        if root_cause_id is not None:
+            stmt = stmt.where(Ticket.root_cause_id == root_cause_id)
+
+        if ticket_type:
+            stmt = stmt.where(Ticket.ticket_type == ticket_type)
 
         term = (q or "").strip()
         if term:
@@ -55,15 +106,6 @@ class TicketService:
                     Ticket.requestor.ilike(pattern),
                     Process.canonical_name.ilike(pattern),
                     Ticket.note.ilike(pattern),
-                )
-            )
-        elif scope == "default":
-            cutoff = date.today() - timedelta(days=_DEFAULT_WINDOW_DAYS)
-            stmt = stmt.where(
-                or_(
-                    Ticket.end_date.is_(None),
-                    Ticket.start_date >= cutoff,
-                    Ticket.end_date >= cutoff,
                 )
             )
 

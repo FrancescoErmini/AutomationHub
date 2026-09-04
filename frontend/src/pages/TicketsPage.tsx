@@ -1,18 +1,38 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchTicketOptions, fetchTickets } from '../api/tickets'
+import {
+  fetchTicketOptions,
+  fetchTickets,
+  type TicketFilters,
+  type TicketLevelFilter,
+  type TicketPeriodFilter,
+  type TicketStatusFilter,
+} from '../api/tickets'
 import { AsyncSection } from '../components/AsyncSection'
 import { NewTicketForm } from '../components/tickets/NewTicketForm'
 import {
   TICKET_COLUMN_COUNT,
   TicketEditableRow,
 } from '../components/tickets/TicketRow'
-import { PageHeader } from '../components/ui'
+import { KpiStat, PageHeader } from '../components/ui'
 
 const PROCESS_DATALIST_ID = 'ticket-process-options'
 const headCell =
   'whitespace-nowrap px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500'
+const selectClass =
+  'rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30'
+
+const PERIOD_OPTIONS: { value: TicketPeriodFilter; label: string }[] = [
+  { value: 'all', label: 'All time' },
+  { value: '7d', label: 'Last 7 days' },
+  { value: '14d', label: 'Last 14 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '90d', label: 'Last 90 days' },
+  { value: 'month', label: 'This month' },
+  { value: 'year', label: 'This year' },
+  { value: 'last_year', label: 'Last year' },
+]
 
 function useDebounced<T>(value: T, ms: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -23,11 +43,23 @@ function useDebounced<T>(value: T, ms: number): T {
   return debounced
 }
 
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      {label}
+      {children}
+    </label>
+  )
+}
+
 export function TicketsPage() {
-  const [scope, setScope] = useState<'default' | 'all'>('default')
+  const [status, setStatus] = useState<TicketStatusFilter>('all')
+  const [period, setPeriod] = useState<TicketPeriodFilter>('14d')
+  const [level, setLevel] = useState<TicketLevelFilter>('all')
+  const [rootCauseId, setRootCauseId] = useState<number | null>(null)
+  const [ticketType, setTicketType] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounced(search.trim(), 300)
-  const searching = debouncedSearch !== ''
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
@@ -52,34 +84,51 @@ export function TicketsPage() {
     staleTime: 5 * 60_000,
   })
 
+  const filters: TicketFilters = {
+    status,
+    period,
+    level,
+    rootCauseId,
+    ticketType,
+    q: debouncedSearch,
+  }
+
   const tickets = useQuery({
-    queryKey: ['tickets', scope, debouncedSearch],
-    queryFn: () => fetchTickets({ scope, q: debouncedSearch }),
+    queryKey: [
+      'tickets',
+      'list',
+      status,
+      period,
+      level,
+      rootCauseId,
+      ticketType,
+      debouncedSearch,
+    ],
+    queryFn: () => fetchTickets(filters),
   })
 
   const processOptions = options.data?.processes ?? []
+  const rootCauseOptions = options.data?.root_causes ?? []
+  const ticketTypeOptions = options.data?.ticket_types ?? []
   const rows = useMemo(() => tickets.data ?? [], [tickets.data])
 
-  const toggleBtn = (value: 'default' | 'all', label: string) => (
-    <button
-      type="button"
-      onClick={() => setScope(value)}
-      disabled={searching}
-      className={`rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-        scope === value
-          ? 'bg-brand text-white'
-          : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-      }`}
-    >
-      {label}
-    </button>
+  const stats = useMemo(
+    () => ({
+      total: rows.length,
+      open: rows.filter((row) => row.is_open).length,
+      twoL: rows.filter((row) => !row.is_1l).length,
+      incident: rows.filter(
+        (row) => row.ticket_type.toLowerCase() === 'incident',
+      ).length,
+    }),
+    [rows],
   )
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Tickets"
-        subtitle="Review and edit raw ticket records inline. The default view shows every ticket still open plus anything opened or closed in the last 14 days; search spans all tickets."
+        subtitle="Review and edit raw ticket records inline. Combine the filters to narrow the list; the page opens on tickets opened in the last 14 days."
         action={
           <button
             type="button"
@@ -98,23 +147,100 @@ export function TicketsPage() {
         />
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search id, requestor, process, or note…"
-          className="w-full max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-        />
-        <div className="flex gap-2">
-          {toggleBtn('default', 'Recent & open')}
-          {toggleBtn('all', 'All tickets')}
-        </div>
-        {searching && (
-          <span className="text-xs text-slate-500">
-            Showing search results across all tickets
-          </span>
-        )}
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label="Status">
+          <select
+            className={selectClass}
+            value={status}
+            onChange={(event) =>
+              setStatus(event.target.value as TicketStatusFilter)
+            }
+          >
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+          </select>
+        </Field>
+        <Field label="Period">
+          <select
+            className={selectClass}
+            value={period}
+            onChange={(event) =>
+              setPeriod(event.target.value as TicketPeriodFilter)
+            }
+          >
+            {PERIOD_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="AMS level">
+          <select
+            className={selectClass}
+            value={level}
+            onChange={(event) =>
+              setLevel(event.target.value as TicketLevelFilter)
+            }
+          >
+            <option value="all">All</option>
+            <option value="1l">1L</option>
+            <option value="2l">2L</option>
+          </select>
+        </Field>
+        <Field label="Root cause">
+          <select
+            className={selectClass}
+            value={rootCauseId === null ? '' : String(rootCauseId)}
+            onChange={(event) =>
+              setRootCauseId(
+                event.target.value === '' ? null : Number(event.target.value),
+              )
+            }
+          >
+            <option value="">All</option>
+            {rootCauseOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Ticket type">
+          <select
+            className={selectClass}
+            value={ticketType ?? ''}
+            onChange={(event) =>
+              setTicketType(
+                event.target.value === '' ? null : event.target.value,
+              )
+            }
+          >
+            <option value="">All</option>
+            {ticketTypeOptions.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Search">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="id, requestor, process, note…"
+            className={`${selectClass} w-56 font-normal normal-case`}
+          />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <KpiStat label="Total tickets" value={String(stats.total)} />
+        <KpiStat label="Open" value={String(stats.open)} />
+        <KpiStat label="2L tickets" value={String(stats.twoL)} />
+        <KpiStat label="Incident" value={String(stats.incident)} />
       </div>
 
       <datalist id={PROCESS_DATALIST_ID}>
@@ -131,7 +257,7 @@ export function TicketsPage() {
       >
         <p className="text-xs text-slate-500">
           {rows.length} ticket{rows.length === 1 ? '' : 's'}
-          {rows.length >= 500 ? ' (server-limited — narrow with search)' : ''}
+          {rows.length >= 500 ? ' (server-limited — narrow the filters)' : ''}
         </p>
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card">
           <table className="w-auto table-auto text-sm">
@@ -182,9 +308,7 @@ export function TicketsPage() {
                     colSpan={TICKET_COLUMN_COUNT}
                     className="px-3 py-6 text-center text-slate-500"
                   >
-                    {searching
-                      ? 'No ticket matches your search.'
-                      : 'No open or recently-touched tickets.'}
+                    No tickets match the current filters.
                   </td>
                 </tr>
               )}

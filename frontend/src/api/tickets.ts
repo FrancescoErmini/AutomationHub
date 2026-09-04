@@ -58,13 +58,37 @@ export interface TicketUpdate {
   ticket_color: string | null
 }
 
-export async function fetchTickets(params: {
-  scope: 'default' | 'all'
+export type TicketStatusFilter = 'all' | 'open' | 'closed'
+export type TicketPeriodFilter =
+  | 'all'
+  | '7d'
+  | '14d'
+  | '30d'
+  | '90d'
+  | 'month'
+  | 'year'
+  | 'last_year'
+export type TicketLevelFilter = 'all' | '1l' | '2l'
+
+export interface TicketFilters {
+  status: TicketStatusFilter
+  period: TicketPeriodFilter
+  level: TicketLevelFilter
+  rootCauseId: number | null
+  ticketType: string | null
   q: string
-}): Promise<TicketRow[]> {
+}
+
+export async function fetchTickets(
+  filters: TicketFilters,
+): Promise<TicketRow[]> {
   return getJson<TicketRow[]>('/api/v1/tickets', {
-    scope: params.scope,
-    q: params.q || undefined,
+    status: filters.status,
+    period: filters.period,
+    level: filters.level,
+    root_cause_id: filters.rootCauseId ?? undefined,
+    ticket_type: filters.ticketType || undefined,
+    q: filters.q || undefined,
   })
 }
 

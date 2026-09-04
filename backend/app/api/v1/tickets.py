@@ -11,11 +11,26 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 @router.get("", response_model=list[TicketRead])
 def list_tickets(
     service: TicketServiceDependency,
-    scope: Literal["default", "all"] = "default",
+    status: Literal["all", "open", "closed"] = "all",
+    period: Literal["all", "7d", "14d", "30d", "90d", "month", "year", "last_year"] = "14d",
+    level: Literal["all", "1l", "2l"] = "all",
+    root_cause_id: int | None = None,
+    ticket_type: str | None = None,
     q: str | None = None,
     limit: int = Query(default=500, ge=1, le=5000),
 ) -> list[TicketRead]:
-    return [TicketRead(**row) for row in service.list_tickets(scope=scope, q=q, limit=limit)]
+    return [
+        TicketRead(**row)
+        for row in service.list_tickets(
+            status=status,
+            period=period,
+            level=level,
+            root_cause_id=root_cause_id,
+            ticket_type=ticket_type,
+            q=q,
+            limit=limit,
+        )
+    ]
 
 
 @router.get("/options", response_model=TicketOptions)
