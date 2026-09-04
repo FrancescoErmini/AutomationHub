@@ -6,14 +6,14 @@ The AMS 1L contract keys reaction/repair targets on the **Einstein priority**
 
     Einstein 0-1 -> High,  2-3 -> Medium,  4-5 -> Low
 
-``core.ticket`` links to ``core.priority`` whose ``value`` holds that number as a
+``automation_hub.ticket`` links to ``automation_hub.priority`` whose ``value`` holds that number as a
 string. Every ticket in the warehouse currently carries priority ``3`` (Medium);
 ``DEFAULT_EINSTEIN_PRIORITY`` is used for any ticket with a missing/unparseable
 value.
 
 Measurability caveat
 --------------------
-``core.ticket`` stores ``start_date`` / ``end_date`` as *dates* (no time of day)
+``automation_hub.ticket`` stores ``start_date`` / ``end_date`` as *dates* (no time of day)
 and there is no first-response timestamp. So:
 
 * Reaction-time SLAs cannot be measured -- shown for reference only.

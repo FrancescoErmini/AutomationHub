@@ -53,7 +53,7 @@ The host commands use `.venv` and `frontend/node_modules`; runtime services use 
 
 ## Database and migrations
 
-PostgreSQL 17 runs in Docker and exposes port `5432` by default. Change mapped ports in `.env` if they conflict locally. Development uses `automation_hub`; integration tests exclusively use `automation_hub_test`. The PostgreSQL initialization script creates both databases when the volume is first created.
+PostgreSQL 16 runs in Docker and exposes port `5432` by default. Change mapped ports in `.env` if they conflict locally. Development uses `automation_hub`; integration tests exclusively use `automation_hub_test`. The PostgreSQL initialization script creates both databases when the volume is first created.
 
 Create and apply a migration after changing SQLAlchemy models:
 
@@ -65,7 +65,7 @@ make migrate
 
 Review every generated migration before committing it. Never call `Base.metadata.create_all`, issue ad hoc DDL, or edit an already-shared migration. `make db-reset` destroys the local Docker volume, recreates both databases, and migrates; use it only when local data can be discarded.
 
-Reference and business data in the `core` schema is maintained through the sqladmin panel at <http://localhost:8000/admin> and the ideas API — there is no bulk import step.
+Reference and business data in the `automation_hub` schema is maintained through the sqladmin panel at <http://localhost:8000/admin> and the ideas API — there is no bulk import step.
 
 ## API
 

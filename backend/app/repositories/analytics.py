@@ -120,7 +120,7 @@ class AnalyticsRepository:
         return {int(yr): Decimal(total) for yr, total in rows}
 
     def tco_cost_by_year(self) -> dict[int, dict[str, Decimal]]:
-        """Portfolio CAPEX/OPEX totals by year, from the core.tco_cost
+        """Portfolio CAPEX/OPEX totals by year, from the automation_hub.tco_cost
         ledger -- source for the TCO & ROI chart."""
         year = func.extract("year", TcoCost.cost_date)
         stmt = (
@@ -137,7 +137,7 @@ class AnalyticsRepository:
 
     def opex_subtype_by_year(self) -> dict[int, dict[str, Decimal]]:
         """OPEX broken down by subtype (AMS, CR, LICENSES, INFRA, ...) per
-        year, from core.tco_cost -- detail rows under the TCO & ROI table."""
+        year, from automation_hub.tco_cost -- detail rows under the TCO & ROI table."""
         year = func.extract("year", TcoCost.cost_date)
         subtype = func.coalesce(TcoCost.subtype, "OTHER")
         stmt = (
