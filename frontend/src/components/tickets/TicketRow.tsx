@@ -26,13 +26,37 @@ const bodyCell = 'whitespace-nowrap px-3 py-2 align-top text-slate-700'
 // Pinned first column so the row action stays visible while the wide table
 // scrolls horizontally. bg-inherit picks up the <tr> background.
 const stickyCol =
-  'sticky left-0 z-10 w-[112px] border-r border-slate-200 bg-inherit'
-const ghostButton =
-  'rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50'
-const primaryButton =
-  'rounded-lg bg-brand px-3 py-1 text-sm font-semibold text-white transition hover:bg-brandHover disabled:cursor-not-allowed disabled:opacity-50'
-const dangerButton =
-  'rounded-lg border border-negative/40 px-3 py-1 text-sm font-semibold text-negative hover:bg-negative/5 disabled:cursor-not-allowed disabled:opacity-50'
+  'sticky left-0 z-10 w-[84px] border-r border-slate-200 bg-inherit'
+
+// Compact square icon buttons keep the action column to one line tall so a
+// ticket's values aren't pushed down by a stack of full-size buttons.
+const iconButton =
+  'inline-flex h-7 w-7 items-center justify-center rounded-md border transition disabled:cursor-not-allowed disabled:opacity-40'
+const neutralIconButton = `${iconButton} border-slate-300 text-slate-600 hover:bg-slate-100`
+const dangerIconButton = `${iconButton} border-negative/40 text-negative hover:bg-negative/10`
+const primaryIconButton = `${iconButton} border-brand bg-brand text-white hover:bg-brandHover`
+
+function ActionIcon({ d }: { d: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={d} />
+    </svg>
+  )
+}
+
+const ICON_PENCIL = 'M10.5 2.5l3 3-8 8H2.5v-3zM9 4l3 3'
+const ICON_TRASH = 'M2.5 4.5h11M6 4.5V2.5h4v2M4 4.5l.8 9h6.4l.8-9M6.5 7v4M9.5 7v4'
+const ICON_CHECK = 'M3 8.5l3.5 3.5L13 4.5'
+const ICON_CROSS = 'M4 4l8 8M12 4l-8 8'
 
 // action column + 12 data columns; the Note row spans the full width below.
 export const TICKET_COLUMN_COUNT = 13
@@ -147,18 +171,22 @@ export function TicketEditableRow({
           }`}
         >
           <td className={`${viewCell} ${stickyCol}`}>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1">
               <button
                 type="button"
-                className={ghostButton}
+                className={neutralIconButton}
                 onClick={onRequestEdit}
+                title="Edit ticket"
+                aria-label={`Edit ticket ${row.ticket_id}`}
               >
-                Edit
+                <ActionIcon d={ICON_PENCIL} />
               </button>
               <button
                 type="button"
-                className={dangerButton}
+                className={dangerIconButton}
                 disabled={remove.isPending}
+                title="Delete ticket"
+                aria-label={`Delete ticket ${row.ticket_id}`}
                 onClick={() => {
                   if (
                     window.confirm(
@@ -169,14 +197,17 @@ export function TicketEditableRow({
                   }
                 }}
               >
-                {remove.isPending ? 'Deleting…' : 'Delete'}
+                <ActionIcon d={ICON_TRASH} />
               </button>
-              {remove.error && (
-                <span className="text-xs text-negative" role="alert">
-                  {remove.error.message}
-                </span>
-              )}
             </div>
+            {remove.error && (
+              <span
+                className="mt-1 block whitespace-normal text-xs text-negative"
+                role="alert"
+              >
+                {remove.error.message}
+              </span>
+            )}
           </td>
           <td className={`${viewCell} font-medium text-ink`}>
             <span
@@ -236,22 +267,26 @@ export function TicketEditableRow({
         onKeyDown={onKeyDown}
       >
         <td className={`${bodyCell} ${stickyCol}`}>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               type="button"
-              className={primaryButton}
+              className={`${primaryIconButton} ${save.isPending ? 'animate-pulse' : ''}`}
               onClick={submit}
               disabled={!canSave}
+              title="Save changes"
+              aria-label="Save changes"
             >
-              {save.isPending ? 'Saving…' : 'Save'}
+              <ActionIcon d={ICON_CHECK} />
             </button>
             <button
               type="button"
-              className={ghostButton}
+              className={neutralIconButton}
               onClick={cancel}
               disabled={save.isPending}
+              title="Cancel editing"
+              aria-label="Cancel editing"
             >
-              Cancel
+              <ActionIcon d={ICON_CROSS} />
             </button>
           </div>
         </td>
