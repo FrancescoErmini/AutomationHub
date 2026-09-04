@@ -54,7 +54,8 @@ function ActionIcon({ d }: { d: string }) {
 }
 
 const ICON_PENCIL = 'M10.5 2.5l3 3-8 8H2.5v-3zM9 4l3 3'
-const ICON_TRASH = 'M2.5 4.5h11M6 4.5V2.5h4v2M4 4.5l.8 9h6.4l.8-9M6.5 7v4M9.5 7v4'
+const ICON_TRASH =
+  'M2.5 4.5h11M6 4.5V2.5h4v2M4 4.5l.8 9h6.4l.8-9M6.5 7v4M9.5 7v4'
 const ICON_CHECK = 'M3 8.5l3.5 3.5L13 4.5'
 const ICON_CROSS = 'M4 4l8 8M12 4l-8 8'
 
