@@ -134,7 +134,7 @@ export function TicketsPage() {
           {rows.length >= 500 ? ' (server-limited — narrow with search)' : ''}
         </p>
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-card">
-          <table className="w-full min-w-[1400px] text-sm">
+          <table className="w-auto table-auto text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
                 <th

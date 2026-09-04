@@ -198,14 +198,13 @@ export function TicketEditableRow({
         {row.note && (
           <tr className="border-b border-slate-100 bg-white last:border-0">
             <td className={`${stickyCol} bg-white`} />
-            <td
-              className={`${bodyCell} whitespace-normal`}
-              colSpan={TICKET_COLUMN_COUNT - 1}
-            >
-              <span className="mr-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Note
-              </span>
-              <span className="text-slate-700">{row.note}</span>
+            <td className={bodyCell} colSpan={TICKET_COLUMN_COUNT - 1}>
+              <div className="max-w-[80ch] whitespace-normal break-words">
+                <span className="mr-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Note
+                </span>
+                <span className="text-slate-700">{row.note}</span>
+              </div>
             </td>
           </tr>
         )}
