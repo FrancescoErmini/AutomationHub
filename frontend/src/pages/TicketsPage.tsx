@@ -10,6 +10,7 @@ import {
   type TicketStatusFilter,
 } from '../api/tickets'
 import { AsyncSection } from '../components/AsyncSection'
+import { ImportTicketsDialog } from '../components/tickets/ImportTicketsDialog'
 import { NewTicketForm } from '../components/tickets/NewTicketForm'
 import {
   TICKET_COLUMN_COUNT,
@@ -63,6 +64,7 @@ export function TicketsPage() {
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
+  const [importing, setImporting] = useState(false)
   const dirtyRef = useRef(false)
 
   const requestEdit = (id: number) => {
@@ -130,15 +132,26 @@ export function TicketsPage() {
         title="Tickets"
         subtitle="Review and edit raw ticket records inline. Combine the filters to narrow the list; the page opens on tickets opened in the last 14 days."
         action={
-          <button
-            type="button"
-            onClick={() => setCreating((open) => !open)}
-            className="rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-brandHover"
-          >
-            {creating ? 'Close' : '+ New ticket'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setImporting(true)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Import CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreating((open) => !open)}
+              className="rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-brandHover"
+            >
+              {creating ? 'Close' : '+ New ticket'}
+            </button>
+          </div>
         }
       />
+
+      {importing && <ImportTicketsDialog onClose={() => setImporting(false)} />}
 
       {creating && options.data && (
         <NewTicketForm
