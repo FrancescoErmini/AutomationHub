@@ -105,5 +105,5 @@ make logs
 
 ## Security and configuration
 
-`.env.example` contains development-only credentials. `.env` is ignored. Do not reuse these credentials outside local development. No application secrets are committed, and production deployment configuration is intentionally outside this local foundation.
+`.env.example` contains development-only credentials. `.env` is ignored. Do not reuse these credentials outside local development. Deployment to the `dev` environment on GKE is documented in [`docs/deploy.md`](docs/deploy.md); the manifests live in `deploy/`.
 
