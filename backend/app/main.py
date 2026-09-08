@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from app.admin import setup_admin
 from app.api.v1.router import router as api_v1_router
@@ -51,3 +52,10 @@ async def handle_unexpected_error(_: Request, exc: Exception) -> JSONResponse:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/health/ready")
+def health_ready() -> dict[str, str]:
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+    return {"status": "ready"}

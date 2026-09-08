@@ -5,3 +5,11 @@ __pycache__
 tests
 *.pyc
 
+.git
+.venv
+.env
+.env.*
+*.md
+alembic/versions/__pycache__
+automation_hub_backend.egg-info
+scripts
