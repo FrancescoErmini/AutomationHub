@@ -6,3 +6,8 @@ test-results
 tests
 *.log
 
+.git
+.env
+.env.*
+*.md
+playwright.config.ts
