@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: automation-hub-dev
+
+labels:
+  - pairs:
+      environment: dev
+    includeSelectors: false
+
+resources:
+  - ../../base
+  - secret.yaml
+
+patches:
+  - path: config-patch.yaml
+  - path: ingress-patch.yaml
+
+images:
+  - name: europe-docker.pkg.dev/mgcp-sdlc-230917012/ict/automation-hub/backend
+    newTag: dev
+  - name: europe-docker.pkg.dev/mgcp-sdlc-230917012/ict/automation-hub/frontend
+    newTag: dev

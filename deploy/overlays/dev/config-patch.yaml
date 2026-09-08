@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: automation-hub-config
+data:
+  ENVIRONMENT: "dev"
+  # Comma-separated Keycloak account emails to auto-promote to app admin on first
+  # login. REQUIRED for anyone to administer via OIDC — set before/at first deploy.
+  BOOTSTRAP_ADMIN_EMAILS: ""
