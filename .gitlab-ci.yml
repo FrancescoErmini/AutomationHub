@@ -27,6 +27,8 @@ stages:
 lint_backend:
   extends: .python_checkstyle_template
   <<: *dev_only
+  before_script:
+    - cd backend
 
 lint_frontend:
   extends: .node_checkstyle_template
