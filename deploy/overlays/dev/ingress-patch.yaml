@@ -1,7 +1,0 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: automation-hub
-  annotations:
-    # DevOps: reserve a GLOBAL static IP and put its name here.
-    kubernetes.io/ingress.global-static-ip-name: "automation-hub-dev-ip"
