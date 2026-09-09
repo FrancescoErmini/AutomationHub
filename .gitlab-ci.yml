@@ -1,6 +1,8 @@
 include:
   - project: 'ci_cd_ict_sdlc/pipelines_sot'
     file: 'GENERIC/cicd-generic-templates.yaml'
+  - project: 'ci_cd_ict_sdlc/pipelines_sot'
+    file: 'ICT/automation-hub/cicd-automation-hub-template.yaml'
 
 variables:
   DOCKER_HOST: tcp://localhost:2375
@@ -25,10 +27,8 @@ stages:
     - if: '$CI_COMMIT_BRANCH == "master"'
 
 lint_backend:
-  extends: .python_checkstyle_template
+  extends: .automation_hub_python_checkstyle_template
   <<: *dev_only
-  before_script:
-    - cd backend
 
 lint_frontend:
   extends: .node_checkstyle_template
