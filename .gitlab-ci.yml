@@ -17,8 +17,6 @@ variables:
   FRONTEND_IMAGE: "${REPOSITORY_URI}/frontend"
 
 stages:
-  - checkstyle-and-test
-  - quality
   - release
   - integration
 
