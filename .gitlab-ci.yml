@@ -27,8 +27,8 @@ build_backend:
     - buildah info
     - export IMAGE_TAG="dev-${CI_COMMIT_SHA:0:8}"
     - echo "Building ${BACKEND_IMAGE}:${IMAGE_TAG}"
-    - buildah bud -f backend/Dockerfile -t "${BACKEND_IMAGE}:dev-${IMAGE_TAG}" backend/
-    - buildah push "${BACKEND_IMAGE}:dev-${IMAGE_TAG}"
+    - buildah bud -f backend/Dockerfile -t "${BACKEND_IMAGE}:${IMAGE_TAG}" backend/
+    - buildah push "${BACKEND_IMAGE}:${IMAGE_TAG}"
 
 build_frontend:
   extends: .build_buildah_image_template
@@ -37,8 +37,8 @@ build_frontend:
     - buildah info
     - export IMAGE_TAG="dev-${CI_COMMIT_SHA:0:8}"
     - echo "Building ${FRONTEND_IMAGE}:${IMAGE_TAG}"
-    - buildah bud -f frontend/Dockerfile --build-arg VITE_OIDC_AUTHORITY="${VITE_OIDC_AUTHORITY}" --build-arg VITE_OIDC_CLIENT_ID="${VITE_OIDC_CLIENT_ID}" --build-arg VITE_OIDC_REDIRECT_URI="${VITE_OIDC_REDIRECT_URI}" -t "${FRONTEND_IMAGE}:dev" frontend/
-    - buildah push "${FRONTEND_IMAGE}:dev-${IMAGE_TAG}"
+    - buildah bud -f frontend/Dockerfile --build-arg VITE_OIDC_AUTHORITY="${VITE_OIDC_AUTHORITY}" --build-arg VITE_OIDC_CLIENT_ID="${VITE_OIDC_CLIENT_ID}" --build-arg VITE_OIDC_REDIRECT_URI="${VITE_OIDC_REDIRECT_URI}" -t "${FRONTEND_IMAGE}:${IMAGE_TAG}" frontend/
+    - buildah push "${FRONTEND_IMAGE}:${IMAGE_TAG}"
 
 bump_manifest:
   extends: .generic_manifest_integration_template
