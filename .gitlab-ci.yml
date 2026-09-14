@@ -25,6 +25,10 @@ variables:
   BACKEND_IMAGE_URI: "${MENARINI_ARTIFACT_REGISTRY_URL}/${APP_PROJECT}/${APP_NAME}/backend"
   FRONTEND_IMAGE_URI: "${MENARINI_ARTIFACT_REGISTRY_URL}/${APP_PROJECT}/${APP_NAME}/frontend"
 
+  # -- Azure Storage for reports --
+  AZURE_STORAGE_ACCOUNT: "sdlcsecurityreport"
+  AZURE_STORAGE_CONTAINER: "sdclcblobstorage"
+
 stages:
   - checkstyle-and-test
   - quality
@@ -40,6 +44,8 @@ sonar_scan:
   extends: .sonar_scan_python_template
   stage: quality
   needs: ["python_checkstyle"]
+  variables:
+    GLOBAL_SONAR_TOKEN: "$SONAR_TOKEN"
 
 trivy_scan:
   extends: .trivy_scan_template
