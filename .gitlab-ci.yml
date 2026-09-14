@@ -27,7 +27,7 @@ variables:
 
   # -- Azure Storage for reports --
   AZURE_STORAGE_ACCOUNT: "sdlcsecurityreport"
-  AZURE_STORAGE_CONTAINER: "sdclcblobstorage"
+  AZURE_STORAGE_CONTAINER: "sdlcblobstorage"
 
 stages:
   - checkstyle-and-test
