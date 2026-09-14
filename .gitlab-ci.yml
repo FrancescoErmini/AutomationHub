@@ -64,8 +64,19 @@ build_backend:
     BUILD_CONTEXT: "backend/"
     DOCKERFILE_PATH: "backend/Dockerfile"
   script:
-    # The template's before_script and tagging logic are inherited.
-    # We only override the build command to specify the context and Dockerfile path.
+    - |
+      if [[ "${CI_COMMIT_REF_NAME}" == "main" ]]; then
+        TAG="prod"
+      elif [[ "${CI_COMMIT_REF_NAME}" == "develop" ]]; then
+        TAG="dev"
+      elif [[ "${CI_COMMIT_REF_NAME}" == "quality" ]]; then
+        TAG="qa"
+      elif [[ "${CI_COMMIT_REF_NAME}" == "release" ]]; then
+        TAG="rel"
+      else
+        TAG="${CI_COMMIT_REF_NAME}"
+      fi
+      export IMAGE_TAG="${TAG}-${CI_COMMIT_SHA:0:8}"
     - buildah bud --ulimit nofile=4096:8192 -f ${DOCKERFILE_PATH} -t "${REPOSITORY_URI}:${IMAGE_TAG}" ${BUILD_CONTEXT}
     - echo "Pushing image ${REPOSITORY_URI}:${IMAGE_TAG}"
     - buildah push "${REPOSITORY_URI}:${IMAGE_TAG}"
@@ -78,7 +89,19 @@ build_frontend:
     BUILD_CONTEXT: "frontend/"
     DOCKERFILE_PATH: "frontend/Dockerfile"
   script:
-    # Override build command to include build arguments for the frontend
+    - |
+      if [[ "${CI_COMMIT_REF_NAME}" == "main" ]]; then
+        TAG="prod"
+      elif [[ "${CI_COMMIT_REF_NAME}" == "develop" ]]; then
+        TAG="dev"
+      elif [[ "${CI_COMMIT_REF_NAME}" == "quality" ]]; then
+        TAG="qa"
+      elif [[ "${CI_COMMIT_REF_NAME}" == "release" ]]; then
+        TAG="rel"
+      else
+        TAG="${CI_COMMIT_REF_NAME}"
+      fi
+      export IMAGE_TAG="${TAG}-${CI_COMMIT_SHA:0:8}"
     - |
       buildah bud 
         --build-arg VITE_OIDC_AUTHORITY="${VITE_OIDC_AUTHORITY}" 
