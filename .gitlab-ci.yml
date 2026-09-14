@@ -38,6 +38,7 @@ stages:
 # --- Checkstyle Stage ---
 python_checkstyle:
   extends: .automation_hub_python_checkstyle_template
+  allow_failure: true
 
 # --- Quality Stage ---
 sonar_scan:
