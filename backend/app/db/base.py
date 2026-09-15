@@ -7,6 +7,7 @@ from sqlalchemy.orm import DeclarativeBase
 REPRESENTATIVE_COLUMN_NAMES: tuple[str, ...] = (
     "canonical_name",
     "name",
+    "email",
     "title",
     "code",
     "value",

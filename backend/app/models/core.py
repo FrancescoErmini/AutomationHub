@@ -42,6 +42,20 @@ class Company(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Person(Base):
+    """A named individual identified by email, independent of Keycloak/SSO
+    login (see app.models.auth.AppUser) — covers people referenced in process
+    data (e.g. external supplier contacts) who may never sign in to the app."""
+
+    __tablename__ = "person"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Department(Base):
     __tablename__ = "department"
     __table_args__ = {"schema": SCHEMA}
@@ -97,6 +111,18 @@ class VirtualMachine(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class ProcessType(Base):
+    """Menarini Process Framework category a process belongs to (e.g. Order
+    to Cash, Procure to Pay)."""
+
+    __tablename__ = "process_type"
+    __table_args__ = {"schema": SCHEMA}
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Application(Base):
     """A system/application used by one or more processes, sourced from
     PIPELINE's SYSTEM column (e.g. SAP, AS400, Archiflow)."""
@@ -128,6 +154,9 @@ class Process(Base):
     ams_year_id: Mapped[int | None] = mapped_column(
         ForeignKey(f"{SCHEMA}.ams_year.id"), nullable=True
     )
+    process_type_id: Mapped[int | None] = mapped_column(
+        ForeignKey(f"{SCHEMA}.process_type.id"), nullable=True
+    )
     go_live_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
     in_pipeline: Mapped[bool] = mapped_column(Boolean(), default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -135,8 +164,12 @@ class Process(Base):
     department: Mapped["Department | None"] = relationship()
     company: Mapped["Company | None"] = relationship()
     ams_year: Mapped["AmsYear | None"] = relationship()
+    process_type: Mapped["ProcessType | None"] = relationship()
     applications: Mapped[list["Application"]] = relationship(
         secondary=f"{SCHEMA}.process_application", viewonly=True, order_by="Application.name"
+    )
+    stakeholders: Mapped[list["ProcessStakeholder"]] = relationship(
+        viewonly=True, order_by="ProcessStakeholder.role"
     )
 
 
@@ -157,6 +190,28 @@ class ProcessApplication(Base):
 
     process: Mapped["Process"] = relationship()
     application: Mapped["Application"] = relationship()
+
+
+class ProcessStakeholder(Base):
+    """A person's role on a process (e.g. ICT referent, Business Process
+    Owner), sourced from the RPA pipeline sheet. A role can have more than
+    one person for the same process (e.g. Business Process Owner sometimes
+    lists two people), hence a link table keyed on (process, role, person)
+    rather than fixed columns on Process."""
+
+    __tablename__ = "process_stakeholder"
+    __table_args__ = (
+        UniqueConstraint("process_id", "role", "person_id", name="uq_process_stakeholder"),
+        {"schema": SCHEMA},
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    process_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.process.id"), index=True)
+    role: Mapped[str] = mapped_column(String(40), index=True)
+    person_id: Mapped[int] = mapped_column(ForeignKey(f"{SCHEMA}.person.id"), index=True)
+
+    process: Mapped["Process"] = relationship()
+    person: Mapped["Person"] = relationship()
 
 
 class Ticket(Base):

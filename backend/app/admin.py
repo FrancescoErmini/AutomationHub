@@ -316,6 +316,9 @@ def _view_overrides() -> dict[str, dict[str, Any]]:
                 # Department (19) is searched, not filtered -- see column_searchable_list.
                 ForeignKeyFilter(Process.company_id, core.Company.name, title="Company"),
                 ForeignKeyFilter(Process.ams_year_id, core.AmsYear.code, title="AMS year"),
+                ForeignKeyFilter(
+                    Process.process_type_id, core.ProcessType.name, title="Process type"
+                ),
             ],
         },
         "ProcessSchedule": {
