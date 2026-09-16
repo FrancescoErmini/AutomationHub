@@ -1,16 +1,20 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    ams_years,
     apqc,
     executive,
     ideas,
     me,
     metadata,
     operations,
+    people,
     process_catalog,
     process_economics,
+    processes,
     service_performance,
     simple_ops,
+    tco_costs,
     tickets,
 )
 
@@ -26,6 +30,10 @@ router.include_router(apqc.router)
 router.include_router(ideas.router)
 router.include_router(me.router)
 router.include_router(tickets.router)
+router.include_router(ams_years.router)
+router.include_router(processes.router)
+router.include_router(tco_costs.router)
+router.include_router(people.router)
 
 
 @router.get("/status")

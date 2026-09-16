@@ -4,6 +4,9 @@ import { NavLink } from 'react-router-dom'
 const LINKS = [
   { to: '/process-economics', label: 'Business Cases' },
   { to: '/tickets', label: 'Tickets' },
+  { to: '/years', label: 'Anni' },
+  { to: '/processes', label: 'Processi' },
+  { to: '/orders', label: 'Ordini' },
 ] as const
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>

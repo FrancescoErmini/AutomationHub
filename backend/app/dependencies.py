@@ -14,14 +14,19 @@ from app.db.session import get_db
 from app.models.auth import AppUser
 from app.repositories.analytics import AnalyticsRepository
 from app.repositories.ideas import IdeaRepository
+from app.services.ams_years import AmsYearService
 from app.services.apqc import ApqcService
 from app.services.executive import ExecutiveService
 from app.services.ideas import IdeaService
 from app.services.operations import OperationsService
+from app.services.people import PersonService
 from app.services.process_catalog import ProcessCatalogService
 from app.services.process_economics import ProcessEconomicsService
+from app.services.processes import ProcessService
 from app.services.service_performance import ServicePerformanceService
 from app.services.simple_ops import SimpleOpsService
+from app.services.tco_cost_import import TcoCostImportService
+from app.services.tco_costs import TcoCostService
 from app.services.ticket_import import TicketImportService
 from app.services.tickets import TicketService
 
@@ -77,6 +82,43 @@ def get_ticket_import_service(session: DbSession) -> TicketImportService:
 
 
 TicketImportServiceDependency = Annotated[TicketImportService, Depends(get_ticket_import_service)]
+
+
+def get_ams_year_service(session: DbSession) -> AmsYearService:
+    return AmsYearService(session)
+
+
+AmsYearServiceDependency = Annotated[AmsYearService, Depends(get_ams_year_service)]
+
+
+def get_process_service(session: DbSession) -> ProcessService:
+    return ProcessService(session)
+
+
+ProcessServiceDependency = Annotated[ProcessService, Depends(get_process_service)]
+
+
+def get_tco_cost_service(session: DbSession) -> TcoCostService:
+    return TcoCostService(session)
+
+
+TcoCostServiceDependency = Annotated[TcoCostService, Depends(get_tco_cost_service)]
+
+
+def get_tco_cost_import_service(session: DbSession) -> TcoCostImportService:
+    return TcoCostImportService(session)
+
+
+TcoCostImportServiceDependency = Annotated[
+    TcoCostImportService, Depends(get_tco_cost_import_service)
+]
+
+
+def get_person_service(session: DbSession) -> PersonService:
+    return PersonService(session)
+
+
+PersonServiceDependency = Annotated[PersonService, Depends(get_person_service)]
 
 
 def get_service_performance_service(

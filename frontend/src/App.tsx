@@ -12,10 +12,13 @@ import { HomePage } from './pages/HomePage'
 import { IdeaDetailPage } from './pages/IdeaDetailPage'
 import { IdeaWizardPage } from './pages/IdeaWizardPage'
 import { IdeasPage } from './pages/IdeasPage'
+import { OrdersPage } from './pages/OrdersPage'
 import { ProcessEconomicsPage } from './pages/ProcessEconomicsPage'
+import { ProcessesPage } from './pages/ProcessesPage'
 import { SimpleOpsPage } from './pages/SimpleOpsPage'
 import { SlaKpiPage } from './pages/SlaKpiPage'
 import { TicketsPage } from './pages/TicketsPage'
+import { YearsPage } from './pages/YearsPage'
 
 export function App() {
   return (
@@ -36,6 +39,9 @@ export function App() {
         <Route element={<RequireAuth />}>
           <Route path="process-economics" element={<ProcessEconomicsPage />} />
           <Route path="tickets" element={<TicketsPage />} />
+          <Route path="years" element={<YearsPage />} />
+          <Route path="processes" element={<ProcessesPage />} />
+          <Route path="orders" element={<OrdersPage />} />
         </Route>
         <Route path="ideas/:id" element={<IdeaDetailPage />} />
         <Route path="documentation" element={<DocumentationPage />} />
