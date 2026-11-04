@@ -26,10 +26,10 @@ Keycloak authenticates only. The application database owns authorization
 
 | Item | Value |
 | --- | --- |
-| Discovery | `https://keycloak-dev.menarini.net/auth/realms/menarini/.well-known/openid-configuration` |
-| Issuer | `https://keycloak-dev.menarini.net/auth/realms/menarini` |
-| Realm | `menarini` |
-| Client ID | `mg-app_AutomationHub` |
+| Discovery | `https://keycloak.example.com/auth/realms/your-realm/.well-known/openid-configuration` |
+| Issuer | `https://keycloak.example.com/auth/realms/your-realm` |
+| Realm | `your-realm` |
+| Client ID | `automation-hub` |
 | Client type | Public, Authorization Code + PKCE (S256) |
 
 The dev Keycloak is a shared remote instance. No Keycloak container is added to
@@ -50,7 +50,7 @@ Only redirect/origin settings are needed — no protocol mappers.
 Because an audience protocol mapper cannot be added, the backend validates the
 `azp` (authorized party) claim rather than `aud`. For a public SPA client
 Keycloak sets `azp` to the requesting client, so this reliably identifies tokens
-issued to `mg-app_AutomationHub`. Upgrade path: if an audience mapper is added
+issued to `automation-hub`. Upgrade path: if an audience mapper is added
 later, also assert the client id appears in `aud`.
 
 ---
@@ -71,8 +71,8 @@ New fields, with development defaults, mirrored into `.env.example` and the
 
 | Setting | Default | Purpose |
 | --- | --- | --- |
-| `oidc_issuer` | `https://keycloak-dev.menarini.net/auth/realms/menarini` | Expected `iss`; base for JWKS URL |
-| `oidc_client_id` | `mg-app_AutomationHub` | Expected `azp` |
+| `oidc_issuer` | `https://keycloak.example.com/auth/realms/your-realm` | Expected `iss`; base for JWKS URL |
+| `oidc_client_id` | `automation-hub` | Expected `azp` |
 | `oidc_jwks_url` | `None` | Optional override; defaults to `{oidc_issuer}/protocol/openid-connect/certs` |
 | `bootstrap_admin_emails` | `""` | Comma-separated emails auto-promoted to `admin` on provisioning |
 
@@ -205,8 +205,8 @@ New `frontend/.env.example` (and documented for local `.env`):
 
 | Var | Example | Notes |
 | --- | --- | --- |
-| `VITE_OIDC_AUTHORITY` | `https://keycloak-dev.menarini.net/auth/realms/menarini` | |
-| `VITE_OIDC_CLIENT_ID` | `mg-app_AutomationHub` | |
+| `VITE_OIDC_AUTHORITY` | `https://keycloak.example.com/auth/realms/your-realm` | |
+| `VITE_OIDC_CLIENT_ID` | `automation-hub` | |
 | `VITE_OIDC_REDIRECT_URI` | `http://localhost:5173/auth/callback` | Optional; defaults to `${window.location.origin}/auth/callback` |
 
 ### Provider wiring (`src/main.tsx`)

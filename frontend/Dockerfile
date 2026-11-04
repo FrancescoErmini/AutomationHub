@@ -2,8 +2,10 @@
 FROM node:20-bookworm-slim AS build
 
 WORKDIR /app
-COPY package.json package-lock.json .npmrc ./
-RUN npm ci
+COPY package.json package-lock.json ./
+# Set NPM_STRICT_SSL=false only behind a TLS-intercepting proxy.
+ARG NPM_STRICT_SSL=true
+RUN npm ci --strict-ssl=${NPM_STRICT_SSL}
 
 COPY . .
 

@@ -2,8 +2,7 @@
 and per-process cost breakdown -- fuels the "Simple Ops" page, a data-driven
 replica of the Claude Design "Dashboard Costi Running RPA" mockup.
 
-Formulas here follow docs/dashboard_costi_running_rpa_data_assessment.md and
-the user's ==> MY_REVIEW decisions in that file:
+Formulas follow the data dictionary:
   total running cost(Y) = license_cost(Y) + ams_1l_cost(Y)
                            + (2L tickets opened in Y x EUR 500)
                            + Sigma ams_rfc_cost(Y)   ["Change Request"]

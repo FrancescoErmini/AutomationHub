@@ -17,3 +17,30 @@ frontend/playwright-report/
 
 # Local design scratch (Gemini exports)
 design/specs/Gemini_Generated_Image_*.jpg
+
+# Local secrets and environment files
+.env.*
+!.env.example
+*.code-workspace
+
+# Real business/personal data (tickets, stakeholders): never publish
+sql/
+data/
+
+# Local tooling config
+.claude/mcp.json
+.claude/settings.local.json
+
+# Generated artifacts
+*.egg-info/
+*.tsbuildinfo
+
+# Internal planning notes and pipeline examples
+docs/superpowers/
+.claude/specs/example-pipeline.md
+
+# Internal deployment notes, validation reports and CI
+docs/deploy*.md
+docs/rpa_final_validation_report.md
+docs/dashboard_costi_running_rpa_data_assessment.md
+.gitlab-ci.yml

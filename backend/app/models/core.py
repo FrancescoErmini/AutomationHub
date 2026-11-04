@@ -112,7 +112,7 @@ class VirtualMachine(Base):
 
 
 class ProcessType(Base):
-    """Menarini Process Framework category a process belongs to (e.g. Order
+    """Process Framework category a process belongs to (e.g. Order
     to Cash, Procure to Pay)."""
 
     __tablename__ = "process_type"

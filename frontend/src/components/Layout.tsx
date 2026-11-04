@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from 'react-oidc-context'
 
-import logoSquare from '../images/logo-square.png'
+import logoSquare from '../images/logo-placeholder.svg'
 import { ManagementDrawer } from './ManagementDrawer'
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -38,7 +38,7 @@ export function Layout() {
             className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-white"
           >
             <img src={logoSquare} alt="" className="h-8 w-8 rounded-md" />
-            Menarini Automation Hub
+            Automation Hub
           </NavLink>
           <nav
             aria-label="Main navigation"

@@ -26,8 +26,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-automation_hub}:${POSTGRES_PASSWORD:-automation_hub_dev}@postgres:5432/${POSTGRES_DB:-automation_hub}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      OIDC_ISSUER: ${OIDC_ISSUER:-https://keycloak-dev.menarini.net/auth/realms/menarini}
-      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-mg-app_AutomationHub}
+      OIDC_ISSUER: ${OIDC_ISSUER:-https://keycloak.example.com/auth/realms/your-realm}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-automation-hub}
       BOOTSTRAP_ADMIN_EMAILS: ${BOOTSTRAP_ADMIN_EMAILS:-}
     command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
     ports:
@@ -49,10 +49,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NPM_STRICT_SSL: ${NPM_STRICT_SSL:-true}
     environment:
       VITE_API_PROXY_TARGET: http://backend:8000
-      VITE_OIDC_AUTHORITY: ${OIDC_ISSUER:-https://keycloak-dev.menarini.net/auth/realms/menarini}
-      VITE_OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-mg-app_AutomationHub}
+      VITE_OIDC_AUTHORITY: ${OIDC_ISSUER:-https://keycloak.example.com/auth/realms/your-realm}
+      VITE_OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-automation-hub}
       VITE_OIDC_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-http://localhost:${FRONTEND_PORT:-5173}/auth/callback}
     ports:
       - "${FRONTEND_PORT:-5173}:5173"

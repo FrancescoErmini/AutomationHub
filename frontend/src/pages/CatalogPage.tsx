@@ -59,7 +59,7 @@ export function CatalogPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Menarini Process Automation"
+        title="Process Automation"
         subtitle="Every automated process running today, and every process still in the pipeline — organized by department in one place."
       />
 

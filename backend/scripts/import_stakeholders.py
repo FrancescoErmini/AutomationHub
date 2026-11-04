@@ -1,10 +1,10 @@
 """One-off importer: populate ``core.person`` / ``core.process_stakeholder``
 from the RPA pipeline sheet's referent columns.
 
-The CSV (``data/RPA Pipeline Menarini  - google - Sheet8.csv``) has one row
+The CSV (``data/rpa-pipeline-stakeholders.csv``) has one row
 per process, with a fixed set of referent columns mapping to the constrained
 ``STAKEHOLDER_ROLES`` (see ``app.schemas.process_stakeholder``). The
-"Menarini Process Framework" column (process type) is not touched here.
+"Process Framework" column (process type) is not touched here.
 
 Each CSV row is matched to exactly one ``core.process`` row by
 ``canonical_name`` (normalised: lower-cased, whitespace-collapsed, trailing
@@ -26,7 +26,7 @@ The script is idempotent: re-running it just skips links that already exist.
 The source CSV lives at the repo root under ``data/``, which is not mounted
 into the backend container, so copy it in first::
 
-    docker cp "data/RPA Pipeline Menarini  - google - Sheet8.csv" \\
+    docker cp "data/rpa-pipeline-stakeholders.csv" \\
         automation-hub-backend-1:/tmp/pipeline.csv
     docker exec automation-hub-backend-1 \\
         python -m scripts.import_stakeholders /tmp/pipeline.csv
@@ -52,7 +52,7 @@ from app.db.session import SessionLocal
 from app.models.core import Person, Process, ProcessStakeholder
 from app.schemas.process_stakeholder import STAKEHOLDER_ROLES
 
-_DEFAULT_CSV = Path("data/RPA Pipeline Menarini  - google - Sheet8.csv")
+_DEFAULT_CSV = Path("data/rpa-pipeline-stakeholders.csv")
 
 # CSV column header -> constrained role value.
 _ROLE_COLUMNS: dict[str, str] = {

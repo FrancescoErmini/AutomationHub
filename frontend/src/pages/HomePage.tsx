@@ -109,7 +109,7 @@ export function HomePage() {
     <div className="space-y-12">
       <section className="rounded-2xl border border-slate-200 bg-white px-8 py-14 shadow-card sm:px-12 sm:py-20">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-          Menarini · RPA Program
+          RPA Program
         </p>
         <h1 className="mt-5 max-w-4xl text-4xl font-bold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-6xl">
           Automation Hub Portal

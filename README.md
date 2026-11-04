@@ -1,109 +1,183 @@
-# Automation Hub
+# Automation Hub for Blue Prism Enterprise
 
-Automation Hub is a production-oriented monorepo foundation for a React application, a FastAPI service, and PostgreSQL persistence. Local infrastructure is containerized; only Python, Node.js, npm, Make, and Docker are required on the host.
+A self-hosted portal to run an RPA program built on **Blue Prism Enterprise**: collect and score automation ideas, publish a catalog of automated processes, and track the cost, savings and service quality of what is running in production.
 
-## Quick start
+It is inspired by [UiPath Automation Hub](https://www.uipath.com/product/automation-hub) (idea pipeline, assessment, catalog, ROI tracking), adapted to the vocabulary and the cost model of a Blue Prism estate: Digital Workers, Runtime Resources, licences, AMS (application maintenance) support levels.
 
-```bash
-cp .env.example .env
-make setup
-make up
-make health
-```
+> **Scope note.** The Hub does not call Blue Prism APIs. Blue Prism remains the execution platform; the Hub is the governance and reporting layer next to it. Data enters through the UI, CSV imports, or the admin panel.
 
-Open <http://localhost:5173>. The API documentation is at <http://localhost:8000/docs>.
+## Contents
 
-`make setup` installs pinned host-side development dependencies, starts PostgreSQL, and applies Alembic migrations. `make up` builds and starts the API and UI containers.
+- [What it does](#what-it-does)
+- [How it maps to UiPath Automation Hub](#how-it-maps-to-uipath-automation-hub)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Development](#development)
+- [Database and migrations](#database-and-migrations)
+- [Troubleshooting](#troubleshooting)
+- [Security notes](#security-notes)
+
+## What it does
+
+| Area | Page | Purpose |
+| --- | --- | --- |
+| **Idea pipeline** | `/ideas`, `/ideas/new`, `/ideas/:id` | Seven-step assessment wizard. Maps the idea to the APQC process taxonomy (L1 → L2 → L3), collects volumetry, complexity, systems and AI-readiness, and computes ROI, feasibility, technology category and final classification on the server. Ideas are shown on a feasibility matrix and a classification chart. |
+| **Catalog** | `/catalog` | Every automated process in production and every process still in the pipeline, grouped by department, with documentation links and stakeholders. |
+| **Executive dashboard** | `/executive` | Program economics: KPIs, company summary, cost breakdown, TCO trend, savings vs. payback, TCO & ROI, per-process ROI table. |
+| **Operations dashboard** | `/simple-ops` | Running cost and licence cost trends, infrastructure (virtual machines hosting Runtime Resources), occupancy heatmap, AMS trend, cost by process, quality breakdown. |
+| **SLA / KPI** | `/sla-kpi` | SLA attainment and commitments, L1/L2 support trend, root-cause Pareto, backlog aging, resolution and data-quality indicators. |
+| **Data management** (signed-in editors) | `/processes`, `/tickets`, `/years`, `/process-economics`, `/orders` | Maintain the process register, incident/request tickets (inline edit and CSV import), AMS contract years, per-process business case (CAPEX, ROI horizon, FTE hours saved) and TCO cost items (single entry or CSV import). |
+| **Documentation** | `/documentation` | Data dictionary: where every dashboard figure comes from. |
+| **Admin panel** | `/admin` (backend) | SQLAdmin back-office for reference data (companies, departments, priorities, root causes, …). |
+
+### Roles
+
+Access uses OpenID Connect (Keycloak). Dashboards and the catalog are readable anonymously; submitting ideas and the data-management pages require sign-in. Every user starts as `user`; `editor` and `admin` are assigned by an administrator. Addresses listed in `BOOTSTRAP_ADMIN_EMAILS` are promoted to `admin` on first login.
+
+## How it maps to UiPath Automation Hub
+
+| UiPath Automation Hub | This portal (Blue Prism context) |
+| --- | --- |
+| Idea submission and assessment | Assessment wizard with server-side ROI, feasibility and classification scoring |
+| Automation pipeline / stages | Ideas list with classification lanes and feasibility matrix |
+| Automation catalog | Process catalog by department, with type (process framework category), documentation URL and stakeholders |
+| Realized value / ROI tracking | Process economics and TCO costs (CAPEX/OPEX), savings vs. payback, per-process ROI |
+| Automation Ops / Orchestrator insights | Operations dashboard: Blue Prism licence cost, Runtime Resource VMs, occupancy heatmap |
+| Collaboration and roles | Keycloak SSO with `user` / `editor` / `admin` roles and per-process stakeholder referents |
+| (not in Hub) | AMS support model: tickets, SLA commitments, L1/L2 split, root-cause analysis |
 
 ## Architecture
 
-The browser sends `/api` requests through the Vite development proxy. FastAPI routes validate HTTP input and delegate to services; services hold application rules and use repositories for SQLAlchemy persistence. PostgreSQL is the only stateful service. Alembic owns all schema changes.
-
 ```text
-React + TanStack Query -> FastAPI router -> service -> repository -> SQLAlchemy -> PostgreSQL
+React + TanStack Query → FastAPI router → service → repository → SQLAlchemy → PostgreSQL
 ```
 
-## Repository layout
+- **Frontend**: React 18, TypeScript (strict), Vite, Tailwind, Recharts, `react-oidc-context`.
+- **Backend**: Python 3.12, FastAPI, SQLAlchemy 2 (typed mappings), Pydantic, SQLAdmin, PyJWT for token verification. Routes are thin; business rules live in `app/services`, queries in `app/repositories`.
+- **Database**: PostgreSQL 16. Alembic exclusively owns the schema.
+- **Runtime**: Docker Compose for local development.
 
 ```text
 .
-├── backend/                  FastAPI app and Alembic
+├── backend/                  FastAPI app and Alembic migrations
 │   ├── alembic/versions/     Immutable schema migrations
-│   └── app/                  API, core, db, models, schemas, services, repositories
+│   ├── app/                  api, core, db, models, schemas, services, repositories
+│   └── scripts/              One-off CSV importers
 ├── frontend/                 React/Vite app
-├── docker/                   Container initialization assets
 ├── docs/                     Architecture notes
+├── docker/                   PostgreSQL initialization
 ├── docker-compose.yml
 └── Makefile
 ```
 
-## Development workflow
+## Installation
 
-Run `make help` for the complete command list. Common commands are:
+### Prerequisites
 
-```bash
-make dev                 # build and run all services in the foreground
-make logs                # follow service logs
-make lint                # Ruff, ESLint, and Prettier checks
-make typecheck           # strict mypy and TypeScript checks
-make down
-```
+Docker (with Compose v2), Make, Python 3.12, Node.js 20+ and npm. The Makefile uses POSIX paths (`.venv/bin/...`): on Windows run it from **WSL** or Git Bash.
 
-The host commands use `.venv` and `frontend/node_modules`; runtime services use Docker images. This keeps feedback fast without requiring a host PostgreSQL installation.
-
-## Database and migrations
-
-PostgreSQL 16 runs in Docker and exposes port `5432` by default. Change mapped ports in `.env` if they conflict locally. Development uses `automation_hub`; integration tests exclusively use `automation_hub_test`. The PostgreSQL initialization script creates both databases when the volume is first created.
-
-Create and apply a migration after changing SQLAlchemy models:
+### Quick start
 
 ```bash
-make db-up
-make migration NAME="add item category"
-make migrate
+git clone <this repository>
+cd automation-hub
+cp .env.example .env      # edit as needed, see Configuration
+make setup                # installs host tooling, starts PostgreSQL, applies migrations
+make up                   # builds and starts API and UI
+make health
 ```
 
-Review every generated migration before committing it. Never call `Base.metadata.create_all`, issue ad hoc DDL, or edit an already-shared migration. `make db-reset` destroys the local Docker volume, recreates both databases, and migrates; use it only when local data can be discarded.
+Then open:
 
-Reference and business data in the `automation_hub` schema is maintained through the sqladmin panel at <http://localhost:8000/admin> and the ideas API — there is no bulk import step.
+- UI: <http://localhost:5173>
+- API docs: <http://localhost:8000/docs>
+- Admin panel: <http://localhost:8000/admin>
 
-## API
+`make down` stops the stack. The database starts empty; see [Usage](#usage) for loading data.
+
+## Configuration
+
+All settings are environment variables, read from `.env` (copy of [`.env.example`](.env.example)).
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_PORT` | `automation_hub` / `automation_hub` / `automation_hub_dev` / `5432` | Local PostgreSQL. Development defaults only. |
+| `BACKEND_PORT`, `FRONTEND_PORT` | `8000`, `5173` | Published ports. |
+| `ENVIRONMENT` | `development` | Any other value makes the backend reject the default admin password and secret key. |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_SECRET_KEY` | `admin`, `admin`, insecure placeholder | Protect `/admin`. **Always override outside your laptop.** |
+| `NPM_STRICT_SSL` | `true` | Build arg for the frontend image; `false` only behind TLS-intercepting proxies. |
+| `OIDC_ISSUER` | `https://keycloak.example.com/auth/realms/your-realm` | Keycloak realm URL (token issuer, JWKS source). |
+| `OIDC_CLIENT_ID` | `automation-hub` | Public client registered in Keycloak. |
+| `BOOTSTRAP_ADMIN_EMAILS` | empty | Comma-separated emails promoted to `admin` on first login. |
+| `LOG_LEVEL` | `INFO` | Structured log level. |
+
+Frontend variables ([`frontend/.env.example`](frontend/.env.example)): `VITE_OIDC_AUTHORITY`, `VITE_OIDC_CLIENT_ID`, optional `VITE_OIDC_REDIRECT_URI` (default `<origin>/auth/callback`).
+
+### Keycloak client
+
+Create a public client with the standard flow and PKCE, redirect URI `http://localhost:5173/auth/callback`, and web origin `http://localhost:5173`. Point `OIDC_ISSUER` and `VITE_OIDC_AUTHORITY` at your realm. Without a reachable Keycloak the read-only pages still work, but sign-in does not.
+
+## Usage
+
+1. **Sign in** with your Keycloak account. The first administrator comes from `BOOTSTRAP_ADMIN_EMAILS`; they can then promote others to `editor`.
+2. **Load reference data** from the admin panel (`/admin`, credentials from `.env`): companies, departments, priorities, support levels, root causes. The APQC taxonomy tables are used by the idea wizard.
+3. **Register your Blue Prism processes** in *Processes*: company, department, AMS year, process type, documentation URL. Add stakeholder referents (ICT, business owner, supplier) per process.
+4. **Add costs and benefits**: *Process Economics* for the per-process business case, *Orders (TCO)* for CAPEX/OPEX items (single entry or CSV import).
+5. **Track operations**: import or create tickets in *Tickets* (CSV import supported) so the SLA / KPI and Operations dashboards have data.
+6. **Collect ideas**: business users open *Submit new idea*, walk through the wizard and get an automatic score and classification. Browse results in *Ideas*.
+7. **Report**: the *Executive*, *Operations* and *SLA / KPI* dashboards update as data changes. Use the *Documentation* page to explain each figure to stakeholders.
+
+### API
 
 ```bash
 curl http://localhost:8000/health
 curl http://localhost:8000/api/v1/status
+curl http://localhost:8000/api/v1/process-catalog
 ```
 
-Structured errors use a stable JSON shape. Validation failures use FastAPI's HTTP 422 response.
+Interactive OpenAPI documentation is at `/docs`. Write endpoints require a bearer token issued by the configured Keycloak realm.
 
-## Testing
+### Importing stakeholders
 
-This project has no automated test suite. Testing is performed manually.
+`backend/scripts/import_stakeholders.py` loads process stakeholders from a CSV placed at `data/rpa-pipeline-stakeholders.csv` (not shipped; the folder is git-ignored). See the script header for the expected columns and the `docker cp` invocation.
 
-After a change, run `make lint` and `make typecheck`, bring up the stack with `make dev`, and exercise the affected flows by hand (API endpoints and the relevant frontend pages).
-
-## Docker operations
-
-`make up` builds local images and waits through Compose health checks. Backend startup applies Alembic before serving traffic. The backend only starts after PostgreSQL is healthy; the frontend only starts after the API is healthy. Volumes preserve database and frontend dependency state between runs.
-
-To inspect state:
+## Development
 
 ```bash
-docker compose ps
-make health
-make logs
+make dev          # run all services in the foreground
+make logs         # follow logs
+make lint         # Ruff, ESLint, Prettier
+make format
+make typecheck    # strict mypy and tsc
+make help         # full list
 ```
+
+The project has no automated test suite; verify changes by running `make lint`, `make typecheck`, `make dev` and exercising the affected flows by hand. Contributor conventions are in [`AGENTS.md`](AGENTS.md).
+
+## Database and migrations
+
+```bash
+make db-up
+# change a SQLAlchemy model, then:
+make migration NAME="clear description"
+make migrate
+```
+
+Review each generated migration. Never use `create_all`, manual DDL, or edit a migration that may already be applied elsewhere. `make db-reset` deletes the local PostgreSQL volume and all its data.
 
 ## Troubleshooting
 
-- **Port already allocated:** change `POSTGRES_PORT`, `BACKEND_PORT`, or `FRONTEND_PORT` in `.env`, then run `make down && make up`.
-- **Stale local database:** if the data is disposable, run `make db-reset`. This removes the Compose volume.
-- **Test database missing:** an old volume may predate the initialization SQL. Run `make db-reset`, or create the dedicated database manually inside the development container.
-- **Dependency mismatch:** run `make install`; `npm ci` restores the exact lockfile and pip installs exact direct dependency versions.
-- **Container health failure:** run `docker compose ps` and `docker compose logs postgres backend frontend`.
-- **WSL filesystem performance:** clone under the Linux filesystem for faster bind mounts when possible; the project remains compatible with `/mnt/c` workspaces.
+- **Port already allocated**: change `POSTGRES_PORT`, `BACKEND_PORT` or `FRONTEND_PORT` in `.env`, then `make down && make up`.
+- **`npm ci` fails with certificate errors behind a TLS-intercepting proxy**: set `NPM_STRICT_SSL=false` in `.env` and rebuild (`make up`).
+- **Dependency mismatch**: `make install`.
+- **Container unhealthy**: `docker compose ps` and `docker compose logs postgres backend frontend`.
+- **Sign-in loop or 401**: check that `OIDC_ISSUER`, `OIDC_CLIENT_ID` and the Keycloak redirect URI agree between backend, frontend and realm.
 
-## Security and configuration
+## Security notes
 
-`.env.example` contains development-only credentials. `.env` is ignored. Do not reuse these credentials outside local development. Deployment to the `dev` environment on GKE is documented in [`docs/deploy.md`](docs/deploy.md); the manifests live in `deploy/`.
-
+- `.env` and `.env.*` are git-ignored; only `.env.example` is tracked. The credentials in it are local-development placeholders.
+- Set strong `ADMIN_PASSWORD` and `ADMIN_SECRET_KEY` for any shared deployment.
+- Outside `ENVIRONMENT=development` the backend refuses to start with the default admin password or secret key. For Kubernetes, use a secret manager (External Secrets, Sealed Secrets) rather than committing Secret manifests.
+- Do not commit real tickets, employee names or emails; the `sql/` and `data/` folders are git-ignored for that reason.
